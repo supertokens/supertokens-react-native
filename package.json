@@ -9,10 +9,14 @@
     "mocha-jsdom": "2.0.0",
     "prettier": "1.18.2",
     "typescript": "3.5.2",
-    "axios": "*"
+    "axios": "*",
+    "react-native": "git+https://git@github.com/facebook/react-native.git#v0.62.0-rc.5",
+    "react": "^16.11.0"
   },
   "peerDependencies": {
-    "axios": "*"
+    "axios": "*",
+    "react": "^16.11.0",
+    "react-native": ">=0.62.0 <1.0.x"
   },
   "scripts": {
     "test": "TEST_MODE=testing npx mocha",
