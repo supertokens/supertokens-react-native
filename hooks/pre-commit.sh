@@ -143,18 +143,6 @@ then
    git stash push -k -u -- $files_to_stash >/dev/null 2>/dev/null
 fi
 
-
-# Delete existing bundle
-rm -rf bundle
-git add bundle
-npm run pack
-packExitCode=$?
-
-if [ $packExitCode -eq 0 ]
-then
-    git add bundle/*
-fi
-
 if [ $no_of_files_to_stash -ne 0 ]
 then
    echo "$(tput setaf 3)* Undoing stashing$(tput sgr 0)"
@@ -164,12 +152,4 @@ then
       git checkout --theirs . >/dev/null 2>/dev/null
    fi
    git stash drop >/dev/null 2>/dev/null
-fi
-
-if [ $packExitCode -ne 0 ]
-then
-    RED='\033[0;31m'
-    NC='\033[0m' # No Color
-    printf "${RED}Bundling failed. Stopping commit${NC}\n"
-    exit 1
 fi

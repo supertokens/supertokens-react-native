@@ -21,7 +21,7 @@
   "scripts": {
     "test": "TEST_MODE=testing npx mocha",
     "build-check": "cd lib && npx tsc -p tsconfig.json --noEmit",
-    "build": "cd lib && npx tsc -p tsconfig.json && cd ../ && ./node_modules/.bin/webpack -p",
+    "build": "cd lib && npx tsc -p tsconfig.json",
     "pretty": "cd lib && npx prettier --write --config .prettierrc \"ts/**/*.ts\" \"build/**/*.js\" \"../test/**/*.js\"",
     "build-pretty": "npm run build && npm run pretty",
     "pretty-check": "cd lib && npx prettier --check --config .prettierrc \"ts/**/*.ts\" \"build/**/*.js\" \"../test/**/*.js\"",
@@ -46,7 +46,7 @@
   ],
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/supertokens/supertokens-website/issues"
+    "url": "https://github.com/supertokens/supertokens-react-native/issues"
   },
-  "homepage": "https://github.com/supertokens/supertokens-website#readme"
+  "homepage": "https://github.com/supertokens/supertokens-react-native#readme"
 }

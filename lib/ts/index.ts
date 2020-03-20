@@ -16,6 +16,8 @@ import { getIDFromCookie, onUnauthorisedResponse, setIDToCookie } from "./handle
 import { PROCESS_STATE, ProcessState } from "./processState";
 import { package_version } from "./version";
 
+declare let global: any;
+
 export class AntiCsrfToken {
     private static tokenInfo:
         | undefined

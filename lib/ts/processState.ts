@@ -34,9 +34,10 @@ export class ProcessState {
     }
 
     addState = (state: PROCESS_STATE) => {
-        if (process !== undefined && process.env !== undefined && process.env.TEST_MODE === "testing") {
-            this.history.push(state);
-        }
+        // if (process !== undefined && process.env !== undefined && process.env.TEST_MODE === "testing") {
+        //     this.history.push(state);
+        // }
+        // TODO:
     };
 
     private getEventByLastEventByName = (state: PROCESS_STATE) => {

@@ -12,7 +12,6 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-import Lock from "browser-tabs-lock";
 
 import AuthHttpRequest, { AntiCsrfToken } from "./";
 import { package_version } from "./version";
@@ -30,9 +29,10 @@ export async function onUnauthorisedResponse(
     refreshAPICustomHeaders: any,
     sessionExpiredStatusCode: number
 ): Promise<{ result: "SESSION_EXPIRED" } | { result: "API_ERROR"; error: any } | { result: "RETRY" }> {
-    let lock = new Lock();
+    // let lock = new Lock();
     while (true) {
-        if (await lock.acquireLock("REFRESH_TOKEN_USE", 1000)) {
+        if (true) {
+            // TODO: Locking
             // to sync across tabs. the 1000 ms wait is for how much time to try and azquire the lock.
             try {
                 let postLockID = getIDFromCookie();
@@ -85,7 +85,7 @@ export async function onUnauthorisedResponse(
                 }
                 return { result: "API_ERROR", error };
             } finally {
-                lock.releaseLock("REFRESH_TOKEN_USE");
+                // lock.releaseLock("REFRESH_TOKEN_USE");
             }
         }
         let idCookieValue = getIDFromCookie();

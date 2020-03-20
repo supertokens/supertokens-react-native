@@ -10,5 +10,5 @@ export declare class ProcessState {
     addState: (state: PROCESS_STATE) => void;
     private getEventByLastEventByName;
     reset: () => void;
-    waitForEvent: (state: PROCESS_STATE, timeInMS?: number) => Promise<unknown>;
+    waitForEvent: (state: PROCESS_STATE, timeInMS?: number) => Promise<any>;
 }
