@@ -10,9 +10,7 @@ Hey! Thanks for contributing to this project. Before you report this issue, we w
 A clear and concise description of what the issue is about.
 
 ### Your environment
-* version of supertokens-website - 
-* version of node - 
-* version of mysql - 
+* version of supertokens-react-native -
 
 ### Steps to reproduce
 Tell us how to reproduce this issue. Please provide a working demo,if you can.
