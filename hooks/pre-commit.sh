@@ -88,6 +88,7 @@ while IFS='"' read -ra ADDR; do
     done
 done <<< "$version"
 
+# TODO: also check in podspec and android version files
 codeversion=`cat lib/build/version.js | grep -e 'package_version'`
 while IFS='"' read -ra ADDR; do
     counter=0

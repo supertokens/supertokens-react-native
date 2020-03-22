@@ -1,0 +1,5 @@
+There will be a pure JS implementation and a native implementation.
+
+If the user links the lib, then ONLY the native implementation will work, else only the pure JS implementation will work.
+
+Both the implementation's data - cookies, storage items, should be "in sync". If the user moves from one to the other, it should not break things and should not cause user logouts.
