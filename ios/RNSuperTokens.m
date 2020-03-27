@@ -10,10 +10,29 @@
 }
 RCT_EXPORT_MODULE()
 
-// refreshTokenEndpoint: String, sessionExpiryStatusCode: Int? = nil, refreshAPICustomHeaders: NSDictionary = NSDictionary()
-RCT_EXPORT_METHOD(initLib)
+
+RCT_EXPORT_METHOD(initLib: (NSString *)refreshTokenEndpoint:
+                  (int)sessionExpiryStatusCode:
+                  (NSDictionary *)refreshAPICustomHeaders:
+                  (RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
 {
-    // SuperTokens.initialise();
+    NSError *error = nil;
+    [SuperTokens initialiseWithRefreshTokenEndpoint:refreshTokenEndpoint sessionExpiryStatusCode:sessionExpiryStatusCode refreshAPICustomHeaders:refreshAPICustomHeaders error:&error];
+    
+    if (error) {
+        reject(@"no_events", @"There were no events", error);
+    } else {
+        resolve(nil);
+    }
+}
+
+RCT_EXPORT_METHOD(doesSessionExist:
+                  (RCTPromiseResolveBlock)resolve:
+                  (RCTPromiseRejectBlock)reject)
+{
+    NSNumber *result = [SuperTokens doesSessionExist] ? [NSNumber numberWithBool:YES] : [NSNumber numberWithBool:NO];
+    resolve(result);
 }
 
 @end
