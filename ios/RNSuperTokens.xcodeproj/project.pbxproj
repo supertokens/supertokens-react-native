@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		130890A7242DF4540063D4D2 /* libReact.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 13089098242DF44E0063D4D2 /* libReact.a */; };
+		130890BA242DFD4C0063D4D2 /* SuperTokensSession.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 130890B1242DFD420063D4D2 /* SuperTokensSession.framework */; };
+		47B9857A7A7387EB76979DC3 /* Pods_RNSuperTokens.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4612FD4C3436E58CCEBF9995 /* Pods_RNSuperTokens.framework */; };
 		B3E7B58A1CC2AC0600A0062D /* RNSuperTokens.m in Sources */ = {isa = PBXBuildFile; fileRef = B3E7B5891CC2AC0600A0062D /* RNSuperTokens.m */; };
 /* End PBXBuildFile section */
 
@@ -68,6 +70,20 @@
 			remoteGlobalIDString = 3D3CD9181DE5FBD800167DC4;
 			remoteInfo = "jschelpers-tvOS";
 		};
+		130890AE242DFD420063D4D2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 130890A9242DFD420063D4D2 /* Pods.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = BD4ABA846E744973DF8C32C80E9F08D5;
+			remoteInfo = "Pods-RNSuperTokens";
+		};
+		130890B0242DFD420063D4D2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 130890A9242DFD420063D4D2 /* Pods.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = A887AB3E0888FB7953E3D594D8D5BAF0;
+			remoteInfo = SuperTokensSession;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -84,9 +100,13 @@
 
 /* Begin PBXFileReference section */
 		1308908C242DF44E0063D4D2 /* React.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = React.xcodeproj; path = "../node_modules/react-native/React/React.xcodeproj"; sourceTree = "<group>"; };
+		130890A9242DFD420063D4D2 /* Pods.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Pods.xcodeproj; path = Pods/Pods.xcodeproj; sourceTree = "<group>"; };
 		134814201AA4EA6300B7C361 /* libRNSuperTokens.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libRNSuperTokens.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		4612FD4C3436E58CCEBF9995 /* Pods_RNSuperTokens.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RNSuperTokens.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		7E88A88EE41EBEF96306423F /* Pods-RNSuperTokens.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RNSuperTokens.release.xcconfig"; path = "Target Support Files/Pods-RNSuperTokens/Pods-RNSuperTokens.release.xcconfig"; sourceTree = "<group>"; };
 		B3E7B5881CC2AC0600A0062D /* RNSuperTokens.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RNSuperTokens.h; sourceTree = "<group>"; };
 		B3E7B5891CC2AC0600A0062D /* RNSuperTokens.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RNSuperTokens.m; sourceTree = "<group>"; };
+		CE37E0D578E6D16380E356DE /* Pods-RNSuperTokens.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RNSuperTokens.debug.xcconfig"; path = "Target Support Files/Pods-RNSuperTokens/Pods-RNSuperTokens.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -94,7 +114,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				130890BA242DFD4C0063D4D2 /* SuperTokensSession.framework in Frameworks */,
 				130890A7242DF4540063D4D2 /* libReact.a in Frameworks */,
+				47B9857A7A7387EB76979DC3 /* Pods_RNSuperTokens.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -104,7 +126,9 @@
 		1308908B242DF44E0063D4D2 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				130890A9242DFD420063D4D2 /* Pods.xcodeproj */,
 				1308908C242DF44E0063D4D2 /* React.xcodeproj */,
+				4612FD4C3436E58CCEBF9995 /* Pods_RNSuperTokens.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -124,12 +148,30 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		130890AA242DFD420063D4D2 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				130890AF242DFD420063D4D2 /* Pods_RNSuperTokens.framework */,
+				130890B1242DFD420063D4D2 /* SuperTokensSession.framework */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		134814211AA4EA7D00B7C361 /* Products */ = {
 			isa = PBXGroup;
 			children = (
 				134814201AA4EA6300B7C361 /* libRNSuperTokens.a */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		1A5C93A799A96A9CF4883F8E /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				CE37E0D578E6D16380E356DE /* Pods-RNSuperTokens.debug.xcconfig */,
+				7E88A88EE41EBEF96306423F /* Pods-RNSuperTokens.release.xcconfig */,
+			);
+			path = Pods;
 			sourceTree = "<group>";
 		};
 		58B511D21A9E6C8500147676 = {
@@ -139,6 +181,7 @@
 				B3E7B5891CC2AC0600A0062D /* RNSuperTokens.m */,
 				134814211AA4EA7D00B7C361 /* Products */,
 				1308908B242DF44E0063D4D2 /* Frameworks */,
+				1A5C93A799A96A9CF4883F8E /* Pods */,
 			);
 			sourceTree = "<group>";
 		};
@@ -149,6 +192,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 58B511EF1A9E6C8500147676 /* Build configuration list for PBXNativeTarget "RNSuperTokens" */;
 			buildPhases = (
+				E572369E2CC45EC3E89AC363 /* [CP] Check Pods Manifest.lock */,
 				58B511D71A9E6C8500147676 /* Sources */,
 				58B511D81A9E6C8500147676 /* Frameworks */,
 				58B511D91A9E6C8500147676 /* CopyFiles */,
@@ -188,6 +232,10 @@
 			productRefGroup = 58B511D21A9E6C8500147676;
 			projectDirPath = "";
 			projectReferences = (
+				{
+					ProductGroup = 130890AA242DFD420063D4D2 /* Products */;
+					ProjectRef = 130890A9242DFD420063D4D2 /* Pods.xcodeproj */;
+				},
 				{
 					ProductGroup = 1308908D242DF44E0063D4D2 /* Products */;
 					ProjectRef = 1308908C242DF44E0063D4D2 /* React.xcodeproj */;
@@ -257,7 +305,46 @@
 			remoteRef = 130890A5242DF44E0063D4D2 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		130890AF242DFD420063D4D2 /* Pods_RNSuperTokens.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = Pods_RNSuperTokens.framework;
+			remoteRef = 130890AE242DFD420063D4D2 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		130890B1242DFD420063D4D2 /* SuperTokensSession.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = SuperTokensSession.framework;
+			remoteRef = 130890B0242DFD420063D4D2 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 /* End PBXReferenceProxy section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		E572369E2CC45EC3E89AC363 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-RNSuperTokens-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		58B511D71A9E6C8500147676 /* Sources */ = {
@@ -354,6 +441,7 @@
 		};
 		58B511F01A9E6C8500147676 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = CE37E0D578E6D16380E356DE /* Pods-RNSuperTokens.debug.xcconfig */;
 			buildSettings = {
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -370,6 +458,7 @@
 		};
 		58B511F11A9E6C8500147676 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7E88A88EE41EBEF96306423F /* Pods-RNSuperTokens.release.xcconfig */;
 			buildSettings = {
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",

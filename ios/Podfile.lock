@@ -1,0 +1,16 @@
+PODS:
+  - SuperTokensSession (1.1.1)
+
+DEPENDENCIES:
+  - SuperTokensSession (~> 1.1.0)
+
+SPEC REPOS:
+  trunk:
+    - SuperTokensSession
+
+SPEC CHECKSUMS:
+  SuperTokensSession: 93c64891c639c4910619ebb45be55a36be4c52ba
+
+PODFILE CHECKSUM: 3eacc9b9deccaa76d8b0376191f204b883970d66
+
+COCOAPODS: 1.9.1

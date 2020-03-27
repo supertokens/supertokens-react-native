@@ -1,7 +1,7 @@
 
 Pod::Spec.new do |s|
   s.name         = "RNSuperTokens"
-  s.version      = "1.0.0"
+  s.version      = "0.0.1"
   s.summary      = "RNSuperTokens"
   s.description  = <<-DESC
                   RNSuperTokens
@@ -17,6 +17,7 @@ Pod::Spec.new do |s|
 
 
   s.dependency "React"
+  s.dependency "SuperTokensSession",'~> 1.1.0'
   #s.dependency "others"
 
 end

@@ -1,0 +1,6 @@
+framework module SuperTokensSession {
+  umbrella header "SuperTokensSession-umbrella.h"
+
+  export *
+  module * { export * }
+}
