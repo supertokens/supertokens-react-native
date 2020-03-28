@@ -4,7 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build-check": "cd lib && npx tsc -p tsconfig.json --skipLibCheck --noEmit",
+    "build": "cd lib && npx tsc -p tsconfig.json --skipLibCheck && cd ../",
+    "pretty": "cd lib && npx prettier --write --config .prettierrc \"ts/**/*.ts\" \"build/**/*.js\" \"../test/**/*.js\"",
+    "build-pretty": "npm run build && npm run pretty",
+    "pretty-check": "cd lib && npx prettier --check --config .prettierrc \"ts/**/*.ts\" \"build/**/*.js\" \"../test/**/*.js\"",
+    "set-up-hooks": "cp hooks/pre-commit.sh .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit"
   },
   "keywords": [
     "react-native"
@@ -13,6 +18,12 @@
   "license": "",
   "peerDependencies": {
     "react-native": "^0.41.2",
-    "react-native-windows": "0.41.0-rc.1"
+    "axios": "*"
+  },
+  "devDependencies": {
+    "@types/react-native": "0.62.0",
+    "prettier": "1.18.2",
+    "typescript": "3.5.2",
+    "axios": "*"
   }
 }
