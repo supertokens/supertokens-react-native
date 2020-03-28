@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		130890A7242DF4540063D4D2 /* libReact.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 13089098242DF44E0063D4D2 /* libReact.a */; };
-		130890BA242DFD4C0063D4D2 /* SuperTokensSession.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 130890B1242DFD420063D4D2 /* SuperTokensSession.framework */; };
+		1385D768242E360C000D5B4B /* SuperTokensSession.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 130890B1242DFD420063D4D2 /* SuperTokensSession.framework */; };
 		47B9857A7A7387EB76979DC3 /* Pods_RNSuperTokens.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4612FD4C3436E58CCEBF9995 /* Pods_RNSuperTokens.framework */; };
 		B3E7B58A1CC2AC0600A0062D /* RNSuperTokens.m in Sources */ = {isa = PBXBuildFile; fileRef = B3E7B5891CC2AC0600A0062D /* RNSuperTokens.m */; };
 /* End PBXBuildFile section */
@@ -114,7 +114,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				130890BA242DFD4C0063D4D2 /* SuperTokensSession.framework in Frameworks */,
+				1385D768242E360C000D5B4B /* SuperTokensSession.framework in Frameworks */,
 				130890A7242DF4540063D4D2 /* libReact.a in Frameworks */,
 				47B9857A7A7387EB76979DC3 /* Pods_RNSuperTokens.framework in Frameworks */,
 			);

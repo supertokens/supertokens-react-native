@@ -1,6 +1,0 @@
-framework module Pods_RNSuperTokens {
-  umbrella header "Pods-RNSuperTokens-umbrella.h"
-
-  export *
-  module * { export * }
-}
