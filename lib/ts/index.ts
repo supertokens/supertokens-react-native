@@ -13,63 +13,17 @@
  * under the License.
  */
 
-import { NativeModules } from 'react-native';
+import { NativeModules } from "react-native";
 
 const { RNSuperTokens } = NativeModules;
 
-import { getIDFromCookie, onUnauthorisedResponse, setIDToCookie } from "./handleSessionExp";
+import { onUnauthorisedResponse } from "./handleSessionExp";
 import { PROCESS_STATE, ProcessState } from "./processState";
 import { package_version } from "./version";
+import AntiCSRF from "./antiCsrf";
+import IdRefreshToken from "./idRefreshToken";
 
-export class AntiCsrfToken {
-    private static tokenInfo:
-    | undefined
-    | {
-        antiCsrf: string;
-        associatedIdRefreshToken: string;
-    };
-
-    private constructor() { }
-
-    static getToken(associatedIdRefreshToken: string | undefined): string | undefined {
-        if (associatedIdRefreshToken === undefined) {
-            AntiCsrfToken.tokenInfo = undefined;
-            return undefined;
-        }
-        if (AntiCsrfToken.tokenInfo === undefined) {
-            let antiCsrf = window.localStorage.getItem("anti-csrf-localstorage");
-            if (antiCsrf === null) {
-                return undefined;
-            }
-            AntiCsrfToken.tokenInfo = {
-                antiCsrf,
-                associatedIdRefreshToken
-            };
-        } else if (AntiCsrfToken.tokenInfo.associatedIdRefreshToken !== associatedIdRefreshToken) {
-            // csrf token has changed.
-            AntiCsrfToken.tokenInfo = undefined;
-            return AntiCsrfToken.getToken(associatedIdRefreshToken);
-        }
-        return AntiCsrfToken.tokenInfo.antiCsrf;
-    }
-
-    static removeToken() {
-        AntiCsrfToken.tokenInfo = undefined;
-        window.localStorage.removeItem("anti-csrf-localstorage");
-    }
-
-    static setItem(associatedIdRefreshToken: string | undefined, antiCsrf: string) {
-        if (associatedIdRefreshToken === undefined) {
-            AntiCsrfToken.tokenInfo = undefined;
-            return undefined;
-        }
-        window.localStorage.setItem("anti-csrf-localstorage", antiCsrf);
-        AntiCsrfToken.tokenInfo = {
-            antiCsrf,
-            associatedIdRefreshToken
-        };
-    }
-}
+declare let global: any;
 
 /**
  * @description returns true if retry, else false is session has expired completely.
@@ -77,7 +31,6 @@ export class AntiCsrfToken {
 export async function handleUnauthorised(
     refreshAPI: string | undefined,
     preRequestIdToken: string | undefined,
-    websiteRootDomain: string,
     refreshAPICustomHeaders: any,
     sessionExpiredStatusCode: number
 ): Promise<boolean> {
@@ -85,12 +38,11 @@ export async function handleUnauthorised(
         throw Error("Please define refresh token API in the init function");
     }
     if (preRequestIdToken === undefined) {
-        return getIDFromCookie() !== undefined;
+        return (await IdRefreshToken.getToken()) !== undefined;
     }
     let result = await onUnauthorisedResponse(
         refreshAPI,
         preRequestIdToken,
-        websiteRootDomain,
         refreshAPICustomHeaders,
         sessionExpiredStatusCode
     );
@@ -128,14 +80,12 @@ export default class AuthHttpRequest {
     static originalFetch: any;
     private static apiDomain = "";
     private static viaInterceptor: boolean | undefined;
-    private static websiteRootDomain: string;
     private static refreshAPICustomHeaders: any;
 
     static init(
         refreshTokenUrl: string,
         sessionExpiredStatusCode?: number,
         viaInterceptor?: boolean,
-        websiteRootDomain?: string,
         refreshAPICustomHeaders?: any
     ) {
         if (viaInterceptor === undefined) {
@@ -147,12 +97,10 @@ export default class AuthHttpRequest {
         }
         AuthHttpRequest.refreshTokenUrl = refreshTokenUrl;
         AuthHttpRequest.refreshAPICustomHeaders = refreshAPICustomHeaders === undefined ? {} : refreshAPICustomHeaders;
-        AuthHttpRequest.websiteRootDomain =
-            websiteRootDomain === undefined ? window.location.hostname : websiteRootDomain;
         if (sessionExpiredStatusCode !== undefined) {
             AuthHttpRequest.sessionExpiredStatusCode = sessionExpiredStatusCode;
         }
-        let env: any = window.fetch === undefined ? global : window;
+        let env: any = global;
         if (AuthHttpRequest.originalFetch === undefined) {
             AuthHttpRequest.originalFetch = env.fetch.bind(env);
         }
@@ -197,21 +145,21 @@ export default class AuthHttpRequest {
             while (true) {
                 // we read this here so that if there is a session expiry error, then we can compare this value (that caused the error) with the value after the request is sent.
                 // to avoid race conditions
-                const preRequestIdToken = getIDFromCookie();
-                const antiCsrfToken = AntiCsrfToken.getToken(preRequestIdToken);
+                const preRequestIdToken = await IdRefreshToken.getToken();
+                const antiCsrfToken = await AntiCSRF.getToken(preRequestIdToken);
                 let configWithAntiCsrf: RequestInit | undefined = config;
                 if (antiCsrfToken !== undefined) {
                     configWithAntiCsrf = {
                         ...configWithAntiCsrf,
                         headers:
-                        configWithAntiCsrf === undefined
-                            ? {
-                                "anti-csrf": antiCsrfToken
-                            }
-                            : {
-                                ...configWithAntiCsrf.headers,
-                                "anti-csrf": antiCsrfToken
-                            }
+                            configWithAntiCsrf === undefined
+                                ? {
+                                      "anti-csrf": antiCsrfToken
+                                  }
+                                : {
+                                      ...configWithAntiCsrf.headers,
+                                      "anti-csrf": antiCsrfToken
+                                  }
                     };
                 }
 
@@ -219,29 +167,28 @@ export default class AuthHttpRequest {
                 configWithAntiCsrf = {
                     ...configWithAntiCsrf,
                     headers:
-                    configWithAntiCsrf === undefined
-                        ? {
-                            "supertokens-sdk-name": "website",
-                            "supertokens-sdk-version": package_version
-                        }
-                        : {
-                            ...configWithAntiCsrf.headers,
-                            "supertokens-sdk-name": "website",
-                            "supertokens-sdk-version": package_version
-                        }
+                        configWithAntiCsrf === undefined
+                            ? {
+                                  "supertokens-sdk-name": "website",
+                                  "supertokens-sdk-version": package_version
+                              }
+                            : {
+                                  ...configWithAntiCsrf.headers,
+                                  "supertokens-sdk-name": "website",
+                                  "supertokens-sdk-version": package_version
+                              }
                 };
                 try {
                     let response = await httpCall(configWithAntiCsrf);
-                    response.headers.forEach((value: any, key: any) => {
+                    response.headers.forEach(async (value: string, key: string) => {
                         if (key.toString() === "id-refresh-token") {
-                            setIDToCookie(value, AuthHttpRequest.websiteRootDomain);
+                            await IdRefreshToken.setToken(value);
                         }
                     });
                     if (response.status === AuthHttpRequest.sessionExpiredStatusCode) {
                         let retry = await handleUnauthorised(
                             AuthHttpRequest.refreshTokenUrl,
                             preRequestIdToken,
-                            AuthHttpRequest.websiteRootDomain,
                             AuthHttpRequest.refreshAPICustomHeaders,
                             AuthHttpRequest.sessionExpiredStatusCode
                         );
@@ -250,9 +197,9 @@ export default class AuthHttpRequest {
                             break;
                         }
                     } else {
-                        response.headers.forEach((value, key) => {
+                        response.headers.forEach(async (value: string, key: string) => {
                             if (key.toString() === "anti-csrf") {
-                                AntiCsrfToken.setItem(getIDFromCookie(), value);
+                                await AntiCSRF.setToken(value, await IdRefreshToken.getToken());
                             }
                         });
                         return response;
@@ -262,7 +209,6 @@ export default class AuthHttpRequest {
                         let retry = await handleUnauthorised(
                             AuthHttpRequest.refreshTokenUrl,
                             preRequestIdToken,
-                            AuthHttpRequest.websiteRootDomain,
                             AuthHttpRequest.refreshAPICustomHeaders,
                             AuthHttpRequest.sessionExpiredStatusCode
                         );
@@ -283,33 +229,8 @@ export default class AuthHttpRequest {
                 return returnObj;
             }
         } finally {
-            if (getIDFromCookie() === undefined) {
-                AntiCsrfToken.removeToken();
-            }
-        }
-    };
-
-    /**
-     * @description attempts to refresh session regardless of expiry
-     * @returns true if successful, else false if session has expired. Wrapped in a Promise
-     * @throws error if anything goes wrong
-     */
-    static attemptRefreshingSession = async (): Promise<boolean> => {
-        if (!AuthHttpRequest.initCalled) {
-            throw Error("init function not called");
-        }
-        try {
-            const preRequestIdToken = getIDFromCookie();
-            return await handleUnauthorised(
-                AuthHttpRequest.refreshTokenUrl,
-                preRequestIdToken,
-                AuthHttpRequest.websiteRootDomain,
-                AuthHttpRequest.refreshAPICustomHeaders,
-                AuthHttpRequest.sessionExpiredStatusCode
-            );
-        } finally {
-            if (getIDFromCookie() === undefined) {
-                AntiCsrfToken.removeToken();
+            if ((await IdRefreshToken.getToken()) === undefined) {
+                await AntiCSRF.removeToken();
             }
         }
     };
@@ -354,7 +275,7 @@ export default class AuthHttpRequest {
         );
     };
 
-    static doesSessionExist = () => {
-        return getIDFromCookie() !== undefined;
+    static doesSessionExist = async () => {
+        return (await IdRefreshToken.getToken()) !== undefined;
     };
 }
