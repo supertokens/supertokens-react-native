@@ -25,45 +25,45 @@
 RCT_EXPORT_MODULE()
 
 
-RCT_EXPORT_METHOD(initLib: (NSString *)refreshTokenEndpoint:
-                  (int)sessionExpiryStatusCode:
-                  (NSDictionary *)refreshAPICustomHeaders:
-                  (RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
-{
-    NSError *error = nil;
-    [SuperTokens initialiseWithRefreshTokenEndpoint:refreshTokenEndpoint sessionExpiryStatusCode:sessionExpiryStatusCode refreshAPICustomHeaders:refreshAPICustomHeaders error:&error];
-    
-    if (error) {
-        reject(@"init_failed", @"Call to initialising native SDK failed", error);
-    } else {
-        resolve(nil);
-    }
-}
-
-RCT_EXPORT_METHOD(doesSessionExist:
-                  (RCTPromiseResolveBlock)resolve:
-                  (RCTPromiseRejectBlock)reject)
-{
-    NSNumber *result = [SuperTokens doesSessionExist] ? [NSNumber numberWithBool:YES] : [NSNumber numberWithBool:NO];
-    resolve(result);
-}
-
-RCT_EXPORT_METHOD(dataTask:
-                  (NSURLRequest *)request:
-                  (RCTPromiseResolveBlock)resolve
-                  rejecter:(RCTPromiseRejectBlock)reject)
-{
-    [SuperTokensURLSession
-     dataTaskWithRequest:request
-     completionHandler:^(NSData * data, NSURLResponse * response, NSError * error) {
-        if (error) {
-            reject(@"network_failed", @"Network request failed", error);
-        } else {
-            
-        }
-    }];
-}
+//RCT_EXPORT_METHOD(initLib: (NSString *)refreshTokenEndpoint:
+//                  (int)sessionExpiryStatusCode:
+//                  (NSDictionary *)refreshAPICustomHeaders:
+//                  (RCTPromiseResolveBlock)resolve
+//                  rejecter:(RCTPromiseRejectBlock)reject)
+//{
+//    NSError *error = nil;
+//    [SuperTokens initialiseWithRefreshTokenEndpoint:refreshTokenEndpoint sessionExpiryStatusCode:sessionExpiryStatusCode refreshAPICustomHeaders:refreshAPICustomHeaders error:&error];
+//
+//    if (error) {
+//        reject(@"init_failed", @"Call to initialising native SDK failed", error);
+//    } else {
+//        resolve(nil);
+//    }
+//}
+//
+//RCT_EXPORT_METHOD(doesSessionExist:
+//                  (RCTPromiseResolveBlock)resolve:
+//                  (RCTPromiseRejectBlock)reject)
+//{
+//    NSNumber *result = [SuperTokens doesSessionExist] ? [NSNumber numberWithBool:YES] : [NSNumber numberWithBool:NO];
+//    resolve(result);
+//}
+//
+//RCT_EXPORT_METHOD(dataTask:
+//                  (NSURLRequest *)request:
+//                  (RCTPromiseResolveBlock)resolve
+//                  rejecter:(RCTPromiseRejectBlock)reject)
+//{
+//    [SuperTokensURLSession
+//     dataTaskWithRequest:request
+//     completionHandler:^(NSData * data, NSURLResponse * response, NSError * error) {
+//        if (error) {
+//            reject(@"network_failed", @"Network request failed", error);
+//        } else {
+//
+//        }
+//    }];
+//}
 
 @end
   
