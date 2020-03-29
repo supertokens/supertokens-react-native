@@ -13,15 +13,21 @@
  * under the License.
  */
 
+import { AsyncStorage } from "react-native";
+
 // TODO: if native is linked, do not use in memory values - always make a call to native.
 // This is because there is a chance that native side has changed the id refresh token, and here, we are still using the older one.
 // Or is this OK?
+const ID_KEY = "supertokens-rn-idrefreshtoken-key";
+
 export default class IdRefreshToken {
     private static idRefreshInMemory: string | undefined;
 
     static async getToken(): Promise<string | undefined> {
         if (IdRefreshToken.idRefreshInMemory === undefined) {
-            IdRefreshToken.idRefreshInMemory = ""; // TODO: get from native IdRefreshToken.getUserDefaults().string(forKey: IdRefreshToken.idRefreshUserDefaultsKey)
+            // TODO: native support
+            let k = await AsyncStorage.getItem(ID_KEY);
+            IdRefreshToken.idRefreshInMemory = k === null ? undefined : k;
         }
         if (IdRefreshToken.idRefreshInMemory !== undefined) {
             let splitted = IdRefreshToken.idRefreshInMemory.split(";");
@@ -45,17 +51,15 @@ export default class IdRefreshToken {
         if (expiry < currentTime) {
             await IdRefreshToken.removeToken();
         } else {
-            // TODO: set in native side
-            // userDefaults.set(newIdRefreshToken, forKey: IdRefreshToken.idRefreshUserDefaultsKey)
-            // userDefaults.synchronize()
+            // TODO: set in native side when that support is there
+            await AsyncStorage.setItem(ID_KEY, newIdRefreshToken);
             IdRefreshToken.idRefreshInMemory = newIdRefreshToken;
         }
     }
 
     static async removeToken() {
         // TODO: set in native
-        // userDefaults.removeObject(forKey: IdRefreshToken.idRefreshUserDefaultsKey)
-        // userDefaults.synchronize()
+        await AsyncStorage.removeItem(ID_KEY);
         IdRefreshToken.idRefreshInMemory = undefined;
     }
 }

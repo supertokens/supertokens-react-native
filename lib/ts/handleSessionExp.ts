@@ -12,94 +12,76 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-// import Lock from "browser-tabs-lock";
 
 import AuthHttpRequest from "./";
 import { package_version } from "./version";
 import AntiCSRF from "./antiCsrf";
 import IdRefreshToken from "./idRefreshToken";
+import getLock from "./locking";
 
-const ID_COOKIE_NAME = "sIRTFrontend";
+const LOCK_NAME = "REFRESH_TOKEN_USE";
 
-declare let Lock: any;
-
-/**
- * @description attempts to call the refresh token API each time we are sure the session has expired, or it throws an error or,
- * or the ID_COOKIE_NAME has changed value -> which may mean that we have a new set of tokens.
- */
 export async function onUnauthorisedResponse(
     refreshTokenUrl: string,
     preRequestIdToken: string,
     refreshAPICustomHeaders: any,
     sessionExpiredStatusCode: number
 ): Promise<{ result: "SESSION_EXPIRED" } | { result: "API_ERROR"; error: any } | { result: "RETRY" }> {
-    let lock = new Lock();
-    while (true) {
-        if (await lock.acquireLock("REFRESH_TOKEN_USE", 1000)) {
-            // to sync across tabs. the 1000 ms wait is for how much time to try and azquire the lock.
-            try {
-                let postLockID = await IdRefreshToken.getToken();
-                if (postLockID === undefined) {
-                    return { result: "SESSION_EXPIRED" };
-                }
-                if (postLockID !== preRequestIdToken) {
-                    // means that some other process has already called this API and succeeded. so we need to call it again
-                    return { result: "RETRY" };
-                }
-                let response = await AuthHttpRequest.originalFetch(refreshTokenUrl, {
-                    method: "post",
-                    credentials: "include",
-                    headers: {
-                        ...refreshAPICustomHeaders,
-                        "supertokens-sdk-name": "website",
-                        "supertokens-sdk-version": package_version
-                    }
-                });
-                let removeIdRefreshToken = true;
-                response.headers.forEach(async (value: string, key: string) => {
-                    if (key.toString() === "id-refresh-token") {
-                        await IdRefreshToken.setToken(value);
-                        removeIdRefreshToken = false;
-                    }
-                });
-                if (response.status === sessionExpiredStatusCode) {
-                    // there is a case where frontend still has id refresh token, but backend doesn't get it. In this event, session expired error will be thrown and the frontend should remove this token
-                    if (removeIdRefreshToken) {
-                        await IdRefreshToken.setToken("remove");
-                    }
-                }
-                if (response.status !== 200) {
-                    throw response;
-                }
-                if ((await IdRefreshToken.getToken()) === undefined) {
-                    // removed by server. So we logout
-                    return { result: "SESSION_EXPIRED" };
-                }
-                response.headers.forEach(async (value: any, key: any) => {
-                    if (key.toString() === "anti-csrf") {
-                        await AntiCSRF.setToken(value, await IdRefreshToken.getToken());
-                    }
-                });
-                return { result: "RETRY" };
-            } catch (error) {
-                if ((await IdRefreshToken.getToken()) === undefined) {
-                    // removed by server.
-                    return { result: "SESSION_EXPIRED" };
-                }
-                return { result: "API_ERROR", error };
-            } finally {
-                lock.releaseLock("REFRESH_TOKEN_USE");
+    let lock = getLock();
+    // TODO: lock natively
+    await lock.lock(LOCK_NAME);
+    try {
+        let postLockID = await IdRefreshToken.getToken();
+        if (postLockID === undefined) {
+            return { result: "SESSION_EXPIRED" };
+        }
+        if (postLockID !== preRequestIdToken) {
+            // means that some other process has already called this API and succeeded. so we need to call it again
+            return { result: "RETRY" };
+        }
+        let response = await AuthHttpRequest.originalFetch(refreshTokenUrl, {
+            method: "post",
+            credentials: "include",
+            headers: {
+                ...refreshAPICustomHeaders,
+                "supertokens-sdk-name": "website",
+                "supertokens-sdk-version": package_version
+            }
+        });
+        let removeIdRefreshToken = true;
+        response.headers.forEach(async (value: string, key: string) => {
+            if (key.toString() === "id-refresh-token") {
+                await IdRefreshToken.setToken(value);
+                removeIdRefreshToken = false;
+            }
+        });
+        if (response.status === sessionExpiredStatusCode) {
+            // there is a case where frontend still has id refresh token, but backend doesn't get it. In this event, session expired error will be thrown and the frontend should remove this token
+            if (removeIdRefreshToken) {
+                await IdRefreshToken.setToken("remove");
             }
         }
-        let idCookieValue = await IdRefreshToken.getToken();
-        if (idCookieValue === undefined) {
+        if (response.status !== 200) {
+            throw response;
+        }
+        if ((await IdRefreshToken.getToken()) === undefined) {
             // removed by server. So we logout
             return { result: "SESSION_EXPIRED" };
-        } else {
-            if (idCookieValue !== preRequestIdToken) {
-                return { result: "RETRY" };
-            }
-            // here we try to call the API again since we probably failed to acquire lock and nothing has changed.
         }
+        response.headers.forEach(async (value: any, key: any) => {
+            if (key.toString() === "anti-csrf") {
+                await AntiCSRF.setToken(value, await IdRefreshToken.getToken());
+            }
+        });
+        return { result: "RETRY" };
+    } catch (error) {
+        if ((await IdRefreshToken.getToken()) === undefined) {
+            // removed by server.
+            return { result: "SESSION_EXPIRED" };
+        }
+        return { result: "API_ERROR", error };
+    } finally {
+        // TODO: unlock natively
+        lock.unlock(LOCK_NAME);
     }
 }
