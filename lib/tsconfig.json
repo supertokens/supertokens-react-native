@@ -7,7 +7,8 @@
         "noImplicitThis": true,
         "module": "ES6",
         "outDir": "build",
-        "moduleResolution": "node"
+        "moduleResolution": "node",
+        "declaration": true
     },
     "compileOnSave": true
 }

@@ -6,13 +6,13 @@ Pod::Spec.new do |s|
   s.description  = <<-DESC
                   RNSuperTokens
                    DESC
-  s.homepage     = ""
-  s.license      = "MIT"
+  s.homepage     = "https://github.com/supertokens/supertokens-react-native"
+  s.license      = "Apache 2.0"
   # s.license      = { :type => "MIT", :file => "FILE_LICENSE" }
-  s.author             = { "author" => "author@domain.cn" }
+  s.author             = { "author" => "team@supertokens.io" }
   s.platform     = :ios, "7.0"
-  s.source       = { :git => "https://github.com/author/RNSuperTokens.git", :tag => "master" }
-  s.source_files  = "RNSuperTokens/**/*.{h,m}"
+  s.source       = { :git => "https://github.com/supertokens/supertokens-react-native.git", :tag => "master" }
+  s.source_files  = "./**/*.{h,m}"
   s.requires_arc = true
 
 
