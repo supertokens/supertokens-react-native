@@ -169,12 +169,12 @@ export default class AuthHttpRequest {
                     headers:
                         configWithAntiCsrf === undefined
                             ? {
-                                  "supertokens-sdk-name": "website",
+                                  "supertokens-sdk-name": "react-native",
                                   "supertokens-sdk-version": package_version
                               }
                             : {
                                   ...configWithAntiCsrf.headers,
-                                  "supertokens-sdk-name": "website",
+                                  "supertokens-sdk-name": "react-native",
                                   "supertokens-sdk-version": package_version
                               }
                 };

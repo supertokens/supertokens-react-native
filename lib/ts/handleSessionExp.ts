@@ -44,7 +44,7 @@ export async function onUnauthorisedResponse(
             credentials: "include",
             headers: {
                 ...refreshAPICustomHeaders,
-                "supertokens-sdk-name": "website",
+                "supertokens-sdk-name": "react-native",
                 "supertokens-sdk-version": package_version
             }
         });

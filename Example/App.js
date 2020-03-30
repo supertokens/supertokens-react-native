@@ -14,6 +14,7 @@ import {
   View,
   Text,
   StatusBar,
+  Button
 } from 'react-native';
 
 import {
@@ -27,92 +28,157 @@ import SuperTokensSession from "supertokens-react-native"
 
 class App extends React.Component {
 
-  render() {
-    return (
-      <>
-      <StatusBar barStyle="dark-content" />
-      <SafeAreaView>
-        <ScrollView
-          contentInsetAdjustmentBehavior="automatic"
-          style={styles.scrollView}>
-          <Header />
-          {global.HermesInternal == null ? null : (
-            <View style={styles.engine}>
-              <Text style={styles.footer}>Engine: Hermes</Text>
-            </View>
-          )}
-          <View style={styles.body}>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Step One</Text>
-              <Text style={styles.sectionDescription}>
-                Edit <Text style={styles.highlight}>App.js</Text> to change this
-                  screen and then come back to see your edits.
-                </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>See Your Changes</Text>
-              <Text style={styles.sectionDescription}>
-                <ReloadInstructions />
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Debug</Text>
-              <Text style={styles.sectionDescription}>
-                <DebugInstructions />
-              </Text>
-            </View>
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Learn More</Text>
-              <Text style={styles.sectionDescription}>
-                Read the docs to discover what to do next:
-                </Text>
-            </View>
-            <LearnMoreLinks />
-          </View>
-        </ScrollView>
-      </SafeAreaView>
-      </>
-    );
+  constructor(props) {
+    super(props);
+    this.state = {
+      loggedIn: undefined,
+      sessionVerified: undefined
+    };
   }
-}
 
-const styles = StyleSheet.create({
-  scrollView: {
-    backgroundColor: Colors.lighter,
-  },
-  engine: {
-    position: 'absolute',
-    right: 0,
-  },
-  body: {
-    backgroundColor: Colors.white,
-  },
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: Colors.black,
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-    color: Colors.dark,
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-  footer: {
-    color: Colors.dark,
-    fontSize: 12,
-    fontWeight: '600',
-    padding: 4,
-    paddingRight: 12,
-    textAlign: 'right',
-  },
-});
+  render() {
+    if (this.state.loggedIn === undefined) {
+      return (
+        <View
+          style={{
+            flex: 1, backgroundColor: "#000000"
+          }} />
+      );
+    } else if (this.state.loggedIn) {
+      if (this.state.sessionVerified === undefined) {
+        return (
+          <View
+            style={{
+              flex: 1, backgroundColor: "#ff0000"
+            }} />
+        );
+      } else if (this.state.sessionVerified) {
+        return (
+          <View
+            style={{
+              flex: 1, alignItems: "center", justifyContent: "center"
+            }}>
+            <Text>
+              Logged in, session verification passed!
+            </Text>
+            <View style={{ height: 50 }} />
+            <Button
+              title="Verify"
+              onPress={this.sessionVerify} />
+            <View style={{ height: 50 }} />
+            <Button
+              title="Logout"
+              onPress={this.logout} />
+          </View>
+        )
+      } else {
+        return (
+          <View
+            style={{
+              flex: 1, alignItems: "center", justifyContent: "center"
+            }}>
+            <Text>
+              Logged in, session verification failed
+          </Text>
+          </View>
+        );
+      }
+    } else {
+      return (
+        <View
+          style={{
+            flex: 1, alignItems: "center", justifyContent: "center"
+          }}>
+          <Button
+            title="Login"
+            onPress={this.login} />
+        </View>
+      );
+    }
+  }
+
+  sessionVerify = () => {
+    this.setState(oldState => {
+      return {
+        ...oldState,
+        sessionVerified: undefined
+      }
+    }, async () => {
+      let response = await fetch("http://localhost:8080/", {
+        method: "get",
+        credentials: "include"
+      });
+
+      if (response.status === 440) {
+        this.logout();
+        return;
+      }
+
+      let resText = await response.text();
+      this.setState(oldState => {
+        return {
+          ...oldState,
+          sessionVerified: resText === "success"
+        }
+      });
+    });
+  }
+
+  logout = async () => {
+    let response = await fetch("http://localhost:8080/logout", {
+      method: "post",
+      credentials: "include",
+    });
+
+    this.setState(oldState => {
+      return {
+        ...oldState,
+        loggedIn: false
+      }
+    });
+  }
+
+  login = async () => {
+    let response = await fetch("http://localhost:8080/login", {
+      method: "post",
+      credentials: "include",
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        userId: "rishabh"
+      })
+    });
+
+    this.setState(oldState => {
+      return {
+        ...oldState,
+        loggedIn: true
+      }
+    }, () => {
+      this.sessionVerify();
+    });
+  }
+
+  componentDidMount() {
+    SuperTokensSession.init("http://localhost:8080/refresh", 440, true);
+    this.checkLogin();
+  }
+
+  checkLogin = async () => {
+    let loggedIn = await SuperTokensSession.doesSessionExist();
+    this.setState((oldState) => {
+      return {
+        ...oldState,
+        loggedIn
+      };
+    }, () => {
+      if (this.state.loggedIn) {
+        this.sessionVerify();
+      }
+    });
+  }
+
+}
 
 export default App;
