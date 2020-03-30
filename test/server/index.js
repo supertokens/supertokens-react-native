@@ -107,7 +107,6 @@ app.get("/", async (req, res) => {
         res.header("Access-Control-Allow-Credentials", true);
         res.send("success");
     } catch (err) {
-        console.log(err);
         res.header("Access-Control-Allow-Origin", "http://127.0.0.1:8080");
         res.header("Access-Control-Allow-Credentials", true);
         res.status(440).send();
