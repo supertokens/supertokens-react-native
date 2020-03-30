@@ -104,7 +104,7 @@ class App extends React.Component {
         sessionVerified: undefined
       }
     }, async () => {
-      let response = await fetch("http://localhost:8080/", {
+      let response = await fetch("http://192.168.1.112:8080/", {
         method: "get",
         credentials: "include"
       });
@@ -125,7 +125,7 @@ class App extends React.Component {
   }
 
   logout = async () => {
-    let response = await fetch("http://localhost:8080/logout", {
+    let response = await fetch("http://192.168.1.112:8080/logout", {
       method: "post",
       credentials: "include",
     });
@@ -139,7 +139,7 @@ class App extends React.Component {
   }
 
   login = async () => {
-    let response = await fetch("http://localhost:8080/login", {
+    let response = await fetch("http://192.168.1.112:8080/login", {
       method: "post",
       credentials: "include",
       headers: {
@@ -149,6 +149,8 @@ class App extends React.Component {
         userId: "rishabh"
       })
     });
+
+    console.log(response.headers);
 
     this.setState(oldState => {
       return {
@@ -161,7 +163,7 @@ class App extends React.Component {
   }
 
   componentDidMount() {
-    SuperTokensSession.init("http://localhost:8080/refresh", 440, true);
+    SuperTokensSession.init("http://192.168.1.112:8080/refresh", 440, true);
     this.checkLogin();
   }
 
