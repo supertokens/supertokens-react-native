@@ -55,4 +55,5 @@ local.properties
 buck-out/
 \.buckd/
 *.keystore
-      
+
+!lib/build/
