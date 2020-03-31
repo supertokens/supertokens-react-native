@@ -7,12 +7,11 @@ export declare function responseInterceptor(response: AxiosResponse): Promise<Ax
  */
 export default class AuthHttpRequest {
     private static refreshTokenUrl;
-    static websiteRootDomain: string;
     static sessionExpiredStatusCode: number;
     static initCalled: boolean;
     static apiDomain: string;
     private static refreshAPICustomHeaders;
-    static init(refreshTokenUrl: string, sessionExpiredStatusCode?: number, websiteRootDomain?: string, refreshAPICustomHeaders?: any): void;
+    static init(refreshTokenUrl: string, sessionExpiredStatusCode?: number, refreshAPICustomHeaders?: any): void;
     /**
      * @description sends the actual http request and returns a response if successful/
      * If not successful due to session expiry reasons, it

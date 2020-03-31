@@ -127,23 +127,16 @@ export async function responseInterceptor(response: AxiosResponse) {
  */
 export default class AuthHttpRequest {
     private static refreshTokenUrl: string | undefined;
-    static websiteRootDomain: string;
     static sessionExpiredStatusCode = 440;
     static initCalled = false;
     static apiDomain = "";
     private static refreshAPICustomHeaders: any;
 
-    static init(
-        refreshTokenUrl: string,
-        sessionExpiredStatusCode?: number,
-        websiteRootDomain?: string,
-        refreshAPICustomHeaders?: any
-    ) {
+    static init(refreshTokenUrl: string, sessionExpiredStatusCode?: number, refreshAPICustomHeaders?: any) {
         FetchAuthRequest.init(refreshTokenUrl, sessionExpiredStatusCode);
         AuthHttpRequest.refreshTokenUrl = refreshTokenUrl;
         AuthHttpRequest.refreshAPICustomHeaders = refreshAPICustomHeaders === undefined ? {} : refreshAPICustomHeaders;
-        AuthHttpRequest.websiteRootDomain =
-            websiteRootDomain === undefined ? window.location.hostname : websiteRootDomain;
+
         if (sessionExpiredStatusCode !== undefined) {
             AuthHttpRequest.sessionExpiredStatusCode = sessionExpiredStatusCode;
         }

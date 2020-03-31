@@ -25,6 +25,9 @@ import {
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
 import SuperTokensSession from "supertokens-react-native"
+import SuperTokensSessionAxios from "supertokens-react-native/axios";
+import axios from "axios";
+SuperTokensSessionAxios.makeSuper(axios);
 
 class App extends React.Component {
 
@@ -67,6 +70,10 @@ class App extends React.Component {
               onPress={this.sessionVerify} />
             <View style={{ height: 50 }} />
             <Button
+              title="Verify Axios"
+              onPress={this.sessionVerifyAxios} />
+            <View style={{ height: 50 }} />
+            <Button
               title="Logout"
               onPress={this.logout} />
           </View>
@@ -95,6 +102,32 @@ class App extends React.Component {
         </View>
       );
     }
+  }
+
+  sessionVerifyAxios = () => {
+    this.setState(oldState => {
+      return {
+        ...oldState,
+        sessionVerified: undefined
+      }
+    }, async () => {
+      let response = await axios.get("http://192.168.1.112:8080/", {
+        withCredentials: true
+      });
+
+      if (response.status === 440) {
+        this.logout();
+        return;
+      }
+
+      let resText = await response.data;
+      this.setState(oldState => {
+        return {
+          ...oldState,
+          sessionVerified: resText === "success"
+        }
+      });
+    });
   }
 
   sessionVerify = () => {
@@ -150,8 +183,6 @@ class App extends React.Component {
       })
     });
 
-    console.log(response.headers);
-
     this.setState(oldState => {
       return {
         ...oldState,
@@ -164,6 +195,7 @@ class App extends React.Component {
 
   componentDidMount() {
     SuperTokensSession.init("http://192.168.1.112:8080/refresh", 440, true);
+    SuperTokensSessionAxios.init("http://192.168.1.112:8080/refresh", 440);
     this.checkLogin();
   }
 
