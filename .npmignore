@@ -14,3 +14,5 @@ frontendDriverInterfaceSupported.json
 .github/
 .babelrc
 /Example
+/android
+/ios
