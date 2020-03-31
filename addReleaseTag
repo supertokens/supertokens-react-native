@@ -26,7 +26,7 @@ password=`cat ./apiPassword`
 
 # we get from the server is the tests have passed or not.
 testPassedJson=`curl -s -X GET \
-"https://api.supertokens.io/0/frontend?password=$password&version=$version&name=website" \
+"https://api.supertokens.io/0/frontend?password=$password&version=$version&name=react-native" \
 -H 'api-version: 0'`
 
 
@@ -79,7 +79,7 @@ responseStatus=`curl -s -o /dev/null -w "%{http_code}" -X PATCH \
     -H 'api-version: 0' \
     -d "{
         \"password\": \"$releasePassword\",
-        \"name\":\"website\",
+        \"name\":\"react-native\",
         \"version\":\"$version\",
         \"release\": true
     }"`
@@ -100,7 +100,7 @@ git push --tags
 
 
 response=`curl -s -X GET \
-"https://api.supertokens.io/0/frontend/latest/check?password=$password&version=$version&name=website" \
+"https://api.supertokens.io/0/frontend/latest/check?password=$password&version=$version&name=react-native" \
 -H 'api-version: 0'`
 response=`echo $response | jq .isLatest`
 
