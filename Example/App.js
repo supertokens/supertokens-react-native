@@ -66,7 +66,7 @@ class App extends React.Component {
             </Text>
             <View style={{ height: 50 }} />
             <Button
-              title="Verify"
+              title="Verify Fetch"
               onPress={this.sessionVerify} />
             <View style={{ height: 50 }} />
             <Button
@@ -74,8 +74,12 @@ class App extends React.Component {
               onPress={this.sessionVerifyAxios} />
             <View style={{ height: 50 }} />
             <Button
-              title="Logout"
+              title="Logout Fetch"
               onPress={this.logout} />
+            <View style={{ height: 50 }} />
+            <Button
+              title="Logout Axios"
+              onPress={this.logoutAxios} />
           </View>
         )
       } else {
@@ -97,11 +101,28 @@ class App extends React.Component {
             flex: 1, alignItems: "center", justifyContent: "center"
           }}>
           <Button
-            title="Login"
+            title="Login Fetch"
             onPress={this.login} />
+          <View style={{ height: 50 }} />
+          <Button
+            title="Login Axios"
+            onPress={this.loginAxios} />
         </View>
       );
     }
+  }
+
+  logoutAxios = async () => {
+    let response = await axios.post("http://192.168.1.112:8080/logout", {
+      withCredentials: true,
+    });
+
+    this.setState(oldState => {
+      return {
+        ...oldState,
+        loggedIn: false
+      }
+    });
   }
 
   sessionVerifyAxios = () => {
@@ -168,6 +189,23 @@ class App extends React.Component {
         ...oldState,
         loggedIn: false
       }
+    });
+  }
+
+  loginAxios = async () => {
+    let response = await axios.post("http://192.168.1.112:8080/login", {
+      userId: "rishabh"
+    }, {
+        withCredentials: true
+      });
+
+    this.setState(oldState => {
+      return {
+        ...oldState,
+        loggedIn: true
+      }
+    }, () => {
+      this.sessionVerify();
     });
   }
 
