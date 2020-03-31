@@ -23,7 +23,7 @@ responseStatus=`curl -s -o /dev/null -w "%{http_code}" -X PUT \
   -d "{
 	\"password\": \"$SUPERTOKENS_API_KEY\",
 	\"version\":\"$version\",
-    \"name\": \"website\",
+    \"name\": \"react-native\",
 	\"frontendDriverInterfaces\": $frontendDriverArray
 }"`
 if [ $responseStatus -ne "200" ]
@@ -103,7 +103,7 @@ then
         -d "{
             \"password\": \"$SUPERTOKENS_API_KEY\",
             \"version\":\"$version\",
-            \"name\": \"website\",
+            \"name\": \"react-native\",
             \"testPassed\": true
         }"`
     if [ $responseStatus -ne "200" ]
