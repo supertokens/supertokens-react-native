@@ -13,10 +13,6 @@
  * under the License.
  */
 
-import { NativeModules } from "react-native";
-
-const { RNSuperTokens } = NativeModules;
-
 import { onUnauthorisedResponse } from "./handleSessionExp";
 import { PROCESS_STATE, ProcessState } from "./processState";
 import { package_version } from "./version";
