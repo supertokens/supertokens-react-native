@@ -67,8 +67,9 @@ git checkout $pluginTag
 cd ../
 echo $SUPERTOKENS_API_KEY > apiPassword
 ./utils/setupTestEnvLocal
-cd ../project/test/server/
+cd ../project/Example/test/server/
 npm i -d
 npm i git+https://github.com:supertokens/supertokens-node.git#$2
-cd ../../.circleci
-INSTALL_PATH=../com-root npm test
+cd ../../../
+cp -r ./test/node_modules/tough-cookie ./node_modules/
+npm run test

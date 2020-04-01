@@ -59,10 +59,10 @@ module.exports.setKeyValueInConfig = async function(key, value) {
 
 module.exports.cleanST = async function() {
     let installationPath = process.env.INSTALL_PATH;
-    await module.exports.executeCommand("cd " + installationPath + " && rm licenseKey");
-    await module.exports.executeCommand("cd " + installationPath + " && rm config.yaml");
-    await module.exports.executeCommand("cd " + installationPath + " && rm -rf .webserver-temp-*");
-    await module.exports.executeCommand("cd " + installationPath + " && rm -rf .started");
+    await module.exports.executeCommand("cd " + installationPath + " && (rm licenseKey || true)");
+    await module.exports.executeCommand("cd " + installationPath + " && (rm config.yaml || true)");
+    await module.exports.executeCommand("cd " + installationPath + " && (rm -rf .webserver-temp-* || true)");
+    await module.exports.executeCommand("cd " + installationPath + " && (rm -rf .started || true)");
 };
 
 module.exports.stopST = async function(pid) {
