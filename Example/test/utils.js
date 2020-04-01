@@ -14,11 +14,7 @@
  */
 let axios = require("axios");
 
-module.exports.delay = function(sec) {
-    return new Promise(res => setTimeout(res, sec * 1000));
-};
-
-module.exports.checkIfIdRefreshIsCleared = function() {
+export function checkIfIdRefreshIsCleared() {
     const ID_COOKIE_NAME = "sIdRefreshToken";
     let value = "; " + document.cookie;
     let parts = value.split("; " + ID_COOKIE_NAME + "=");
@@ -37,19 +33,25 @@ module.exports.checkIfIdRefreshIsCleared = function() {
             }
         }
     }
-};
+}
 
-module.exports.getNumberOfTimesRefreshCalled = async function() {
+export async function getNumberOfTimesRefreshCalled() {
     let instance = axios.create();
     let response = await instance.get("http://localhost:8080/refreshCalledTime");
     return response.data;
-};
+}
 
-module.exports.startST = async function(accessTokenValidity = 1, enableAntiCsrf = true) {
+export async function startST(accessTokenValidity = 1, enableAntiCsrf = true) {
     let instance = axios.create();
     let response = await instance.post("http://localhost:8080/startST", {
         accessTokenValidity,
         enableAntiCsrf
     });
     return response.data;
-};
+}
+
+export async function getNumberOfTimesGetSessionCalled() {
+    let instance = axios.create();
+    let response = await instance.get("http://localhost:8080/getSessionCalledTime");
+    return response.data;
+}

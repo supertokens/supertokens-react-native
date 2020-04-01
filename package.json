@@ -1,7 +1,7 @@
 {
   "name": "supertokens-react-native",
   "version": "0.0.1",
-  "description": "",
+  "description": "React Native SDK for SuperTokens",
   "main": "index.js",
   "scripts": {
     "build-check": "cd lib && npx tsc -p tsconfig.json --skipLibCheck --noEmit",
@@ -11,11 +11,24 @@
     "pretty-check": "cd lib && npx prettier --check --config .prettierrc \"ts/**/*.ts\" \"build/**/*.js\" \"../Example/test/**/*.js\"",
     "set-up-hooks": "cp hooks/pre-commit.sh .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/supertokens/supertokens-react-native.git"
+  },
   "keywords": [
-    "react-native"
+    "react-native",
+    "authentication",
+    "authorisation",
+    "supertokens",
+    "ios",
+    "android"
   ],
-  "author": "",
-  "license": "",
+  "author": "rishabhpoddar",
+  "license": "Apache 2.0",
+  "bugs": {
+    "url": "https://github.com/supertokens/supertokens-react-native/issues"
+  },
+  "homepage": "https://github.com/supertokens/supertokens-react-native#readme",
   "peerDependencies": {
     "react-native": ">=0.61.5 <1.0.x",
     "axios": "*"

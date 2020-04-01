@@ -19,7 +19,6 @@ import AuthHttpRequestFetch from "supertokens-react-native";
 import AuthHttpRequest from "supertokens-react-native/axios";
 import assert from "assert";
 import {
-    delay,
     checkIfIdRefreshIsCleared,
     getNumberOfTimesRefreshCalled,
     startST,
@@ -296,539 +295,435 @@ describe("Fetch AuthHttpRequest class tests", function() {
         }
     });
 
-    //     // //testing doesSessionExist works fine when user is logged in******
-    //     // it("test with fetch that doesSessionExist works fine when the user is logged in", async function () {
-    //     //     await startST(5);
-    //     //     const browser = await puppeteer.launch({
-    //     //         args: ["--no-sandbox", "--disable-setuid-sandbox"]
-    //     //     });
-    //     //     try {
-    //     //         const page = await browser.newPage();
-    //     //         await page.goto(BASE_URL + "/index", { waitUntil: "load" });
-    //     //         await page.addScriptTag({ path: `./bundle/bundle.js`, type: "text/javascript" });
-    //     //         await page.evaluate(async () => {
-    //     //             let BASE_URL = "http://localhost:8080";
-    //     //             supertokens.fetch.init(`${BASE_URL}/refresh`, 440, true);
-    //     //             let userId = "testing-supertokens-website";
-
-    //     //             //send loing request
-    //     //             let loginResponse = await fetch(`${BASE_URL}/login`, {
-    //     //                 method: "post",
-    //     //                 headers: {
-    //     //                     Accept: "application/json",
-    //     //                     "Content-Type": "application/json"
-    //     //                 },
-    //     //                 body: JSON.stringify({ userId })
-    //     //             });
-    //     //             assertEqual(await loginResponse.text(), userId);
-
-    //     //             assertEqual(await supertokens.fetch.doesSessionExist(), true);
-    //     //         });
-    //     //     } finally {
-    //     //         await browser.close();
-    //     //     }
-    //     // });
-
-    //     // //session should not exist when user calls log out - use doesSessionExist & check localstorage is empty
-    //     // it("test with fetch session should not exist when user calls log out", async function () {
-    //     //     await startST(5);
-    //     //     const browser = await puppeteer.launch({
-    //     //         args: ["--no-sandbox", "--disable-setuid-sandbox"]
-    //     //     });
-    //     //     try {
-    //     //         const page = await browser.newPage();
-    //     //         await page.goto(BASE_URL + "/index", { waitUntil: "load" });
-    //     //         await page.addScriptTag({ path: `./bundle/bundle.js`, type: "text/javascript" });
-    //     //         await page.evaluate(async () => {
-    //     //             let BASE_URL = "http://localhost:8080";
-    //     //             supertokens.fetch.init(`${BASE_URL}/refresh`, 440, true);
-    //     //             let userId = "testing-supertokens-website";
-
-    //     //             // send api request to login
-    //     //             let loginResponse = await fetch(`${BASE_URL}/login`, {
-    //     //                 method: "post",
-    //     //                 headers: {
-    //     //                     Accept: "application/json",
-    //     //                     "Content-Type": "application/json"
-    //     //                 },
-    //     //                 body: JSON.stringify({ userId })
-    //     //             });
-    //     //             assertEqual(await loginResponse.text(), userId);
-
-    //     //             assertEqual(await supertokens.fetch.doesSessionExist(), true);
-    //     //             assertEqual(window.localStorage.length, 1);
-
-    //     //             // send api request to logout
-    //     //             let logoutResponse = await fetch(`${BASE_URL}/logout`, {
-    //     //                 method: "post",
-    //     //                 headers: {
-    //     //                     Accept: "application/json",
-    //     //                     "Content-Type": "application/json"
-    //     //                 },
-    //     //                 body: JSON.stringify({ userId })
-    //     //             });
-
-    //     //             assertEqual(await logoutResponse.text(), "success");
-    //     //             assertEqual(await supertokens.fetch.doesSessionExist(), false);
-    //     //             assertEqual(window.localStorage.length, 0);
-    //     //         });
-    //     //     } finally {
-    //     //         await browser.close();
-    //     //     }
-    //     // });
-
-    //     // // testing attemptRefreshingSession works fine******
-    //     // it("test with fetch that attemptRefreshingSession is working correctly", async function () {
-    //     //     await startST(5);
-    //     //     const browser = await puppeteer.launch({
-    //     //         args: ["--no-sandbox", "--disable-setuid-sandbox"]
-    //     //     });
-    //     //     try {
-    //     //         const page = await browser.newPage();
-    //     //         await page.goto(BASE_URL + "/index", { waitUntil: "load" });
-    //     //         await page.addScriptTag({ path: `./bundle/bundle.js`, type: "text/javascript" });
-    //     //         await page.evaluate(async () => {
-    //     //             let BASE_URL = "http://localhost:8080";
-    //     //             supertokens.fetch.init(`${BASE_URL}/refresh`, 440, true);
-    //     //             let userId = "testing-supertokens-website";
-
-    //     //             // send api request to login
-    //     //             let loginResponse = await fetch(`${BASE_URL}/login`, {
-    //     //                 method: "post",
-    //     //                 headers: {
-    //     //                     Accept: "application/json",
-    //     //                     "Content-Type": "application/json"
-    //     //                 },
-    //     //                 body: JSON.stringify({ userId })
-    //     //             });
-    //     //             assertEqual(await loginResponse.text(), userId);
-
-    //     //             await delay(5);
-    //     //             let attemptRefresh = await supertokens.fetch.attemptRefreshingSession();
-    //     //             assertEqual(attemptRefresh, true);
-
-    //     //             //check that the number of times the refresh API was called is 1
-    //     //             assertEqual(await getNumberOfTimesRefreshCalled(), 1);
-
-    //     //             let getSessionResponse = await fetch(`${BASE_URL}/`);
-    //     //             assertEqual(await getSessionResponse.text(), "success");
-
-    //     //             //check that the number of times the refresh API was called is still 1
-    //     //             assertEqual(await getNumberOfTimesRefreshCalled(), 1);
-    //     //         });
-    //     //     } finally {
-    //     //         await browser.close();
-    //     //     }
-    //     // });
-
-    //     // // multiple API calls in parallel when access token is expired (100 of them) and only 1 refresh should be called*****
-    //     // it("test with fetch that multiple API calls in parallel when access token is expired, only 1 refresh should be called", async function () {
-    //     //     await startST(5);
-    //     //     const browser = await puppeteer.launch({
-    //     //         args: ["--no-sandbox", "--disable-setuid-sandbox"]
-    //     //     });
-    //     //     try {
-    //     //         const page = await browser.newPage();
-    //     //         await page.goto(BASE_URL + "/index", { waitUntil: "load" });
-    //     //         await page.addScriptTag({ path: `./bundle/bundle.js`, type: "text/javascript" });
-    //     //         await page.evaluate(async () => {
-    //     //             let BASE_URL = "http://localhost:8080";
-    //     //             supertokens.fetch.init(`${BASE_URL}/refresh`, 440, true);
-    //     //             let userId = "testing-supertokens-website";
-
-    //     //             // send api request to login
-    //     //             let loginResponse = await fetch(`${BASE_URL}/login`, {
-    //     //                 method: "post",
-    //     //                 headers: {
-    //     //                     Accept: "application/json",
-    //     //                     "Content-Type": "application/json"
-    //     //                 },
-    //     //                 body: JSON.stringify({ userId })
-    //     //             });
-    //     //             assertEqual(await loginResponse.text(), userId);
-    //     //             assertEqual(await getNumberOfTimesRefreshCalled(), 0);
-
-    //     //             // wait for 7 seconds so that the accesstoken expires
-    //     //             await delay(7);
-
-    //     //             let promises = [];
-    //     //             let n = 100;
-
-    //     //             // create an array of 100 get session promises
-    //     //             for (let i = 0; i < n; i++) {
-    //     //                 promises.push(fetch(`${BASE_URL}/`));
-    //     //             }
-
-    //     //             // send 100 get session requests
-    //     //             let multipleGetSessionResponse = await Promise.all(promises);
-
-    //     //             //check that reponse of all requests are success
-    //     //             let noOfResponeSuccesses = 0;
-    //     //             for (let i = 0; i < multipleGetSessionResponse.length; i++) {
-    //     //                 assertEqual(await multipleGetSessionResponse[i].text(), "success");
-    //     //                 noOfResponeSuccesses += 1;
-    //     //             }
-
-    //     //             //check that the number of times refresh is called is 1
-
-    //     //             assertEqual(await getNumberOfTimesRefreshCalled(), 1);
-    //     //             assertEqual(noOfResponeSuccesses, n);
-    //     //         });
-    //     //     } finally {
-    //     //         await browser.close();
-    //     //     }
-    //     // });
-
-    //     // // - Things should work if anti-csrf is disabled.******
-    //     // it("test with fetch that things should work correctly if anti-csrf is disabled", async function () {
-    //     //     await startST(3, false);
-    //     //     const browser = await puppeteer.launch({
-    //     //         args: ["--no-sandbox", "--disable-setuid-sandbox"]
-    //     //     });
-    //     //     try {
-    //     //         const page = await browser.newPage();
-    //     //         await page.goto(BASE_URL + "/index", { waitUntil: "load" });
-    //     //         await page.addScriptTag({ path: `./bundle/bundle.js`, type: "text/javascript" });
-    //     //         await page.evaluate(async () => {
-    //     //             let BASE_URL = "http://localhost:8080";
-    //     //             supertokens.fetch.init(`${BASE_URL}/refresh`, 440, true);
-    //     //             let userId = "testing-supertokens-website";
-
-    //     //             // send api request to login
-    //     //             let loginResponse = await fetch(`${BASE_URL}/login`, {
-    //     //                 method: "post",
-    //     //                 headers: {
-    //     //                     Accept: "application/json",
-    //     //                     "Content-Type": "application/json"
-    //     //                 },
-    //     //                 body: JSON.stringify({ userId })
-    //     //             });
-    //     //             assertEqual(await loginResponse.text(), userId);
-    //     //             assertEqual(await supertokens.fetch.doesSessionExist(), true);
-    //     //             assertEqual(await getNumberOfTimesRefreshCalled(), 0);
-
-    //     //             await delay(5);
-
-    //     //             let getSessionResponse = await fetch(`${BASE_URL}/`);
-
-    //     //             assertEqual(await getSessionResponse.text(), "success");
-    //     //             assertEqual(await getNumberOfTimesRefreshCalled(), 1);
-
-    //     //             let logoutResponse = await fetch(`${BASE_URL}/logout`, {
-    //     //                 method: "post",
-    //     //                 headers: {
-    //     //                     Accept: "application/json",
-    //     //                     "Content-Type": "application/json"
-    //     //                 },
-    //     //                 body: JSON.stringify({ userId })
-    //     //             });
-
-    //     //             assertEqual(await supertokens.fetch.doesSessionExist(), false);
-    //     //             assertEqual(await logoutResponse.text(), "success");
-    //     //         });
-    //     //     } finally {
-    //     //         await browser.close();
-    //     //     }
-    //     // });
-
-    //     // // device info tests******
-    //     // it("test with fetch that device info is sent", async function () {
-    //     //     await startST();
-    //     //     const browser = await puppeteer.launch({
-    //     //         args: ["--no-sandbox", "--disable-setuid-sandbox"]
-    //     //     });
-    //     //     try {
-    //     //         const page = await browser.newPage();
-    //     //         await page.goto(BASE_URL + "/index", { waitUntil: "load" });
-    //     //         await page.addScriptTag({ path: "./bundle/bundle.js", type: "text/javascript" });
-    //     //         await page.evaluate(async () => {
-    //     //             let BASE_URL = "http://localhost:8080";
-    //     //             supertokens.fetch.init(`${BASE_URL}/refresh`, 440, true);
-    //     //             let userId = "testing-supertokens-website";
-
-    //     //             // send request to check if deviceInfo is beinf added to headers
-    //     //             let deviceInfoIsAdded = await fetch(`${BASE_URL}/checkDeviceInfo`);
-
-    //     //             assertEqual(await deviceInfoIsAdded.text(), "true");
-    //     //         });
-    //     //     } finally {
-    //     //         await browser.close();
-    //     //     }
-    //     // });
-
-    //     // // if any API throws error, it gets propogated to the user properly (with and without interception)******
-    //     // it("test with fetch that if an api throws an error it gets propagated to the user with interception", async () => {
-    //     //     await startST();
-    //     //     const browser = await puppeteer.launch({
-    //     //         args: ["--no-sandbox", "--disable-setuid-sandbox"]
-    //     //     });
-    //     //     try {
-    //     //         const page = await browser.newPage();
-    //     //         await page.goto(BASE_URL + "/index", { waitUntil: "load" });
-    //     //         await page.addScriptTag({ path: "./bundle/bundle.js", type: "text/javascript" });
-    //     //         await page.evaluate(async () => {
-    //     //             let BASE_URL = "http://localhost:8080";
-    //     //             supertokens.fetch.init(`${BASE_URL}/refresh`, 440, true);
-
-    //     //             let val = await fetch(`${BASE_URL}/testError`);
-    //     //             assertEqual(await val.text(), "test error message");
-    //     //             assertEqual(val.status, 500);
-    //     //         });
-    //     //     } finally {
-    //     //         await browser.close();
-    //     //     }
-    //     // });
-
-    //     // // if any API throws error, it gets propogated to the user properly (with and without interception)******
-    //     // it("test with fetch that if an api throws an error it gets propagated to the user without interception", async () => {
-    //     //     await startST();
-    //     //     const browser = await puppeteer.launch({
-    //     //         args: ["--no-sandbox", "--disable-setuid-sandbox"]
-    //     //     });
-    //     //     try {
-    //     //         const page = await browser.newPage();
-    //     //         await page.goto(BASE_URL + "/index", { waitUntil: "load" });
-    //     //         await page.addScriptTag({ path: "./bundle/bundle.js", type: "text/javascript" });
-    //     //         await page.evaluate(async () => {
-    //     //             let BASE_URL = "http://localhost:8080";
-    //     //             supertokens.fetch.init(`${BASE_URL}/refresh`, 440, false);
-
-    //     //             let val = await supertokens.fetch.get(`${BASE_URL}/testError`);
-    //     //             assertEqual(await val.text(), "test error message");
-    //     //             assertEqual(val.status, 500);
-    //     //         });
-    //     //     } finally {
-    //     //         await browser.close();
-    //     //     }
-    //     // });
-
-    //     // //    - Calling SuperTokens.init more than once works!*******
-    //     // it("test with fetch that calling SuperTokens.init more than once works", async () => {
-    //     //     await startST();
-    //     //     const browser = await puppeteer.launch({
-    //     //         args: ["--no-sandbox", "--disable-setuid-sandbox"]
-    //     //     });
-    //     //     try {
-    //     //         const page = await browser.newPage();
-    //     //         await page.goto(BASE_URL + "/index", { waitUntil: "load" });
-    //     //         await page.addScriptTag({ path: "./bundle/bundle.js", type: "text/javascript" });
-    //     //         await page.evaluate(async () => {
-    //     //             let BASE_URL = "http://localhost:8080";
-    //     //             supertokens.fetch.init(`${BASE_URL}/refresh`, 440, true);
-    //     //             supertokens.fetch.init(`${BASE_URL}/refresh`, 440, true);
-    //     //             let userId = "testing-supertokens-website";
-
-    //     //             let loginResponse = await fetch(`${BASE_URL}/login`, {
-    //     //                 method: "post",
-    //     //                 headers: {
-    //     //                     Accept: "application/json",
-    //     //                     "Content-Type": "application/json"
-    //     //                 },
-    //     //                 body: JSON.stringify({ userId })
-    //     //             });
-
-    //     //             assertEqual(await loginResponse.text(), userId);
-
-    //     //             supertokens.fetch.init(`${BASE_URL}/refresh`, 440, true);
-
-    //     //             let logoutResponse = await fetch(`${BASE_URL}/logout`, {
-    //     //                 method: "post",
-    //     //                 headers: {
-    //     //                     Accept: "application/json",
-    //     //                     "Content-Type": "application/json"
-    //     //                 },
-    //     //                 body: JSON.stringify({ userId })
-    //     //             });
-
-    //     //             assertEqual(await logoutResponse.text(), "success");
-
-    //     //             //check that session does not exist
-    //     //             assertEqual(await supertokens.fetch.doesSessionExist(), false);
-
-    //     //             //check that login still works correctly
-    //     //             loginResponse = await fetch(`${BASE_URL}/login`, {
-    //     //                 method: "post",
-    //     //                 headers: {
-    //     //                     Accept: "application/json",
-    //     //                     "Content-Type": "application/json"
-    //     //                 },
-    //     //                 body: JSON.stringify({ userId })
-    //     //             });
-
-    //     //             assertEqual(await loginResponse.text(), userId);
-    //     //         });
-    //     //     } finally {
-    //     //         await browser.close();
-    //     //     }
-    //     // });
-
-    //     // //If via interception, make sure that initially, just an endpoint is just hit twice in case of access token expiry*****
-    //     // it("test with fetch that if via interception, initially an endpoint is hit just twice in case of access token expiary", async () => {
-    //     //     await startST(3);
-    //     //     const browser = await puppeteer.launch({
-    //     //         args: ["--no-sandbox", "--disable-setuid-sandbox"]
-    //     //     });
-    //     //     try {
-    //     //         const page = await browser.newPage();
-    //     //         await page.goto(BASE_URL + "/index", { waitUntil: "load" });
-    //     //         await page.addScriptTag({ path: "./bundle/bundle.js", type: "text/javascript" });
-    //     //         await page.evaluate(async () => {
-    //     //             let BASE_URL = "http://localhost:8080";
-    //     //             supertokens.fetch.init(`${BASE_URL}/refresh`, 440, true);
-    //     //             let userId = "testing-supertokens-website";
-
-    //     //             // send api request to login
-    //     //             let loginResponse = await fetch(`${BASE_URL}/login`, {
-    //     //                 method: "post",
-    //     //                 headers: {
-    //     //                     Accept: "application/json",
-    //     //                     "Content-Type": "application/json"
-    //     //                 },
-    //     //                 body: JSON.stringify({ userId })
-    //     //             });
-
-    //     //             assertEqual(await loginResponse.text(), userId);
-
-    //     //             //wait for 3 seconds such that the session expires
-    //     //             await delay(5);
-
-    //     //             let getSessionResponse = await fetch(`${BASE_URL}/`);
-    //     //             assertEqual(await getSessionResponse.text(), "success");
-
-    //     //             //check that the number of times getSession was called is 2
-    //     //             assertEqual(await getNumberOfTimesGetSessionCalled(), 2);
-
-    //     //             //check that the number of times refesh session was called is 1
-    //     //             assertEqual(await getNumberOfTimesRefreshCalled(), 1);
-    //     //         });
-    //     //     } finally {
-    //     //         await browser.close();
-    //     //     }
-    //     // });
-
-    //     // //- If you make an api call without cookies(logged out) api throws session expired , then make sure that refresh token api is not getting called , get 440 as the output****
-    //     // it("test with fetch that an api call without cookies throws session expire, refresh api is not called and 440 is the output", async function () {
-    //     //     await startST(5);
-    //     //     const browser = await puppeteer.launch({
-    //     //         args: ["--no-sandbox", "--disable-setuid-sandbox"]
-    //     //     });
-    //     //     try {
-    //     //         const page = await browser.newPage();
-    //     //         await page.goto(BASE_URL + "/index", { waitUntil: "load" });
-    //     //         await page.addScriptTag({ path: "./bundle/bundle.js", type: "text/javascript" });
-    //     //         await page.evaluate(async () => {
-    //     //             let BASE_URL = "http://localhost:8080";
-    //     //             supertokens.fetch.init(`${BASE_URL}/refresh`, 440, true);
-    //     //             let userId = "testing-supertokens-website";
-
-    //     //             let loginResponse = await fetch(`${BASE_URL}/login`, {
-    //     //                 method: "post",
-    //     //                 headers: {
-    //     //                     Accept: "application/json",
-    //     //                     "Content-Type": "application/json"
-    //     //                 },
-    //     //                 body: JSON.stringify({ userId })
-    //     //             });
-
-    //     //             assertEqual(await loginResponse.text(), userId);
-
-    //     //             let logoutResponse = await fetch(`${BASE_URL}/logout`, {
-    //     //                 method: "post",
-    //     //                 headers: {
-    //     //                     Accept: "application/json",
-    //     //                     "Content-Type": "application/json"
-    //     //                 },
-    //     //                 body: JSON.stringify({ userId })
-    //     //             });
-
-    //     //             assertEqual(await logoutResponse.text(), "success");
-
-    //     //             let getSessionResponse = await fetch(`${BASE_URL}/`);
-
-    //     //             //check that the response to getSession without cookies is 440
-    //     //             assertEqual(getSessionResponse.status, 440);
-
-    //     //             assertEqual(await getNumberOfTimesRefreshCalled(), 0);
-    //     //         });
-    //     //     } finally {
-    //     //         await browser.close();
-    //     //     }
-    //     // });
-
-    //     // //    - If via interception, make sure that initially, just an endpoint is just hit once in case of access token NOT expiry*****
-    //     // it("test that via interception initially an endpoint is just hit once in case of valid access token", async function () {
-    //     //     await startST(5);
-    //     //     const browser = await puppeteer.launch({
-    //     //         args: ["--no-sandbox", "--disable-setuid-sandbox"]
-    //     //     });
-    //     //     try {
-    //     //         const page = await browser.newPage();
-    //     //         await page.goto(BASE_URL + "/index", { waitUntil: "load" });
-    //     //         await page.addScriptTag({ path: "./bundle/bundle.js", type: "text/javascript" });
-    //     //         await page.evaluate(async () => {
-    //     //             let BASE_URL = "http://localhost:8080";
-    //     //             supertokens.fetch.init(`${BASE_URL}/refresh`, 440, true);
-    //     //             let userId = "testing-supertokens-website";
-
-    //     //             // send api request to login
-    //     //             let loginResponse = await fetch(`${BASE_URL}/login`, {
-    //     //                 method: "post",
-    //     //                 headers: {
-    //     //                     Accept: "application/json",
-    //     //                     "Content-Type": "application/json"
-    //     //                 },
-    //     //                 body: JSON.stringify({ userId })
-    //     //             });
-
-    //     //             assertEqual(await loginResponse.text(), userId);
-
-    //     //             let getSessionResponse = await fetch(`${BASE_URL}/`);
-    //     //             assertEqual(await getSessionResponse.text(), "success");
-
-    //     //             //check that the number of times getSession was called is 1
-    //     //             assertEqual(await getNumberOfTimesGetSessionCalled(), 1);
-
-    //     //             //check that the number of times refresh session was called is 0
-    //     //             assertEqual(await getNumberOfTimesRefreshCalled(), 0);
-    //     //         });
-    //     //     } finally {
-    //     //         await browser.close();
-    //     //     }
-    //     // });
-
-    //     // //    - Interception should not happen when domain is not the one that they gave*******
-    //     // it("test with fetch interception should not happen when domain is not the one that they gave", async function () {
-    //     //     await startST(5);
-    //     //     AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, 440, true);
-    //     //     let userId = "testing-supertokens-website";
-
-    //     //     // this is technically not doing interception, but it is equavalent to doing it since the inteceptor just calls the function below.
-    //     //     await AuthHttpRequestFetch.fetch(`https://www.google.com`);
-
-    //     //     let verifyRequestState = await ProcessState.getInstance().waitForEvent(
-    //     //         PROCESS_STATE.CALLING_INTERCEPTION_REQUEST,
-    //     //         100
-    //     //     );
-
-    //     //     assert.deepEqual(verifyRequestState, undefined);
-
-    //     //     let loginResponse = await AuthHttpRequestFetch.fetch(`${BASE_URL}/login`, {
-    //     //         method: "post",
-    //     //         headers: {
-    //     //             Accept: "application/json",
-    //     //             "Content-Type": "application/json"
-    //     //         },
-    //     //         body: JSON.stringify({ userId })
-    //     //     });
-
-    //     //     assert.deepEqual(await loginResponse.text(), userId);
-
-    //     //     verifyRequestState = await ProcessState.getInstance().waitForEvent(
-    //     //         PROCESS_STATE.CALLING_INTERCEPTION_REQUEST,
-    //     //         5000
-    //     //     );
-    //     //     assert.notDeepEqual(verifyRequestState, undefined);
-    //     // });
+    //testing doesSessionExist works fine when user is logged in******
+    it("test with fetch that doesSessionExist works fine when the user is logged in", async function(done) {
+        try {
+            jest.setTimeout(15000);
+            await startST(5);
+
+            AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, 440, true);
+            let userId = "testing-supertokens-website";
+
+            //send loing request
+            let loginResponse = await global.fetch(`${BASE_URL}/login`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+            assertEqual(await loginResponse.text(), userId);
+
+            assertEqual(await AuthHttpRequestFetch.doesSessionExist(), true);
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    //session should not exist when user calls log out - use doesSessionExist & check localstorage is empty
+    it("test with fetch session should not exist when user calls log out", async function(done) {
+        try {
+            jest.setTimeout(15000);
+            await startST(5);
+
+            AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, 440, true);
+            let userId = "testing-supertokens-website";
+
+            // send api request to login
+            let loginResponse = await global.fetch(`${BASE_URL}/login`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+            assertEqual(await loginResponse.text(), userId);
+
+            assertEqual(await AuthHttpRequestFetch.doesSessionExist(), true);
+
+            // send api request to logout
+            let logoutResponse = await global.fetch(`${BASE_URL}/logout`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+
+            assertEqual(await logoutResponse.text(), "success");
+            assertEqual(await AuthHttpRequestFetch.doesSessionExist(), false);
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    // multiple API calls in parallel when access token is expired (100 of them) and only 1 refresh should be called*****
+    it("test with fetch that multiple API calls in parallel when access token is expired, only 1 refresh should be called", async function(done) {
+        try {
+            jest.setTimeout(15000);
+            await startST(5);
+
+            AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, 440, true);
+            let userId = "testing-supertokens-website";
+
+            // send api request to login
+            let loginResponse = await global.fetch(`${BASE_URL}/login`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+            assertEqual(await loginResponse.text(), userId);
+            assertEqual(await getNumberOfTimesRefreshCalled(), 0);
+
+            // wait for 7 seconds so that the accesstoken expires
+            await delay(7);
+
+            let promises = [];
+            let n = 100;
+
+            // create an array of 100 get session promises
+            for (let i = 0; i < n; i++) {
+                promises.push(global.fetch(`${BASE_URL}/`));
+            }
+
+            // send 100 get session requests
+            let multipleGetSessionResponse = await Promise.all(promises);
+
+            //check that reponse of all requests are success
+            let noOfResponeSuccesses = 0;
+            for (let i = 0; i < multipleGetSessionResponse.length; i++) {
+                assertEqual(await multipleGetSessionResponse[i].text(), "success");
+                noOfResponeSuccesses += 1;
+            }
+
+            //check that the number of times refresh is called is 1
+
+            assertEqual(await getNumberOfTimesRefreshCalled(), 1);
+            assertEqual(noOfResponeSuccesses, n);
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    // - Things should work if anti-csrf is disabled.******
+    it("test with fetch that things should work correctly if anti-csrf is disabled", async function(done) {
+        try {
+            jest.setTimeout(15000);
+            await startST(3, false);
+
+            AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, 440, true);
+            let userId = "testing-supertokens-website";
+
+            // send api request to login
+            let loginResponse = await global.fetch(`${BASE_URL}/login`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+            assertEqual(await loginResponse.text(), userId);
+            assertEqual(await AuthHttpRequestFetch.doesSessionExist(), true);
+            assertEqual(await getNumberOfTimesRefreshCalled(), 0);
+
+            await delay(5);
+
+            let getSessionResponse = await global.fetch(`${BASE_URL}/`);
+
+            assertEqual(await getSessionResponse.text(), "success");
+            assertEqual(await getNumberOfTimesRefreshCalled(), 1);
+
+            let logoutResponse = await global.fetch(`${BASE_URL}/logout`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+
+            assertEqual(await AuthHttpRequestFetch.doesSessionExist(), false);
+            assertEqual(await logoutResponse.text(), "success");
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    // device info tests******
+    it("test with fetch that device info is sent", async function(done) {
+        try {
+            jest.setTimeout(15000);
+            await startST();
+
+            AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, 440, true);
+            let userId = "testing-supertokens-website";
+
+            // send request to check if deviceInfo is beinf added to headers
+            let deviceInfoIsAdded = await fetch(`${BASE_URL}/checkDeviceInfo`);
+            assertEqual(await deviceInfoIsAdded.text(), "true");
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    // if any API throws error, it gets propogated to the user properly (with and without interception)******
+    it("test with fetch that if an api throws an error it gets propagated to the user with interception", async done => {
+        try {
+            jest.setTimeout(15000);
+            await startST();
+
+            AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, 440, true);
+
+            let val = await global.fetch(`${BASE_URL}/testError`);
+            assertEqual(await val.text(), "test error message");
+            assertEqual(val.status, 500);
+
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    // if any API throws error, it gets propogated to the user properly (with and without interception)******
+    it("test with fetch that if an api throws an error it gets propagated to the user without interception", async done => {
+        try {
+            jest.setTimeout(15000);
+            await startST();
+
+            AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, 440, false);
+
+            let val = await AuthHttpRequestFetch.get(`${BASE_URL}/testError`);
+            assertEqual(await val.text(), "test error message");
+            assertEqual(val.status, 500);
+
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    //    - Calling SuperTokens.init more than once works!*******
+    it("test with fetch that calling SuperTokens.init more than once works", async done => {
+        try {
+            jest.setTimeout(15000);
+            await startST();
+
+            AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, 440, true);
+            AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, 440, true);
+            let userId = "testing-supertokens-website";
+
+            let loginResponse = await global.fetch(`${BASE_URL}/login`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+
+            assertEqual(await loginResponse.text(), userId);
+
+            AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, 440, true);
+
+            let logoutResponse = await global.fetch(`${BASE_URL}/logout`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+
+            assertEqual(await logoutResponse.text(), "success");
+
+            //check that session does not exist
+            assertEqual(await AuthHttpRequestFetch.doesSessionExist(), false);
+
+            //check that login still works correctly
+            loginResponse = await global.fetch(`${BASE_URL}/login`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+
+            assertEqual(await loginResponse.text(), userId);
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    //If via interception, make sure that initially, just an endpoint is just hit twice in case of access token expiry*****
+    it("test with fetch that if via interception, initially an endpoint is hit just twice in case of access token expiry", async done => {
+        try {
+            jest.setTimeout(15000);
+            await startST(3);
+
+            AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, 440, true);
+            let userId = "testing-supertokens-website";
+
+            // send api request to login
+            let loginResponse = await global.fetch(`${BASE_URL}/login`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+
+            assertEqual(await loginResponse.text(), userId);
+
+            //wait for 3 seconds such that the session expires
+            await delay(5);
+
+            let getSessionResponse = await global.fetch(`${BASE_URL}/`);
+            assertEqual(await getSessionResponse.text(), "success");
+
+            //check that the number of times getSession was called is 2
+            assertEqual(await getNumberOfTimesGetSessionCalled(), 2);
+
+            //check that the number of times refesh session was called is 1
+            assertEqual(await getNumberOfTimesRefreshCalled(), 1);
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    //- If you make an api call without cookies(logged out) api throws session expired , then make sure that refresh token api is not getting called , get 440 as the output****
+    it("test with fetch that an api call without cookies throws session expire, refresh api is not called and 440 is the output", async function(done) {
+        try {
+            jest.setTimeout(15000);
+            await startST(5);
+
+            AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, 440, true);
+            let userId = "testing-supertokens-website";
+
+            let loginResponse = await global.fetch(`${BASE_URL}/login`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+
+            assertEqual(await loginResponse.text(), userId);
+
+            let logoutResponse = await global.fetch(`${BASE_URL}/logout`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+
+            assertEqual(await logoutResponse.text(), "success");
+
+            let getSessionResponse = await global.fetch(`${BASE_URL}/`);
+
+            //check that the response to getSession without cookies is 440
+            assertEqual(getSessionResponse.status, 440);
+
+            assertEqual(await getNumberOfTimesRefreshCalled(), 0);
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    //    - If via interception, make sure that initially, just an endpoint is just hit once in case of access token NOT expiry*****
+    it("test that via interception initially an endpoint is just hit once in case of valid access token", async function(done) {
+        try {
+            jest.setTimeout(15000);
+            await startST(5);
+
+            AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, 440, true);
+            let userId = "testing-supertokens-website";
+
+            // send api request to login
+            let loginResponse = await global.fetch(`${BASE_URL}/login`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+
+            assertEqual(await loginResponse.text(), userId);
+
+            let getSessionResponse = await global.fetch(`${BASE_URL}/`);
+            assertEqual(await getSessionResponse.text(), "success");
+
+            //check that the number of times getSession was called is 1
+            assertEqual(await getNumberOfTimesGetSessionCalled(), 1);
+
+            //check that the number of times refresh session was called is 0
+            assertEqual(await getNumberOfTimesRefreshCalled(), 0);
+
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    //    - Interception should not happen when domain is not the one that they gave*******
+    it("test with fetch interception should not happen when domain is not the one that they gave", async function(done) {
+        try {
+            jest.setTimeout(15000);
+            await startST(5);
+            AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, 440, true);
+            let userId = "testing-supertokens-website";
+
+            // this is technically not doing interception, but it is equavalent to doing it since the inteceptor just calls the function below.
+            await AuthHttpRequestFetch.fetch(`https://www.google.com`);
+
+            let verifyRequestState = await ProcessState.getInstance().waitForEvent(
+                PROCESS_STATE.CALLING_INTERCEPTION_REQUEST,
+                100
+            );
+
+            assertEqual(verifyRequestState, undefined);
+
+            let loginResponse = await AuthHttpRequestFetch.fetch(`${BASE_URL}/login`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+
+            assertEqual(await loginResponse.text(), userId);
+
+            verifyRequestState = await ProcessState.getInstance().waitForEvent(
+                PROCESS_STATE.CALLING_INTERCEPTION_REQUEST,
+                5000
+            );
+            assert(verifyRequestState !== undefined);
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
 
     //     // //cross domain login, userinfo, logout
     //     // it("test with fetch cross domain", async () => {

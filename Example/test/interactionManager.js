@@ -13,12 +13,8 @@
  * under the License.
  */
 
-import MockStorage from "./asyncStorage";
-import MockInteractionManager from "./interactionManager";
-
-jest.mock("react-native", () => {
-    return {
-        AsyncStorage: new MockStorage({}),
-        InteractionManager: new MockInteractionManager()
-    };
-});
+export default class InteractionManager {
+    runAfterInteractions = jest.fn(func => {
+        setTimeout(func, 0);
+    });
+}

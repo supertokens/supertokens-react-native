@@ -7,6 +7,7 @@ export declare class ProcessState {
     private static instance;
     static getInstance(): ProcessState;
     addState: (state: PROCESS_STATE) => void;
+    private getEventByLastEventByName;
     reset: () => void;
-    waitForEvent: (state: PROCESS_STATE, timeInMS?: number) => Promise<void>;
+    waitForEvent: (state: PROCESS_STATE, timeInMS?: number) => Promise<unknown>;
 }
