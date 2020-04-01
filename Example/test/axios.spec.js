@@ -18,6 +18,7 @@ const tough = require("tough-cookie");
 import AntiCsrfToken from "supertokens-react-native/lib/build/antiCsrf";
 import AuthHttpRequestFetch from "supertokens-react-native";
 import AuthHttpRequest from "supertokens-react-native/axios";
+import { interceptorFunctionRequestFulfilled, responseInterceptor } from "supertokens-react-native/lib/build/axios";
 import assert from "assert";
 import {
     delay,
@@ -290,900 +291,611 @@ describe("Axios AuthHttpRequest class tests", function() {
         }
     });
 
-    // //test custom headers are being sent when logged in and when not*****
-    // it("test that custom headers are being sent when logged in", async function () {
-    //     await startST();
-    //     const browser = await puppeteer.launch({
-    //         args: ["--no-sandbox", "--disable-setuid-sandbox"]
-    //     });
-    //     try {
-    //         const page = await browser.newPage();
-    //         await page.goto(BASE_URL + "/index", { waitUntil: "load" });
-    //         await page.addScriptTag({ path: "./bundle/bundle.js", type: "text/javascript" });
-    //         await page.evaluate(async () => {
-    //             let BASE_URL = "http://localhost:8080";
-    //             supertokens.axios.makeSuper(axios);
-    //             supertokens.axios.init(`${BASE_URL}/refresh`, 440);
-    //             let userId = "testing-supertokens-website";
-
-    //             // send api request to login
-    //             let loginResponse = await axios.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
-    //                 headers: {
-    //                     Accept: "application/json",
-    //                     "Content-Type": "application/json"
-    //                 }
-    //             });
-    //             assertEqual(userId, loginResponse.data);
-
-    //             // send api request with custom headers and check that they are sent.
-    //             let testResponse = await axios.post(`${BASE_URL}/testing`, JSON.stringify({ userId }), {
-    //                 headers: {
-    //                     Accept: "application/json",
-    //                     "Content-Type": "application/json",
-    //                     testing: "testValue"
-    //                 }
-    //             });
-    //             assertEqual(testResponse.data, "success");
-    //             //check that custom header values are sent
-    //             assertEqual(testResponse.headers["testing"], "testValue");
-
-    //             //send logout api request
-    //             let logoutResponse = await axios.post(`${BASE_URL}/logout`, JSON.stringify({ userId }), {
-    //                 headers: {
-    //                     Accept: "application/json",
-    //                     "Content-Type": "application/json"
-    //                 }
-    //             });
-    //             assertEqual(logoutResponse.data, "success");
-
-    //             //send api request with custom headers
-    //             let testResponse2 = await axios.post(`${BASE_URL}/testing`, JSON.stringify({ userId }), {
-    //                 headers: {
-    //                     Accept: "application/json",
-    //                     "Content-Type": "application/json",
-    //                     testing: "testValue"
-    //                 }
-    //             });
-    //             assertEqual(testResponse2.data, "success");
-    //             //check that custom headers are present
-    //             assertEqual(testResponse2.headers["testing"], "testValue");
-    //         });
-    //     } finally {
-    //         await browser.close();
-    //     }
-    // });
-
-    // //testing doesSessionExist works fine when user is logged in******
-    // it("test doesSessionExist works fine when user is logged in", async function () {
-    //     await startST(5);
-    //     const browser = await puppeteer.launch({
-    //         args: ["--no-sandbox", "--disable-setuid-sandbox"]
-    //     });
-    //     try {
-    //         const page = await browser.newPage();
-    //         await page.goto(BASE_URL + "/index", { waitUntil: "load" });
-    //         await page.addScriptTag({ path: "./bundle/bundle.js", type: "text/javascript" });
-    //         await page.evaluate(async () => {
-    //             let BASE_URL = "http://localhost:8080";
-    //             supertokens.axios.makeSuper(axios);
-    //             supertokens.axios.init(`${BASE_URL}/refresh`, 440);
-    //             let userId = "testing-supertokens-website";
-
-    //             // send api request to login
-    //             let loginResponse = await axios.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
-    //                 headers: {
-    //                     Accept: "application/json",
-    //                     "Content-Type": "application/json"
-    //                 }
-    //             });
-    //             assertEqual(userId, loginResponse.data);
-    //             assertEqual(await supertokens.axios.doesSessionExist(), true);
-    //         });
-    //     } finally {
-    //         await browser.close();
-    //     }
-    // });
-
-    // //session should not exist when user calls log out - use doesSessionExist & check localstorage is empty
-    // it("test session should not exist when user calls log out", async function () {
-    //     await startST();
-    //     const browser = await puppeteer.launch({
-    //         args: ["--no-sandbox", "--disable-setuid-sandbox"]
-    //     });
-    //     try {
-    //         const page = await browser.newPage();
-    //         await page.goto(BASE_URL + "/index", { waitUntil: "load" });
-    //         await page.addScriptTag({ path: "./bundle/bundle.js", type: "text/javascript" });
-    //         await page.evaluate(async () => {
-    //             let BASE_URL = "http://localhost:8080";
-    //             supertokens.axios.makeSuper(axios);
-    //             supertokens.axios.init(`${BASE_URL}/refresh`, 440);
-    //             let userId = "testing-supertokens-website";
-
-    //             // send api request to login
-    //             let loginResponse = await axios.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
-    //                 headers: {
-    //                     Accept: "application/json",
-    //                     "Content-Type": "application/json"
-    //                 }
-    //             });
-    //             assertEqual(userId, loginResponse.data);
-    //             assertEqual(await supertokens.axios.doesSessionExist(), true);
-    //             assertEqual(window.localStorage.length, 1);
-
-    //             // send api request to logout
-    //             let logoutResponse = await axios.post(`${BASE_URL}/logout`, JSON.stringify({ userId }), {
-    //                 headers: {
-    //                     Accept: "application/json",
-    //                     "Content-Type": "application/json"
-    //                 }
-    //             });
-    //             let sessionExists = await supertokens.axios.doesSessionExist();
-
-    //             assertEqual(logoutResponse.data, "success");
-    //             assertEqual(sessionExists, false);
-    //             assertEqual(window.localStorage.length, 0);
-    //         });
-    //     } finally {
-    //         await browser.close();
-    //     }
-    // });
-
-    // // testing attemptRefreshingSession works fine******
-    // it("test that attemptRefreshingSession is working correctly", async function () {
-    //     await startST(5);
-    //     const browser = await puppeteer.launch({
-    //         args: ["--no-sandbox", "--disable-setuid-sandbox"]
-    //     });
-    //     try {
-    //         const page = await browser.newPage();
-    //         await page.goto(BASE_URL + "/index", { waitUntil: "load" });
-    //         await page.addScriptTag({ path: "./bundle/bundle.js", type: "text/javascript" });
-    //         await page.evaluate(async () => {
-    //             let BASE_URL = "http://localhost:8080";
-    //             supertokens.axios.makeSuper(axios);
-    //             supertokens.axios.init(`${BASE_URL}/refresh`, 440);
-    //             let userId = "testing-supertokens-website";
-
-    //             // send api request to login
-    //             let loginResponse = await axios.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
-    //                 headers: {
-    //                     Accept: "application/json",
-    //                     "Content-Type": "application/json"
-    //                 }
-    //             });
-    //             assertEqual(userId, loginResponse.data);
-
-    //             await delay(7);
-    //             let attemptRefresh = await supertokens.axios.attemptRefreshingSession();
-    //             assertEqual(attemptRefresh, true);
-
-    //             //check that the number of times the refresh API called is 1
-    //             assertEqual(await getNumberOfTimesRefreshCalled(), 1);
-
-    //             let getSessionResponse = await axios.get(`${BASE_URL}/`);
-    //             assertEqual(getSessionResponse.data, "success");
-
-    //             //check that the number of times the refresh API called is still 1
-    //             assertEqual(await getNumberOfTimesRefreshCalled(), 1);
-    //         });
-    //     } finally {
-    //         await browser.close();
-    //     }
-    // });
-
-    // // multiple API calls in parallel when access token is expired (100 of them) and only 1 refresh should be called*****
-    // it("test that multiple API calls in parallel when access token is expired, only 1 refresh should be called", async function () {
-    //     await startST(5, true);
-    //     const browser = await puppeteer.launch({
-    //         args: ["--no-sandbox", "--disable-setuid-sandbox"]
-    //     });
-    //     try {
-    //         const page = await browser.newPage();
-    //         await page.goto(BASE_URL + "/index", { waitUntil: "load" });
-    //         await page.addScriptTag({ path: "./bundle/bundle.js", type: "text/javascript" });
-    //         await page.evaluate(async () => {
-    //             let BASE_URL = "http://localhost:8080";
-    //             supertokens.axios.makeSuper(axios);
-    //             supertokens.axios.init(`${BASE_URL}/refresh`, 440);
-    //             let userId = "testing-supertokens-website";
-
-    //             // send api request to login
-    //             let loginResponse = await axios.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
-    //                 headers: {
-    //                     Accept: "application/json",
-    //                     "Content-Type": "application/json"
-    //                 }
-    //             });
-    //             assertEqual(loginResponse.data, userId);
-    //             assertEqual(await getNumberOfTimesRefreshCalled(), 0);
-
-    //             // wait for 7 seconds so that the accesstoken expires
-    //             await delay(7);
-
-    //             let promises = [];
-    //             let n = 100;
-
-    //             // create an array of 100 get session promises
-    //             for (let i = 0; i < n; i++) {
-    //                 promises.push(axios({ url: `${BASE_URL}/`, method: "GET" }));
-    //             }
-
-    //             // send 100 get session requests
-    //             let multipleGetSessionResponse = await axios.all(promises);
-
-    //             //check that reponse of all requests are success
-    //             let noOfResponeSuccesses = 0;
-    //             multipleGetSessionResponse.forEach(element => {
-    //                 assertEqual(element.data, "success");
-    //                 noOfResponeSuccesses += 1;
-    //             });
-
-    //             //check that the number of times refresh is called is 1
-    //             assertEqual(await getNumberOfTimesRefreshCalled(), 1);
-    //             assertEqual(noOfResponeSuccesses, n);
-    //         });
-    //     } finally {
-    //         await browser.close();
-    //     }
-    // });
-
-    // // - Things should work if anti-csrf is disabled.******
-    // it("test that things should work correctly if anti-csrf is disabled", async function () {
-    //     await startST(3, false);
-    //     const browser = await puppeteer.launch({
-    //         args: ["--no-sandbox", "--disable-setuid-sandbox"]
-    //     });
-    //     try {
-    //         const page = await browser.newPage();
-    //         await page.goto(BASE_URL + "/index", { waitUntil: "load" });
-    //         await page.addScriptTag({ path: "./bundle/bundle.js", type: "text/javascript" });
-    //         await page.evaluate(async () => {
-    //             let BASE_URL = "http://localhost:8080";
-    //             supertokens.axios.makeSuper(axios);
-    //             supertokens.axios.init(`${BASE_URL}/refresh`, 440);
-    //             let userId = "testing-supertokens-website";
-    //             // test out anti-csrf
-    //             //check that login works correctly
-    //             let loginResponse = await axios.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
-    //                 headers: {
-    //                     Accept: "application/json",
-    //                     "Content-Type": "application/json"
-    //                 }
-    //             });
-
-    //             assertEqual(loginResponse.data, userId);
-    //             assertEqual(await supertokens.axios.doesSessionExist(), true);
-
-    //             assertEqual(await getNumberOfTimesRefreshCalled(), 0);
-
-    //             await delay(5);
-
-    //             let getSessionResponse = await axios({ url: `${BASE_URL}/`, method: "GET" });
-    //             assertEqual(getSessionResponse.data, "success");
-    //             assertEqual(await getNumberOfTimesRefreshCalled(), 1);
-
-    //             let logoutResponse = await axios.post(`${BASE_URL}/logout`, JSON.stringify({ userId }), {
-    //                 headers: {
-    //                     Accept: "application/json",
-    //                     "Content-Type": "application/json"
-    //                 }
-    //             });
-
-    //             assertEqual(await supertokens.axios.doesSessionExist(), false);
-    //             assertEqual(logoutResponse.data, "success");
-    //         });
-    //     } finally {
-    //         await browser.close();
-    //     }
-    // });
-
-    // // device info tests******
-    // it("test device info being sent", async function () {
-    //     await startST();
-    //     const browser = await puppeteer.launch({
-    //         args: ["--no-sandbox", "--disable-setuid-sandbox"]
-    //     });
-    //     try {
-    //         const page = await browser.newPage();
-    //         await page.goto(BASE_URL + "/index", { waitUntil: "load" });
-    //         await page.addScriptTag({ path: "./bundle/bundle.js", type: "text/javascript" });
-    //         await page.evaluate(async () => {
-    //             let BASE_URL = "http://localhost:8080";
-    //             supertokens.axios.makeSuper(axios);
-    //             supertokens.axios.init(`${BASE_URL}/refresh`, 440);
-    //             let userId = "testing-supertokens-website";
-
-    //             let deviceInfoIsAdded = await axios.get(`${BASE_URL}/checkDeviceInfo`);
-    //             assertEqual(deviceInfoIsAdded.data, true);
-    //         });
-    //     } finally {
-    //         await browser.close();
-    //     }
-    // });
-
-    // //test that calling makeSuper many times is not a problem******
-    // it("test that calling makeSuper multiple times is not a problem", async () => {
-    //     await startST(3);
-    //     const browser = await puppeteer.launch({
-    //         args: ["--no-sandbox", "--disable-setuid-sandbox"]
-    //     });
-    //     try {
-    //         const page = await browser.newPage();
-    //         await page.goto(BASE_URL + "/index", { waitUntil: "load" });
-    //         await page.addScriptTag({ path: "./bundle/bundle.js", type: "text/javascript" });
-    //         await page.evaluate(async () => {
-    //             supertokens.axios.makeSuper(axios);
-    //             supertokens.axios.makeSuper(axios);
-    //             let BASE_URL = "http://localhost:8080";
-    //             supertokens.axios.init(`${BASE_URL}/refresh`, 440);
-    //             let userId = "testing-supertokens-website";
-
-    //             let loginResponse = await axios.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
-    //                 headers: {
-    //                     Accept: "application/json",
-    //                     "Content-Type": "application/json"
-    //                 }
-    //             });
-
-    //             //check that the userId which is returned in the response is the same as the one we sent
-    //             assertEqual(loginResponse.data, userId);
-
-    //             // check that the session exists
-    //             assertEqual(await supertokens.axios.doesSessionExist(), true);
-
-    //             supertokens.axios.makeSuper(axios);
-    //             // check that the number of times session refresh is called is zero
-    //             assertEqual(await getNumberOfTimesRefreshCalled(), 0);
-
-    //             //delay for 5 seconds so that we know accessToken expires
-
-    //             await delay(5);
-    //             // send a get session request , which should do a refresh session request
-
-    //             let getSessionResponse = await axios({ url: `${BASE_URL}/`, method: "GET" });
-
-    //             // check that the getSession was successfull
-    //             assertEqual(getSessionResponse.data, "success");
-
-    //             // check that the refresh session was called only once
-    //             assertEqual(await getNumberOfTimesRefreshCalled(), 1);
-
-    //             // do logout
-    //             let logoutResponse = await axios.post(`${BASE_URL}/logout`, JSON.stringify({ userId }), {
-    //                 headers: {
-    //                     Accept: "application/json",
-    //                     "Content-Type": "application/json"
-    //                 }
-    //             });
-
-    //             supertokens.axios.makeSuper(axios);
-    //             assertEqual(logoutResponse.data, "success");
-
-    //             //check that session does not exist
-    //             assertEqual(await supertokens.axios.doesSessionExist(), false);
-    //         });
-    //     } finally {
-    //         await browser.close();
-    //     }
-    // });
-
-    // //    - User passed config should be sent as well******
-    // it("test that user passed config should be sent", async () => {
-    //     await startST();
-    //     const browser = await puppeteer.launch({
-    //         args: ["--no-sandbox", "--disable-setuid-sandbox"]
-    //     });
-    //     try {
-    //         const page = await browser.newPage();
-    //         await page.goto(BASE_URL + "/index", { waitUntil: "load" });
-    //         await page.addScriptTag({ path: "./bundle/bundle.js", type: "text/javascript" });
-    //         await page.evaluate(async () => {
-    //             supertokens.axios.makeSuper(axios);
-    //             let BASE_URL = "http://localhost:8080";
-    //             supertokens.axios.init(`${BASE_URL}/refresh`, 440);
-    //             let userId = "testing-supertokens-website";
-
-    //             let userConfigResponse = await axios.post(`${BASE_URL}/testUserConfig`, JSON.stringify({ userId }), {
-    //                 headers: {
-    //                     Accept: "application/json",
-    //                     "Content-Type": "application/json"
-    //                 },
-    //                 timeout: 1000
-    //             });
-    //             assertEqual(userConfigResponse.config.timeout, 1000);
-    //         });
-    //     } finally {
-    //         await browser.close();
-    //     }
-    // });
-    // // if any API throws error, it gets propogated to the user properly (with and without interception)******
-    // it("test that if an api throws an error it gets propagated to the user with interception", async () => {
-    //     await startST();
-    //     const browser = await puppeteer.launch({
-    //         args: ["--no-sandbox", "--disable-setuid-sandbox"]
-    //     });
-    //     try {
-    //         const page = await browser.newPage();
-    //         await page.goto(BASE_URL + "/index", { waitUntil: "load" });
-    //         await page.addScriptTag({ path: "./bundle/bundle.js", type: "text/javascript" });
-    //         await page.evaluate(async () => {
-    //             let BASE_URL = "http://localhost:8080";
-    //             supertokens.axios.makeSuper(axios);
-    //             supertokens.axios.init(`${BASE_URL}/refresh`, 440);
-    //             try {
-    //                 await axios.get(`${BASE_URL}/testError`);
-    //                 assertEqual(false, "should not have come here");
-    //             } catch (error) {
-    //                 assertEqual(error.response.data, "test error message");
-    //                 assertEqual(error.response.status, 500);
-    //             }
-    //         });
-    //     } finally {
-    //         await browser.close();
-    //     }
-    // });
-
-    // // if any API throws error, it gets propogated to the user properly (with and without interception)******
-    // it("test that if an api throws an error, it gets propergated to the user without interception", async () => {
-    //     await startST();
-    //     const browser = await puppeteer.launch({
-    //         args: ["--no-sandbox", "--disable-setuid-sandbox"]
-    //     });
-    //     try {
-    //         const page = await browser.newPage();
-    //         await page.goto(BASE_URL + "/index", { waitUntil: "load" });
-    //         await page.addScriptTag({ path: "./bundle/bundle.js", type: "text/javascript" });
-    //         await page.evaluate(async () => {
-    //             let BASE_URL = "http://localhost:8080";
-    //             supertokens.axios(axios);
-    //             supertokens.axios.init(`${BASE_URL}/refresh`, 440);
-    //             try {
-    //                 await supertokens.axios.get(`${BASE_URL}/testError`);
-    //                 assert(false, "should not have come here");
-    //             } catch (error) {
-    //                 assertEqual(error.response.data, "test error message");
-    //                 assertEqual(error.response.status, 500);
-    //             }
-    //         });
-    //     } finally {
-    //         await browser.close();
-    //     }
-    // });
-
-    // //    - Calling SuperTokens.init more than once works!*******
-    // it("test that calling SuperTokens.init more than once works", async () => {
-    //     await startST();
-    //     const browser = await puppeteer.launch({
-    //         args: ["--no-sandbox", "--disable-setuid-sandbox"]
-    //     });
-    //     try {
-    //         const page = await browser.newPage();
-    //         await page.goto(BASE_URL + "/index", { waitUntil: "load" });
-    //         await page.addScriptTag({ path: "./bundle/bundle.js", type: "text/javascript" });
-    //         await page.evaluate(async () => {
-    //             let BASE_URL = "http://localhost:8080";
-    //             supertokens.axios.makeSuper(axios);
-    //             supertokens.axios.init(`${BASE_URL}/refresh`, 440);
-    //             supertokens.axios.init(`${BASE_URL}/refresh`, 440);
-    //             let userId = "testing-supertokens-website";
-
-    //             let loginResponse = await axios.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
-    //                 headers: {
-    //                     Accept: "application/json",
-    //                     "Content-Type": "application/json"
-    //                 }
-    //             });
-    //             assertEqual(userId, loginResponse.data);
-
-    //             supertokens.axios.init(`${BASE_URL}/refresh`, 440);
-
-    //             let logoutResponse = await axios.post(`${BASE_URL}/logout`, JSON.stringify({ userId }), {
-    //                 headers: {
-    //                     Accept: "application/json",
-    //                     "Content-Type": "application/json"
-    //                 }
-    //             });
-
-    //             assertEqual(logoutResponse.data, "success");
-
-    //             //check that session does not exist
-    //             assertEqual(await supertokens.axios.doesSessionExist(), false);
-
-    //             //check that login still works correctly
-    //             loginResponse = await axios.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
-    //                 headers: {
-    //                     Accept: "application/json",
-    //                     "Content-Type": "application/json"
-    //                 }
-    //             });
-    //             assertEqual(userId, loginResponse.data);
-    //         });
-    //     } finally {
-    //         await browser.close();
-    //     }
-    // });
-
-    // //If via interception, make sure that initially, just an endpoint is just hit twice in case of access token expiry*****
-    // it("test that if via interception, initially an endpoint is hit just twice in case of access token expiary", async () => {
-    //     await startST(3);
-    //     const browser = await puppeteer.launch({
-    //         args: ["--no-sandbox", "--disable-setuid-sandbox"]
-    //     });
-    //     try {
-    //         const page = await browser.newPage();
-    //         await page.goto(BASE_URL + "/index", { waitUntil: "load" });
-    //         await page.addScriptTag({ path: "./bundle/bundle.js", type: "text/javascript" });
-    //         await page.evaluate(async () => {
-    //             let BASE_URL = "http://localhost:8080";
-    //             supertokens.axios.makeSuper(axios);
-    //             supertokens.axios.init(`${BASE_URL}/refresh`, 440);
-    //             let userId = "testing-supertokens-website";
-
-    //             // send api request to login
-    //             let loginResponse = await axios.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
-    //                 headers: {
-    //                     Accept: "application/json",
-    //                     "Content-Type": "application/json"
-    //                 }
-    //             });
-    //             assertEqual(userId, loginResponse.data);
-
-    //             //wait for 3 seconds such that the session expires
-    //             await delay(5);
-
-    //             let getSessionResponse = await axios({ url: `${BASE_URL}/`, method: "GET" });
-    //             assertEqual(getSessionResponse.data, "success");
-
-    //             //check that the number of times getSession was called is 2
-    //             assertEqual(await getNumberOfTimesGetSessionCalled(), 2);
-
-    //             //check that the number of times refesh session was called is 1
-    //             assertEqual(await getNumberOfTimesRefreshCalled(), 1);
-    //         });
-    //     } finally {
-    //         await browser.close();
-    //     }
-    // });
-
-    // //    - Interception should not happen when domain is not the one that they gave*******
-    // it("test interception should not happen when domain is not the one that they gave", async function () {
-    //     await startST(5);
-    //     AuthHttpRequest.init(`${BASE_URL}/refresh`, 440);
-
-    //     await axios.get(`https://www.google.com`);
-    //     let verifyRequestState = await ProcessState.getInstance().waitForEvent(
-    //         PROCESS_STATE.CALLING_INTERCEPTION_REQUEST,
-    //         100
-    //     );
-    //     let verifyResponseState = await ProcessState.getInstance().waitForEvent(
-    //         PROCESS_STATE.CALLING_INTERCEPTION_RESPONSE,
-    //         100
-    //     );
-
-    //     assert.strictEqual(verifyRequestState, undefined);
-    //     assert.strictEqual(verifyResponseState, undefined);
-
-    //     let userId = "testing-supertokens-website";
-    //     let loginResponse = await axios.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
-    //         headers: {
-    //             Accept: "application/json",
-    //             "Content-Type": "application/json"
-    //         }
-    //     });
-
-    //     assert.strictEqual(await loginResponse.data, userId);
-
-    //     verifyRequestState = await ProcessState.getInstance().waitForEvent(
-    //         PROCESS_STATE.CALLING_INTERCEPTION_REQUEST,
-    //         5000
-    //     );
-    //     verifyResponseState = await ProcessState.getInstance().waitForEvent(
-    //         PROCESS_STATE.CALLING_INTERCEPTION_RESPONSE,
-    //         5000
-    //     );
-
-    //     assert.notStrictEqual(verifyRequestState, undefined);
-    //     assert.notStrictEqual(verifyResponseState, undefined);
-    // });
-
-    // //- If you make an api call without cookies(logged out) api throws session expired , then make sure that refresh token api is not getting called , get 440 as the output****
-    // it("test that an api call without cookies throws session expire, refresh api is not called and 440 is the output", async function () {
-    //     await startST(5);
-    //     const browser = await puppeteer.launch({
-    //         args: ["--no-sandbox", "--disable-setuid-sandbox"]
-    //     });
-    //     try {
-    //         const page = await browser.newPage();
-    //         await page.goto(BASE_URL + "/index", { waitUntil: "load" });
-    //         await page.addScriptTag({ path: "./bundle/bundle.js", type: "text/javascript" });
-    //         await page.evaluate(async () => {
-    //             supertokens.axios.makeSuper(axios);
-    //             let BASE_URL = "http://localhost:8080";
-    //             supertokens.axios.init(`${BASE_URL}/refresh`, 440);
-    //             let userId = "testing-supertokens-website";
-
-    //             let loginResponse = await axios.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
-    //                 headers: {
-    //                     Accept: "application/json",
-    //                     "Content-Type": "application/json"
-    //                 }
-    //             });
-    //             assertEqual(loginResponse.data, userId);
-
-    //             let logoutResponse = await axios.post(`${BASE_URL}/logout`, JSON.stringify({ userId }), {
-    //                 headers: {
-    //                     Accept: "application/json",
-    //                     "Content-Type": "application/json"
-    //                 }
-    //             });
-
-    //             assertEqual(logoutResponse.data, "success");
-
-    //             try {
-    //                 await axios.get(`${BASE_URL}/`);
-    //                 throw new Error("Should not have come here");
-    //             } catch (error) {
-    //                 assertEqual(error.message, "Request failed with status code 440");
-    //             }
-
-    //             assertEqual(await getNumberOfTimesRefreshCalled(), 0);
-    //         });
-    //     } finally {
-    //         await browser.close();
-    //     }
-    // });
-
-    // //    - If via interception, make sure that initially, just an endpoint is just hit once in case of access token NOT expiry*****
-    // it("test that via interception initially an endpoint is just hit once in case of valid access token", async function () {
-    //     await startST(5);
-    //     const browser = await puppeteer.launch({
-    //         args: ["--no-sandbox", "--disable-setuid-sandbox"]
-    //     });
-    //     try {
-    //         const page = await browser.newPage();
-    //         await page.goto(BASE_URL + "/index", { waitUntil: "load" });
-    //         await page.addScriptTag({ path: "./bundle/bundle.js", type: "text/javascript" });
-    //         await page.evaluate(async () => {
-    //             let BASE_URL = "http://localhost:8080";
-    //             supertokens.axios.makeSuper(axios);
-    //             supertokens.axios.init(`${BASE_URL}/refresh`, 440);
-    //             let userId = "testing-supertokens-website";
-
-    //             // send api request to login
-    //             let loginResponse = await axios.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
-    //                 headers: {
-    //                     Accept: "application/json",
-    //                     "Content-Type": "application/json"
-    //                 }
-    //             });
-    //             assertEqual(userId, loginResponse.data);
-
-    //             let getSessionResponse = await axios({ url: `${BASE_URL}/`, method: "GET" });
-    //             assertEqual(getSessionResponse.data, "success");
-
-    //             //check that the number of times getSession was called is 1
-    //             assertEqual(await getNumberOfTimesGetSessionCalled(), 1);
-
-    //             //check that the number of times refresh session was called is 0
-    //             assertEqual(await getNumberOfTimesRefreshCalled(), 0);
-    //         });
-    //     } finally {
-    //         await browser.close();
-    //     }
-    // });
-
-    // //- if multiple interceptors are there, they should all work*****
-    // it("test that if multiple interceptors are there, they should all work", async function () {
-    //     await startST();
-    //     let testAxios = axios.create();
-    //     makeSuperTest(testAxios);
-    //     AuthHttpRequest.init(`${BASE_URL}/refresh`, 440);
-    //     let userId = "testing-supertokens-website";
-    //     let multipleInterceptorResponse = await testAxios.post(
-    //         `${BASE_URL}/multipleInterceptors`,
-    //         JSON.stringify({ userId }),
-    //         {
-    //             headers: {
-    //                 Accept: "application/json",
-    //                 "Content-Type": "application/json"
-    //             }
-    //         }
-    //     );
-    //     assert.deepEqual(multipleInterceptorResponse.data, "success");
-    //     assert.notDeepEqual(multipleInterceptorResponse.headers.doInterception3, undefined);
-    //     assert.notDeepEqual(multipleInterceptorResponse.headers.doInterception4, undefined);
-    // });
-
-    // //cross domain login, userinfo, logout
-    // it("cross domain", async () => {
-    //     await startST(3);
-    //     const browser = await puppeteer.launch({
-    //         args: ["--no-sandbox", "--disable-setuid-sandbox"]
-    //     });
-    //     try {
-    //         const page = await browser.newPage();
-    //         await page.goto("http://127.0.0.1:8080/index", { waitUntil: "load" });
-    //         await page.addScriptTag({ path: "./bundle/bundle.js", type: "text/javascript" });
-    //         await page.evaluate(async () => {
-    //             supertokens.axios.makeSuper(axios);
-    //             let BASE_URL = "http://localhost:8080";
-    //             supertokens.axios.init(`${BASE_URL}/refresh`, 440);
-    //             let userId = "testing-supertokens-website";
-
-    //             let loginResponse = await axios.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
-    //                 headers: {
-    //                     Accept: "application/json",
-    //                     "Content-Type": "application/json"
-    //                 },
-    //                 withCredentials: true
-    //             });
-
-    //             //check that the userId which is returned in the response is the same as the one we sent
-    //             assertEqual(loginResponse.data, userId);
-
-    //             // check that the session exists
-    //             assertEqual(await supertokens.axios.doesSessionExist(), true);
-
-    //             // check that the number of times session refresh is called is zero
-    //             assertEqual(await getNumberOfTimesRefreshCalled(), 0);
-
-    //             //delay for 5 seconds so that we know accessToken expires
-
-    //             await delay(5);
-    //             // send a get session request , which should do a refresh session request
-
-    //             let getSessionResponse = await axios.get(`${BASE_URL}/`, {
-    //                 withCredentials: true
-    //             });
-
-    //             // check that the getSession was successfull
-    //             assertEqual(getSessionResponse.data, "success");
-
-    //             // check that the refresh session was called only once
-    //             assertEqual(await getNumberOfTimesRefreshCalled(), 1);
-
-    //             // do logout
-    //             let logoutResponse = await axios.post(`${BASE_URL}/logout`, JSON.stringify({ userId }), {
-    //                 headers: {
-    //                     Accept: "application/json",
-    //                     "Content-Type": "application/json"
-    //                 },
-    //                 withCredentials: true
-    //             });
-    //             assertEqual(logoutResponse.data, "success");
-
-    //             //check that session does not exist
-    //             assertEqual(await supertokens.axios.doesSessionExist(), false);
-    //         });
-    //     } finally {
-    //         await browser.close();
-    //     }
-    // });
-
-    // it("cross domain with BaseURL", async () => {
-    //     await startST(3);
-    //     const browser = await puppeteer.launch({
-    //         args: ["--no-sandbox", "--disable-setuid-sandbox"]
-    //     });
-    //     try {
-    //         const page = await browser.newPage();
-    //         await page.goto("http://127.0.0.1:8080/index", { waitUntil: "load" });
-    //         await page.addScriptTag({ path: "./bundle/bundle.js", type: "text/javascript" });
-    //         await page.evaluate(async () => {
-    //             const http = axios.create({
-    //                 baseURL: "http://localhost:8080",
-    //                 withCredentials: true
-    //             });
-    //             supertokens.axios.makeSuper(http);
-    //             let BASE_URL = "http://localhost:8080";
-    //             supertokens.axios.init(`${BASE_URL}/refresh`, 440);
-    //             let userId = "testing-supertokens-website";
-
-    //             let loginResponse = await http.post(`login`, JSON.stringify({ userId }), {
-    //                 headers: {
-    //                     Accept: "application/json",
-    //                     "Content-Type": "application/json"
-    //                 }
-    //             });
-
-    //             //check that the userId which is returned in the response is the same as the one we sent
-    //             assertEqual(loginResponse.data, userId);
-
-    //             // check that the session exists
-    //             assertEqual(await supertokens.axios.doesSessionExist(), true);
-
-    //             // check that the number of times session refresh is called is zero
-    //             assertEqual(await getNumberOfTimesRefreshCalled(), 0);
-
-    //             //delay for 5 seconds so that we know accessToken expires
-
-    //             await delay(5);
-    //             // send a get session request , which should do a refresh session request
-
-    //             let getSessionResponse = await http.get(`/`);
-
-    //             // check that the getSession was successfull
-    //             assertEqual(getSessionResponse.data, "success");
-
-    //             // check that the refresh session was called only once
-    //             assertEqual(await getNumberOfTimesRefreshCalled(), 1);
-
-    //             // do logout
-    //             let logoutResponse = await http.post(`/logout`, JSON.stringify({ userId }), {
-    //                 headers: {
-    //                     Accept: "application/json",
-    //                     "Content-Type": "application/json"
-    //                 }
-    //             });
-
-    //             assertEqual(logoutResponse.data, "success");
-
-    //             //check that session does not exist
-    //             assertEqual(await supertokens.axios.doesSessionExist(), false);
-    //         });
-    //     } finally {
-    //         await browser.close();
-    //     }
-    // });
-
-    // it("refresh session with baseURL", async function () {
-    //     await startST();
-    //     const browser = await puppeteer.launch({
-    //         args: ["--no-sandbox", "--disable-setuid-sandbox"]
-    //     });
-    //     try {
-    //         const page = await browser.newPage();
-    //         await page.goto(BASE_URL + "/index", { waitUntil: "load" });
-    //         await page.addScriptTag({ path: `./bundle/bundle.js`, type: "text/javascript" });
-    //         await page.evaluate(async () => {
-    //             const http = axios.create({
-    //                 baseURL: "http://localhost:8080"
-    //             });
-    //             let BASE_URL = "http://localhost:8080";
-    //             supertokens.axios.makeSuper(http);
-    //             supertokens.axios.init(`${BASE_URL}/refresh`, 440);
-    //             let userId = "testing-supertokens-website";
-    //             let loginResponse = await http.post(`/login`, JSON.stringify({ userId }), {
-    //                 headers: {
-    //                     Accept: "application/json",
-    //                     "Content-Type": "application/json"
-    //                 }
-    //             });
-    //             let userIdFromResponse = loginResponse.data;
-    //             assertEqual(userId, userIdFromResponse);
-    //             await delay(3);
-
-    //             assertEqual(await getNumberOfTimesRefreshCalled(), 0);
-    //             let getResponse = await http({ url: `/`, method: "GET" });
-    //             assertEqual(await getNumberOfTimesRefreshCalled(), 1);
-    //             getResponse = await getResponse.data;
-    //             assertEqual(getResponse, "success");
-    //         });
-    //     } finally {
-    //         await browser.close();
-    //     }
-    // });
+    //test custom headers are being sent when logged in and when not*****
+    it("test that custom headers are being sent when logged in", async function(done) {
+        try {
+            jest.setTimeout(15000);
+            await startST();
+
+            AuthHttpRequest.init(`${BASE_URL}/refresh`, 440);
+            let userId = "testing-supertokens-website";
+
+            // send api request to login
+            let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                }
+            });
+            assertEqual(userId, loginResponse.data);
+
+            // send api request with custom headers and check that they are sent.
+            let testResponse = await axiosInstance.post(`${BASE_URL}/testing`, JSON.stringify({ userId }), {
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                    testing: "testValue"
+                }
+            });
+            assertEqual(testResponse.data, "success");
+            //check that custom header values are sent
+            assertEqual(testResponse.headers["testing"], "testValue");
+
+            //send logout api request
+            let logoutResponse = await axiosInstance.post(`${BASE_URL}/logout`, JSON.stringify({ userId }), {
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                }
+            });
+            assertEqual(logoutResponse.data, "success");
+
+            //send api request with custom headers
+            let testResponse2 = await axiosInstance.post(`${BASE_URL}/testing`, JSON.stringify({ userId }), {
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                    testing: "testValue"
+                }
+            });
+            assertEqual(testResponse2.data, "success");
+            //check that custom headers are present
+            assertEqual(testResponse2.headers["testing"], "testValue");
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    //testing doesSessionExist works fine when user is logged in******
+    it("test doesSessionExist works fine when user is logged in", async function(done) {
+        try {
+            jest.setTimeout(15000);
+            await startST(5);
+
+            AuthHttpRequest.init(`${BASE_URL}/refresh`, 440);
+            let userId = "testing-supertokens-website";
+
+            // send api request to login
+            let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                }
+            });
+            assertEqual(userId, loginResponse.data);
+            assertEqual(await AuthHttpRequest.doesSessionExist(), true);
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    //session should not exist when user calls log out - use doesSessionExist & check localstorage is empty
+    it("test session should not exist when user calls log out", async function(done) {
+        try {
+            jest.setTimeout(15000);
+            await startST();
+
+            AuthHttpRequest.init(`${BASE_URL}/refresh`, 440);
+            let userId = "testing-supertokens-website";
+
+            // send api request to login
+            let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                }
+            });
+            assertEqual(userId, loginResponse.data);
+            assertEqual(await AuthHttpRequest.doesSessionExist(), true);
+
+            // send api request to logout
+            let logoutResponse = await axiosInstance.post(`${BASE_URL}/logout`, JSON.stringify({ userId }), {
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                }
+            });
+            let sessionExists = await AuthHttpRequest.doesSessionExist();
+
+            assertEqual(logoutResponse.data, "success");
+            assertEqual(sessionExists, false);
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    // multiple API calls in parallel when access token is expired (100 of them) and only 1 refresh should be called*****
+    it("test that multiple API calls in parallel when access token is expired, only 1 refresh should be called", async function(done) {
+        try {
+            jest.setTimeout(15000);
+            await startST(5, true);
+
+            AuthHttpRequest.init(`${BASE_URL}/refresh`, 440);
+            let userId = "testing-supertokens-website";
+
+            // send api request to login
+            let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                }
+            });
+            assertEqual(loginResponse.data, userId);
+            assertEqual(await getNumberOfTimesRefreshCalled(), 0);
+
+            // wait for 7 seconds so that the accesstoken expires
+            await delay(7);
+
+            let promises = [];
+            let n = 100;
+
+            // create an array of 100 get session promises
+            for (let i = 0; i < n; i++) {
+                promises.push(axiosInstance({ url: `${BASE_URL}/`, method: "GET" }));
+            }
+
+            // send 100 get session requests
+            let multipleGetSessionResponse = await axios.all(promises);
+
+            //check that reponse of all requests are success
+            let noOfResponeSuccesses = 0;
+            multipleGetSessionResponse.forEach(element => {
+                assertEqual(element.data, "success");
+                noOfResponeSuccesses += 1;
+            });
+
+            //check that the number of times refresh is called is 1
+            assertEqual(await getNumberOfTimesRefreshCalled(), 1);
+            assertEqual(noOfResponeSuccesses, n);
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    // - Things should work if anti-csrf is disabled.******
+    it("test that things should work correctly if anti-csrf is disabled", async function(done) {
+        try {
+            jest.setTimeout(15000);
+            await startST(3, false);
+
+            AuthHttpRequest.init(`${BASE_URL}/refresh`, 440);
+            let userId = "testing-supertokens-website";
+            // test out anti-csrf
+            //check that login works correctly
+            let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                }
+            });
+
+            assertEqual(loginResponse.data, userId);
+            assertEqual(await AuthHttpRequest.doesSessionExist(), true);
+
+            assertEqual(await getNumberOfTimesRefreshCalled(), 0);
+
+            await delay(5);
+
+            let getSessionResponse = await axiosInstance({ url: `${BASE_URL}/`, method: "GET" });
+            assertEqual(getSessionResponse.data, "success");
+            assertEqual(await getNumberOfTimesRefreshCalled(), 1);
+
+            let logoutResponse = await axiosInstance.post(`${BASE_URL}/logout`, JSON.stringify({ userId }), {
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                }
+            });
+
+            assertEqual(await AuthHttpRequest.doesSessionExist(), false);
+            assertEqual(logoutResponse.data, "success");
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    // device info tests******
+    it("test device info being sent", async function(done) {
+        try {
+            jest.setTimeout(15000);
+            await startST();
+
+            AuthHttpRequest.init(`${BASE_URL}/refresh`, 440);
+            let userId = "testing-supertokens-website";
+
+            let deviceInfoIsAdded = await axiosInstance.get(`${BASE_URL}/checkDeviceInfo`);
+            assertEqual(deviceInfoIsAdded.data, true);
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    //test that calling makeSuper many times is not a problem******
+    it("test that calling makeSuper multiple times is not a problem", async done => {
+        try {
+            jest.setTimeout(15000);
+            await startST(3);
+
+            AuthHttpRequest.makeSuper(axiosInstance);
+            AuthHttpRequest.makeSuper(axiosInstance);
+            AuthHttpRequest.init(`${BASE_URL}/refresh`, 440);
+            let userId = "testing-supertokens-website";
+
+            let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                }
+            });
+
+            //check that the userId which is returned in the response is the same as the one we sent
+            assertEqual(loginResponse.data, userId);
+
+            // check that the session exists
+            assertEqual(await AuthHttpRequest.doesSessionExist(), true);
+
+            AuthHttpRequest.makeSuper(axiosInstance);
+            // check that the number of times session refresh is called is zero
+            assertEqual(await getNumberOfTimesRefreshCalled(), 0);
+
+            //delay for 5 seconds so that we know accessToken expires
+
+            await delay(5);
+            // send a get session request , which should do a refresh session request
+
+            let getSessionResponse = await axiosInstance({ url: `${BASE_URL}/`, method: "GET" });
+
+            // check that the getSession was successfull
+            assertEqual(getSessionResponse.data, "success");
+
+            // check that the refresh session was called only once
+            assertEqual(await getNumberOfTimesRefreshCalled(), 1);
+
+            // do logout
+            let logoutResponse = await axiosInstance.post(`${BASE_URL}/logout`, JSON.stringify({ userId }), {
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                }
+            });
+
+            AuthHttpRequest.makeSuper(axiosInstance);
+            assertEqual(logoutResponse.data, "success");
+
+            //check that session does not exist
+            assertEqual(await AuthHttpRequest.doesSessionExist(), false);
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    //    - User passed config should be sent as well******
+    it("test that user passed config should be sent", async done => {
+        try {
+            jest.setTimeout(15000);
+            await startST();
+
+            AuthHttpRequest.init(`${BASE_URL}/refresh`, 440);
+            let userId = "testing-supertokens-website";
+
+            let userConfigResponse = await axiosInstance.post(
+                `${BASE_URL}/testUserConfig`,
+                JSON.stringify({ userId }),
+                {
+                    headers: {
+                        Accept: "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    timeout: 1000
+                }
+            );
+            assertEqual(userConfigResponse.config.timeout, 1000);
+
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    // if any API throws error, it gets propogated to the user properly (with and without interception)******
+    it("test that if an api throws an error it gets propagated to the user with interception", async done => {
+        try {
+            jest.setTimeout(15000);
+            await startST();
+
+            AuthHttpRequest.init(`${BASE_URL}/refresh`, 440);
+            try {
+                await axiosInstance.get(`${BASE_URL}/testError`);
+                assertEqual(false, "should not have come here");
+            } catch (error) {
+                assertEqual(error.response.data, "test error message");
+                assertEqual(error.response.status, 500);
+            }
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    // if any API throws error, it gets propogated to the user properly (with and without interception)******
+    it("test that if an api throws an error, it gets propergated to the user without interception", async done => {
+        try {
+            jest.setTimeout(15000);
+            await startST();
+
+            AuthHttpRequest.init(`${BASE_URL}/refresh`, 440);
+            try {
+                await AuthHttpRequest.get(`${BASE_URL}/testError`);
+                assert(false, "should not have come here");
+            } catch (error) {
+                assertEqual(error.response.data, "test error message");
+                assertEqual(error.response.status, 500);
+            }
+
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    //    - Calling SuperTokens.init more than once works!*******
+    it("test that calling SuperTokens.init more than once works", async done => {
+        try {
+            jest.setTimeout(15000);
+            await startST();
+
+            AuthHttpRequest.init(`${BASE_URL}/refresh`, 440);
+            AuthHttpRequest.init(`${BASE_URL}/refresh`, 440);
+            let userId = "testing-supertokens-website";
+
+            let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                }
+            });
+            assertEqual(userId, loginResponse.data);
+
+            AuthHttpRequest.init(`${BASE_URL}/refresh`, 440);
+
+            let logoutResponse = await axiosInstance.post(`${BASE_URL}/logout`, JSON.stringify({ userId }), {
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                }
+            });
+
+            assertEqual(logoutResponse.data, "success");
+
+            //check that session does not exist
+            assertEqual(await AuthHttpRequest.doesSessionExist(), false);
+
+            //check that login still works correctly
+            loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                }
+            });
+            assertEqual(userId, loginResponse.data);
+
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    //If via interception, make sure that initially, just an endpoint is just hit twice in case of access token expiry*****
+    it("test that if via interception, initially an endpoint is hit just twice in case of access token expiary", async done => {
+        try {
+            jest.setTimeout(15000);
+            await startST(3);
+
+            AuthHttpRequest.init(`${BASE_URL}/refresh`, 440);
+            let userId = "testing-supertokens-website";
+
+            // send api request to login
+            let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                }
+            });
+            assertEqual(userId, loginResponse.data);
+
+            //wait for 3 seconds such that the session expires
+            await delay(5);
+
+            let getSessionResponse = await axiosInstance({ url: `${BASE_URL}/`, method: "GET" });
+            assertEqual(getSessionResponse.data, "success");
+
+            //check that the number of times getSession was called is 2
+            assertEqual(await getNumberOfTimesGetSessionCalled(), 2);
+
+            //check that the number of times refesh session was called is 1
+            assertEqual(await getNumberOfTimesRefreshCalled(), 1);
+
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    //    - Interception should not happen when domain is not the one that they gave*******
+    it("test interception should not happen when domain is not the one that they gave", async function(done) {
+        try {
+            jest.setTimeout(15000);
+            await startST(5);
+            AuthHttpRequest.init(`${BASE_URL}/refresh`, 440);
+
+            await axiosInstance.get(`https://www.google.com`);
+            let verifyRequestState = await ProcessState.getInstance().waitForEvent(
+                PROCESS_STATE.CALLING_INTERCEPTION_REQUEST,
+                100
+            );
+            let verifyResponseState = await ProcessState.getInstance().waitForEvent(
+                PROCESS_STATE.CALLING_INTERCEPTION_RESPONSE,
+                100
+            );
+
+            assert.strictEqual(verifyRequestState, undefined);
+            assert.strictEqual(verifyResponseState, undefined);
+
+            let userId = "testing-supertokens-website";
+            let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                }
+            });
+
+            assert.strictEqual(await loginResponse.data, userId);
+
+            verifyRequestState = await ProcessState.getInstance().waitForEvent(
+                PROCESS_STATE.CALLING_INTERCEPTION_REQUEST,
+                5000
+            );
+            verifyResponseState = await ProcessState.getInstance().waitForEvent(
+                PROCESS_STATE.CALLING_INTERCEPTION_RESPONSE,
+                5000
+            );
+
+            assert.notStrictEqual(verifyRequestState, undefined);
+            assert.notStrictEqual(verifyResponseState, undefined);
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    //- If you make an api call without cookies(logged out) api throws session expired , then make sure that refresh token api is not getting called , get 440 as the output****
+    it("test that an api call without cookies throws session expire, refresh api is not called and 440 is the output", async function(done) {
+        try {
+            jest.setTimeout(15000);
+            await startST(5);
+
+            AuthHttpRequest.init(`${BASE_URL}/refresh`, 440);
+            let userId = "testing-supertokens-website";
+
+            let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                }
+            });
+            assertEqual(loginResponse.data, userId);
+
+            let logoutResponse = await axiosInstance.post(`${BASE_URL}/logout`, JSON.stringify({ userId }), {
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                }
+            });
+
+            assertEqual(logoutResponse.data, "success");
+
+            try {
+                await axiosInstance.get(`${BASE_URL}/`);
+                throw new Error("Should not have come here");
+            } catch (error) {
+                assertEqual(error.message, "Request failed with status code 440");
+            }
+
+            assertEqual(await getNumberOfTimesRefreshCalled(), 0);
+
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    //    - If via interception, make sure that initially, just an endpoint is just hit once in case of access token NOT expiry*****
+    it("test that via interception initially an endpoint is just hit once in case of valid access token", async function(done) {
+        try {
+            jest.setTimeout(15000);
+            await startST(5);
+
+            AuthHttpRequest.init(`${BASE_URL}/refresh`, 440);
+            let userId = "testing-supertokens-website";
+
+            // send api request to login
+            let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                }
+            });
+            assertEqual(userId, loginResponse.data);
+
+            let getSessionResponse = await axiosInstance({ url: `${BASE_URL}/`, method: "GET" });
+            assertEqual(getSessionResponse.data, "success");
+
+            //check that the number of times getSession was called is 1
+            assertEqual(await getNumberOfTimesGetSessionCalled(), 1);
+
+            //check that the number of times refresh session was called is 0
+            assertEqual(await getNumberOfTimesRefreshCalled(), 0);
+
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    //- if multiple interceptors are there, they should all work*****
+    it("test that if multiple interceptors are there, they should all work", async function(done) {
+        try {
+            jest.setTimeout(15000);
+            await startST();
+            makeSuperTest(axiosInstance);
+
+            AuthHttpRequest.init(`${BASE_URL}/refresh`, 440);
+            let userId = "testing-supertokens-website";
+            let multipleInterceptorResponse = await axiosInstance.post(
+                `${BASE_URL}/multipleInterceptors`,
+                JSON.stringify({ userId }),
+                {
+                    headers: {
+                        Accept: "application/json",
+                        "Content-Type": "application/json"
+                    }
+                }
+            );
+            assert.deepEqual(multipleInterceptorResponse.data, "success");
+            assert.notDeepEqual(multipleInterceptorResponse.headers.doInterception3, undefined);
+            assert.notDeepEqual(multipleInterceptorResponse.headers.doInterception4, undefined);
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
 });
 
-function makeSuperTest(axiosInstance) {
+function makeSuperTest(axiosIn) {
     // test request interceptor1
-    axiosInstance.interceptors.request.use(testRequestInterceptor, async function(error) {
+    axiosIn.interceptors.request.use(testRequestInterceptor, async function(error) {
         throw error;
     });
 
     // Add a request interceptor
-    axiosInstance.interceptors.request.use(interceptorFunctionRequestFulfilled, async function(error) {
+    axiosIn.interceptors.request.use(interceptorFunctionRequestFulfilled, async function(error) {
         throw error;
     });
 
     // test request interceptor2
-    axiosInstance.interceptors.request.use(testRequestInterceptor, async function(error) {
+    axiosIn.interceptors.request.use(testRequestInterceptor, async function(error) {
         throw error;
     });
 
     // test response interceptor3
-    axiosInstance.interceptors.response.use(
+    axiosIn.interceptors.response.use(
         async function(response) {
             response = {
                 ...response,
@@ -1200,9 +912,10 @@ function makeSuperTest(axiosInstance) {
     );
 
     // Add a response interceptor
-    axiosInstance.interceptors.response.use(responseInterceptor);
+    axiosIn.interceptors.response.use(responseInterceptor(axiosIn));
+
     // test response interceptor4
-    axiosInstance.interceptors.response.use(
+    axiosIn.interceptors.response.use(
         async function(response) {
             response = {
                 ...response,
