@@ -1,6 +1,6 @@
 {
   "name": "supertokens-react-native",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "React Native SDK for SuperTokens",
   "main": "index.js",
   "scripts": {

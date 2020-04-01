@@ -268,7 +268,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             let BASE_URL = "http://localhost:8080";
 
             AuthHttpRequest.init(`${BASE_URL}/refresh`, 440);
-            let userId = "testing-supertokens-website";
+            let userId = "testing-supertokens-react-native";
             let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
                 headers: {
                     Accept: "application/json",
@@ -298,7 +298,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             await startST();
 
             AuthHttpRequest.init(`${BASE_URL}/refresh`, 440);
-            let userId = "testing-supertokens-website";
+            let userId = "testing-supertokens-react-native";
 
             // send api request to login
             let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
@@ -354,7 +354,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             await startST(5);
 
             AuthHttpRequest.init(`${BASE_URL}/refresh`, 440);
-            let userId = "testing-supertokens-website";
+            let userId = "testing-supertokens-react-native";
 
             // send api request to login
             let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
@@ -378,7 +378,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             await startST();
 
             AuthHttpRequest.init(`${BASE_URL}/refresh`, 440);
-            let userId = "testing-supertokens-website";
+            let userId = "testing-supertokens-react-native";
 
             // send api request to login
             let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
@@ -414,7 +414,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             await startST(5, true);
 
             AuthHttpRequest.init(`${BASE_URL}/refresh`, 440);
-            let userId = "testing-supertokens-website";
+            let userId = "testing-supertokens-react-native";
 
             // send api request to login
             let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
@@ -463,7 +463,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             await startST(3, false);
 
             AuthHttpRequest.init(`${BASE_URL}/refresh`, 440);
-            let userId = "testing-supertokens-website";
+            let userId = "testing-supertokens-react-native";
             // test out anti-csrf
             //check that login works correctly
             let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
@@ -506,7 +506,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             await startST();
 
             AuthHttpRequest.init(`${BASE_URL}/refresh`, 440);
-            let userId = "testing-supertokens-website";
+            let userId = "testing-supertokens-react-native";
 
             let deviceInfoIsAdded = await axiosInstance.get(`${BASE_URL}/checkDeviceInfo`);
             assertEqual(deviceInfoIsAdded.data, true);
@@ -525,7 +525,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             AuthHttpRequest.makeSuper(axiosInstance);
             AuthHttpRequest.makeSuper(axiosInstance);
             AuthHttpRequest.init(`${BASE_URL}/refresh`, 440);
-            let userId = "testing-supertokens-website";
+            let userId = "testing-supertokens-react-native";
 
             let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
                 headers: {
@@ -583,7 +583,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             await startST();
 
             AuthHttpRequest.init(`${BASE_URL}/refresh`, 440);
-            let userId = "testing-supertokens-website";
+            let userId = "testing-supertokens-react-native";
 
             let userConfigResponse = await axiosInstance.post(
                 `${BASE_URL}/testUserConfig`,
@@ -653,7 +653,7 @@ describe("Axios AuthHttpRequest class tests", function() {
 
             AuthHttpRequest.init(`${BASE_URL}/refresh`, 440);
             AuthHttpRequest.init(`${BASE_URL}/refresh`, 440);
-            let userId = "testing-supertokens-website";
+            let userId = "testing-supertokens-react-native";
 
             let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
                 headers: {
@@ -699,7 +699,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             await startST(3);
 
             AuthHttpRequest.init(`${BASE_URL}/refresh`, 440);
-            let userId = "testing-supertokens-website";
+            let userId = "testing-supertokens-react-native";
 
             // send api request to login
             let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
@@ -748,7 +748,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             assert.strictEqual(verifyRequestState, undefined);
             assert.strictEqual(verifyResponseState, undefined);
 
-            let userId = "testing-supertokens-website";
+            let userId = "testing-supertokens-react-native";
             let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
                 headers: {
                     Accept: "application/json",
@@ -782,7 +782,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             await startST(5);
 
             AuthHttpRequest.init(`${BASE_URL}/refresh`, 440);
-            let userId = "testing-supertokens-website";
+            let userId = "testing-supertokens-react-native";
 
             let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
                 headers: {
@@ -823,7 +823,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             await startST(5);
 
             AuthHttpRequest.init(`${BASE_URL}/refresh`, 440);
-            let userId = "testing-supertokens-website";
+            let userId = "testing-supertokens-react-native";
 
             // send api request to login
             let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
@@ -857,7 +857,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             makeSuperTest(axiosInstance);
 
             AuthHttpRequest.init(`${BASE_URL}/refresh`, 440);
-            let userId = "testing-supertokens-website";
+            let userId = "testing-supertokens-react-native";
             let multipleInterceptorResponse = await axiosInstance.post(
                 `${BASE_URL}/multipleInterceptors`,
                 JSON.stringify({ userId }),

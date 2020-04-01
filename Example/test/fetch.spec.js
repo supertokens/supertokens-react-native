@@ -199,7 +199,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             await startST(3);
 
             AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, 440, true);
-            let userId = "testing-supertokens-website";
+            let userId = "testing-supertokens-react-native";
 
             let loginResponse = await global.fetch(`${BASE_URL}/login`, {
                 method: "post",
@@ -239,7 +239,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             await startST();
 
             AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, 440, true);
-            let userId = "testing-supertokens-website";
+            let userId = "testing-supertokens-react-native";
 
             //send loing request
             let loginResponse = await global.fetch(`${BASE_URL}/login`, {
@@ -304,7 +304,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             await startST(5);
 
             AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, 440, true);
-            let userId = "testing-supertokens-website";
+            let userId = "testing-supertokens-react-native";
 
             //send loing request
             let loginResponse = await global.fetch(`${BASE_URL}/login`, {
@@ -331,7 +331,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             await startST(5);
 
             AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, 440, true);
-            let userId = "testing-supertokens-website";
+            let userId = "testing-supertokens-react-native";
 
             // send api request to login
             let loginResponse = await global.fetch(`${BASE_URL}/login`, {
@@ -371,7 +371,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             await startST(5);
 
             AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, 440, true);
-            let userId = "testing-supertokens-website";
+            let userId = "testing-supertokens-react-native";
 
             // send api request to login
             let loginResponse = await global.fetch(`${BASE_URL}/login`, {
@@ -423,7 +423,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             await startST(3, false);
 
             AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, 440, true);
-            let userId = "testing-supertokens-website";
+            let userId = "testing-supertokens-react-native";
 
             // send api request to login
             let loginResponse = await global.fetch(`${BASE_URL}/login`, {
@@ -469,7 +469,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             await startST();
 
             AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, 440, true);
-            let userId = "testing-supertokens-website";
+            let userId = "testing-supertokens-react-native";
 
             // send request to check if deviceInfo is beinf added to headers
             let deviceInfoIsAdded = await fetch(`${BASE_URL}/checkDeviceInfo`);
@@ -524,7 +524,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
             AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, 440, true);
             AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, 440, true);
-            let userId = "testing-supertokens-website";
+            let userId = "testing-supertokens-react-native";
 
             let loginResponse = await global.fetch(`${BASE_URL}/login`, {
                 method: "post",
@@ -577,7 +577,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             await startST(3);
 
             AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, 440, true);
-            let userId = "testing-supertokens-website";
+            let userId = "testing-supertokens-react-native";
 
             // send api request to login
             let loginResponse = await global.fetch(`${BASE_URL}/login`, {
@@ -615,7 +615,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             await startST(5);
 
             AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, 440, true);
-            let userId = "testing-supertokens-website";
+            let userId = "testing-supertokens-react-native";
 
             let loginResponse = await global.fetch(`${BASE_URL}/login`, {
                 method: "post",
@@ -658,7 +658,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             await startST(5);
 
             AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, 440, true);
-            let userId = "testing-supertokens-website";
+            let userId = "testing-supertokens-react-native";
 
             // send api request to login
             let loginResponse = await global.fetch(`${BASE_URL}/login`, {
@@ -693,7 +693,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST(5);
             AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, 440, true);
-            let userId = "testing-supertokens-website";
+            let userId = "testing-supertokens-react-native";
 
             // this is technically not doing interception, but it is equavalent to doing it since the inteceptor just calls the function below.
             await AuthHttpRequestFetch.fetch(`https://www.google.com`);
@@ -732,7 +732,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST(5);
             AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, 440, true);
-            let userId = "testing-supertokens-website";
+            let userId = "testing-supertokens-react-native";
 
             let myFetch = async (url, config) => {
                 let testConfig = config;
