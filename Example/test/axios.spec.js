@@ -29,6 +29,8 @@ import {
 import { spawn } from "child_process";
 import { ProcessState, PROCESS_STATE } from "supertokens-react-native/lib/build/processState";
 
+process.env.TEST_MODE = "testing";
+
 const BASE_URL = "http://localhost:8080";
 let axiosInstance;
 /* TODO: 

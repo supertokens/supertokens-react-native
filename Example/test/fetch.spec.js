@@ -45,6 +45,8 @@ const BASE_URL = "http://localhost:8080";
     - User passed config should be sent as well
 */
 
+process.env.TEST_MODE = "testing";
+
 describe("Fetch AuthHttpRequest class tests", function() {
     async function delay(time) {
         return new Promise(resolve => setTimeout(resolve, time * 1000));

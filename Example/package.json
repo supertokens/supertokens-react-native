@@ -35,6 +35,7 @@
     "setupFiles": [
       "./test/setup.js"
     ],
+    "testEnvironment": "node",
     "transform": {
       "^.+\\.(ts|tsx)?$": "ts-jest",
       "^.*\\.(js|jsx)$": "babel-jest"
