@@ -6,14 +6,14 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "start": "react-native start",
-    "test": "jest",
+    "test": "jest test/*.spec.js",
     "lint": "eslint ."
   },
   "dependencies": {
+    "axios": "0.19.2",
     "react": "16.11.0",
     "react-native": "0.62.0",
-    "supertokens-react-native": "git+https://git@github.com/supertokens/supertokens-react-native.git#0.0",
-    "axios": "0.19.2"
+    "supertokens-react-native": "git+https://git@github.com/supertokens/supertokens-react-native.git#0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
@@ -23,9 +23,18 @@
     "eslint": "^6.8.0",
     "jest": "^25.2.3",
     "metro-react-native-babel-preset": "^0.59.0",
-    "react-test-renderer": "16.11.0"
+    "react-test-renderer": "16.11.0",
+    "babel-preset-react-app": "^7.0.0",
+    "ts-jest": "^25.3.0"
   },
   "jest": {
-    "preset": "react-native"
+    "preset": "react-native",
+    "transform": {
+      "^.+\\.(ts|tsx)?$": "ts-jest",
+      "^.*\\.(js|jsx)$": "babel-jest"
+    },
+    "transformIgnorePatterns": [
+      "/node_modules/.+\\.(js | ts | jsx | tsx)"
+    ]
   }
 }
