@@ -71,5 +71,5 @@ cd ../project/Example/test/server/
 npm i -d
 npm i git+https://github.com:supertokens/supertokens-node.git#$2
 cd ../../../
-cp -r ./test/node_modules/tough-cookie ./node_modules/
+cp -r ./test/tough-cookie ./node_modules/
 npm run test

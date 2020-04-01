@@ -6,7 +6,7 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "start": "react-native start",
-    "test": "jest test/*.spec.js",
+    "test": "npx jest test/*.spec.js",
     "lint": "eslint ."
   },
   "dependencies": {
@@ -27,7 +27,8 @@
     "babel-preset-react-app": "7.0.0",
     "ts-jest": "25.3.0",
     "node-fetch": "2.6.0",
-    "fetch-cookie": "0.8.0"
+    "fetch-cookie": "0.8.0",
+    "axios-cookiejar-support": "0.5.1"
   },
   "jest": {
     "preset": "react-native",

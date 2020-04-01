@@ -78,47 +78,50 @@ export async function interceptorFunctionRequestFulfilled(config: AxiosRequestCo
     return configWithAntiCsrf;
 }
 
-export async function responseInterceptor(response: AxiosResponse) {
-    try {
-        if (!AuthHttpRequest.initCalled) {
-            throw new Error("init function not called");
-        }
-        let url = getUrlFromConfig(response.config);
-        if (typeof url === "string" && getDomainFromUrl(url) !== AuthHttpRequest.apiDomain) {
-            // this check means that if you are using axios via inteceptor, then we only do the refresh steps if you are calling your APIs.
-            return response;
-        }
-        ProcessState.getInstance().addState(PROCESS_STATE.CALLING_INTERCEPTION_RESPONSE);
-
-        let idRefreshToken = response.headers["id-refresh-token"];
-        if (idRefreshToken !== undefined) {
-            await IdRefreshToken.setToken(idRefreshToken);
-        }
-        if (response.status === AuthHttpRequest.sessionExpiredStatusCode) {
-            let config = response.config;
-            return AuthHttpRequest.doRequest(
-                (config: AxiosRequestConfig) => {
-                    // we create an instance since we don't want to intercept this.
-                    const instance = axios.create();
-                    return instance(config);
-                },
-                config,
-                url,
-                response,
-                true
-            );
-        } else {
-            let antiCsrfToken = response.headers["anti-csrf"];
-            if (antiCsrfToken !== undefined) {
-                await AntiCSRF.setToken(antiCsrfToken, await IdRefreshToken.getToken());
+export function responseInterceptor(axiosInstance: any) {
+    return async (response: AxiosResponse) => {
+        try {
+            if (!AuthHttpRequest.initCalled) {
+                throw new Error("init function not called");
             }
-            return response;
+            let url = getUrlFromConfig(response.config);
+            if (typeof url === "string" && getDomainFromUrl(url) !== AuthHttpRequest.apiDomain) {
+                // this check means that if you are using axios via inteceptor, then we only do the refresh steps if you are calling your APIs.
+                return response;
+            }
+            ProcessState.getInstance().addState(PROCESS_STATE.CALLING_INTERCEPTION_RESPONSE);
+
+            let idRefreshToken = response.headers["id-refresh-token"];
+            if (idRefreshToken !== undefined) {
+                await IdRefreshToken.setToken(idRefreshToken);
+            }
+            if (response.status === AuthHttpRequest.sessionExpiredStatusCode) {
+                let config = response.config;
+                return AuthHttpRequest.doRequest(
+                    (config: AxiosRequestConfig) => {
+                        // we create an instance since we don't want to intercept this.
+                        // const instance = axios.create();
+                        // return instance(config);
+                        return axiosInstance(config);
+                    },
+                    config,
+                    url,
+                    response,
+                    true
+                );
+            } else {
+                let antiCsrfToken = response.headers["anti-csrf"];
+                if (antiCsrfToken !== undefined) {
+                    await AntiCSRF.setToken(antiCsrfToken, await IdRefreshToken.getToken());
+                }
+                return response;
+            }
+        } finally {
+            if ((await IdRefreshToken.getToken()) === undefined) {
+                await AntiCSRF.removeToken();
+            }
         }
-    } finally {
-        if ((await IdRefreshToken.getToken()) === undefined) {
-            await AntiCSRF.removeToken();
-        }
-    }
+    };
 }
 
 /**
@@ -351,7 +354,7 @@ export default class AuthHttpRequest {
         });
 
         // Add a response interceptor
-        axiosInstance.interceptors.response.use(responseInterceptor, async function(error: any) {
+        axiosInstance.interceptors.response.use(responseInterceptor(axiosInstance), async function(error: any) {
             if (!AuthHttpRequest.initCalled) {
                 throw new Error("init function not called");
             }
@@ -364,8 +367,9 @@ export default class AuthHttpRequest {
                     return AuthHttpRequest.doRequest(
                         (config: AxiosRequestConfig) => {
                             // we create an instance since we don't want to intercept this.
-                            const instance = axios.create();
-                            return instance(config);
+                            // const instance = axios.create();
+                            // return instance(config);
+                            return axiosInstance(config);
                         },
                         config,
                         getUrlFromConfig(config),

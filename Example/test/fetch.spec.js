@@ -13,8 +13,7 @@
  * under the License.
  */
 import axios from "axios";
-import nodeFetch from "node-fetch";
-const fetch = require("fetch-cookie")(nodeFetch);
+const tough = require("tough-cookie");
 import AntiCsrfToken from "supertokens-react-native/lib/build/antiCsrf";
 import AuthHttpRequestFetch from "supertokens-react-native";
 import AuthHttpRequest from "supertokens-react-native/axios";
@@ -28,7 +27,6 @@ import {
 } from "./utils";
 import { spawn } from "child_process";
 import { ProcessState, PROCESS_STATE } from "supertokens-react-native/lib/build/processState";
-import { AsyncStorage } from "react-native";
 
 const BASE_URL = "http://localhost:8080";
 
@@ -53,6 +51,10 @@ describe("Fetch AuthHttpRequest class tests", function() {
         return new Promise(resolve => setTimeout(resolve, time * 1000));
     }
 
+    function assertEqual(a, b) {
+        assert(a === b);
+    }
+
     beforeAll(async function() {
         spawn("./test/startServer", ["../../com-root"]);
         await new Promise(r => setTimeout(r, 1000));
@@ -69,9 +71,13 @@ describe("Fetch AuthHttpRequest class tests", function() {
     beforeEach(async function() {
         AuthHttpRequestFetch.initCalled = false;
         AuthHttpRequest.initCalled = false;
+        AuthHttpRequestFetch.originalFetch = undefined;
         ProcessState.getInstance().reset();
         let instance = axios.create();
         await instance.post(BASE_URL + "/beforeeach");
+
+        let nodeFetch = require("node-fetch").default;
+        const fetch = require("fetch-cookie")(nodeFetch, new tough.CookieJar());
         global.fetch = fetch;
     });
 
@@ -225,77 +231,70 @@ describe("Fetch AuthHttpRequest class tests", function() {
         }
     });
 
-    //     // //test custom headers are being sent when logged in and when not*****
-    //     // it("test with fetch that custom headers are being sent", async function () {
-    //     //     await startST();
-    //     //     const browser = await puppeteer.launch({
-    //     //         args: ["--no-sandbox", "--disable-setuid-sandbox"]
-    //     //     });
-    //     //     try {
-    //     //         const page = await browser.newPage();
-    //     //         await page.goto(BASE_URL + "/index", { waitUntil: "load" });
-    //     //         await page.addScriptTag({ path: `./bundle/bundle.js`, type: "text/javascript" });
-    //     //         await page.evaluate(async () => {
-    //     //             let BASE_URL = "http://localhost:8080";
-    //     //             supertokens.fetch.init(`${BASE_URL}/refresh`, 440, true);
-    //     //             let userId = "testing-supertokens-website";
+    //test custom headers are being sent when logged in and when not*****
+    it("test with fetch that custom headers are being sent", async function(done) {
+        try {
+            jest.setTimeout(10000);
+            await startST();
 
-    //     //             //send loing request
-    //     //             let loginResponse = await fetch(`${BASE_URL}/login`, {
-    //     //                 method: "post",
-    //     //                 headers: {
-    //     //                     Accept: "application/json",
-    //     //                     "Content-Type": "application/json"
-    //     //                 },
-    //     //                 body: JSON.stringify({ userId })
-    //     //             });
-    //     //             assertEqual(await loginResponse.text(), userId);
+            AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, 440, true);
+            let userId = "testing-supertokens-website";
 
-    //     //             //send api request with custom headers and check that they are set
-    //     //             let testResponse = await fetch(`${BASE_URL}/testing`, {
-    //     //                 method: "post",
-    //     //                 headers: {
-    //     //                     Accept: "application/json",
-    //     //                     "Content-Type": "application/json",
-    //     //                     testing: "testValue"
-    //     //                 }
-    //     //             });
+            //send loing request
+            let loginResponse = await global.fetch(`${BASE_URL}/login`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+            assertEqual(await loginResponse.text(), userId);
 
-    //     //             // check that output is success
-    //     //             assertEqual(await testResponse.text(), "success");
-    //     //             //check that the custom headers are present
-    //     //             assertEqual(await testResponse.headers.get("testing"), "testValue");
+            //send api request with custom headers and check that they are set
+            let testResponse = await global.fetch(`${BASE_URL}/testing`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                    testing: "testValue"
+                }
+            });
 
-    //     //             //send logout request
-    //     //             let logoutResponse = await fetch(`${BASE_URL}/logout`, {
-    //     //                 method: "post",
-    //     //                 headers: {
-    //     //                     Accept: "application/json",
-    //     //                     "Content-Type": "application/json"
-    //     //                 },
-    //     //                 body: JSON.stringify({ userId })
-    //     //             });
+            // check that output is success
+            assertEqual(await testResponse.text(), "success");
+            //check that the custom headers are present
+            assertEqual(await testResponse.headers.get("testing"), "testValue");
 
-    //     //             assertEqual(await logoutResponse.text(), "success");
+            //send logout request
+            let logoutResponse = await global.fetch(`${BASE_URL}/logout`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+            assertEqual(await logoutResponse.text(), "success");
 
-    //     //             let testResponse2 = await fetch(`${BASE_URL}/testing`, {
-    //     //                 method: "post",
-    //     //                 headers: {
-    //     //                     Accept: "application/json",
-    //     //                     "Content-Type": "application/json",
-    //     //                     testing: "testValue"
-    //     //                 }
-    //     //             });
+            let testResponse2 = await global.fetch(`${BASE_URL}/testing`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                    testing: "testValue"
+                }
+            });
+            // check that output is success
+            assertEqual(await testResponse2.text(), "success");
+            //check that the custom headers are present
+            assertEqual(await testResponse2.headers.get("testing"), "testValue");
 
-    //     //             // check that output is success
-    //     //             assertEqual(await testResponse2.text(), "success");
-    //     //             //check that the custom headers are present
-    //     //             assertEqual(await testResponse2.headers.get("testing"), "testValue");
-    //     //         });
-    //     //     } finally {
-    //     //         await browser.close();
-    //     //     }
-    //     // });
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
 
     //     // //testing doesSessionExist works fine when user is logged in******
     //     // it("test with fetch that doesSessionExist works fine when the user is logged in", async function () {
