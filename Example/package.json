@@ -6,7 +6,7 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "start": "react-native start",
-    "test": "npx jest test/*.spec.js",
+    "test": "npx jest test/*.spec.js --runInBand",
     "lint": "eslint ."
   },
   "dependencies": {
