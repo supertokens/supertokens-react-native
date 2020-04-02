@@ -18,7 +18,7 @@ let cookieParser = require("cookie-parser");
 let bodyParser = require("body-parser");
 let http = require("http");
 let { startST, stopST, killAllST, setupST, cleanST, setKeyValueInConfig } = require("./utils");
-package_version = "0.0.1";
+let { package_version } = require("./version");
 let noOfTimesRefreshCalledDuringTest = 0;
 let noOfTimesGetSessionCalledDuringTest = 0;
 

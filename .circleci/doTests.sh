@@ -93,6 +93,7 @@ while [ $i -lt $frontendDriverLength ]; do
     rm -rf ../../com-root
     rm -rf ./test/server/node_modules/supertokens-node
     git checkout HEAD -- ./test/server/package.json
+    cd ../.circleci
 done
 
 if [[ $someTestsRan = "true" ]]

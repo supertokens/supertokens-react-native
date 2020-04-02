@@ -109,6 +109,26 @@ then
     exit 1
 fi
 
+testversion=`cat Example/test/server/version.js | grep -e 'module.exports.package_version'`
+while IFS='"' read -ra ADDR; do
+    counter=0
+    for i in "${ADDR[@]}"; do
+        if [ $counter == 1 ]
+        then
+            testversion=$i
+        fi
+        counter=$(($counter+1))
+    done
+done <<< "$testversion"
+
+if [ $version != $testversion ]
+then
+    RED='\033[0;31m'
+    NC='\033[0m' # No Color
+    printf "${RED}Version codes in version.ts and version.js in test server are not the same${NC}\n"
+    exit 1
+fi
+
 # get git branch name-----------
 branch_name="$(git symbolic-ref HEAD 2>/dev/null)" ||
 branch_name="(unnamed branch)"     # detached HEAD
