@@ -70,7 +70,7 @@ echo $SUPERTOKENS_API_KEY > apiPassword
 cd ../project/Example/test/server/
 npm i -d
 npm i git+https://github.com:supertokens/supertokens-node.git#$2
-cd ../../../
+cd ../../
 npm i -d
 cp -r ./test/tough-cookie ./node_modules/
 npm i git+https://github.com:supertokens/supertokens-react-native.git#dev-v$3
