@@ -61,7 +61,7 @@ export function getDomainFromUrl(url: string): string {
             .filter((_, i) => i <= 2)
             .join("/");
     } else {
-        return window.location.origin;
+        throw new Error("Please make sure that the provided URL starts with http:// or https://");
     }
 }
 

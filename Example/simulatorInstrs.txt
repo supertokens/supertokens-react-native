@@ -1,0 +1,6 @@
+- run ./startTestingEnv --wait in com-root
+- change config.yaml file to have cookie_domain as 192.168.1.112
+- run in com-root: java -classpath "./core/*:./plugin-interface/*" io.supertokens.Main ./ DEV port=9000
+- go to ./Example/test/server and run TEST_MODE=testing INSTALL_PATH=../../../../com-root node .
+- go to Example folder and run npm run ios
+- To test on android, open android studio -> tools -> avd manager -> start a simulator -> run npm run android
