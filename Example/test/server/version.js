@@ -1,1 +1,1 @@
-module.exports.package_version = "1.0.0";
+module.exports.package_version = "1.0.1";
