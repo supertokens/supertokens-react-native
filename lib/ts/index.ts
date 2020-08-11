@@ -71,7 +71,7 @@ export function getDomainFromUrl(url: string): string {
  */
 export default class AuthHttpRequest {
     private static refreshTokenUrl: string | undefined;
-    private static sessionExpiredStatusCode = 440;
+    private static sessionExpiredStatusCode = 401;
     private static initCalled = false;
     static originalFetch: any;
     private static apiDomain = "";
@@ -80,9 +80,9 @@ export default class AuthHttpRequest {
 
     static init(
         refreshTokenUrl: string,
-        sessionExpiredStatusCode?: number,
         viaInterceptor?: boolean,
-        refreshAPICustomHeaders?: any
+        refreshAPICustomHeaders?: any,
+        sessionExpiredStatusCode?: number
     ) {
         if (viaInterceptor === undefined) {
             if (AuthHttpRequest.viaInterceptor === undefined) {

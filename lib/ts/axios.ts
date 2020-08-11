@@ -130,13 +130,13 @@ export function responseInterceptor(axiosInstance: any) {
  */
 export default class AuthHttpRequest {
     private static refreshTokenUrl: string | undefined;
-    static sessionExpiredStatusCode = 440;
+    static sessionExpiredStatusCode = 401;
     static initCalled = false;
     static apiDomain = "";
     private static refreshAPICustomHeaders: any;
 
-    static init(refreshTokenUrl: string, sessionExpiredStatusCode?: number, refreshAPICustomHeaders?: any) {
-        FetchAuthRequest.init(refreshTokenUrl, sessionExpiredStatusCode);
+    static init(refreshTokenUrl: string, refreshAPICustomHeaders?: any, sessionExpiredStatusCode?: number) {
+        FetchAuthRequest.init(refreshTokenUrl, undefined, undefined, sessionExpiredStatusCode);
         AuthHttpRequest.refreshTokenUrl = refreshTokenUrl;
         AuthHttpRequest.refreshAPICustomHeaders = refreshAPICustomHeaders === undefined ? {} : refreshAPICustomHeaders;
 
