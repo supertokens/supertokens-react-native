@@ -109,7 +109,7 @@ app.get("/", async (req, res) => {
     } catch (err) {
         res.header("Access-Control-Allow-Origin", "http://127.0.0.1:8080");
         res.header("Access-Control-Allow-Credentials", true);
-        res.status(440).send();
+        res.status(401).send();
     }
 });
 
@@ -129,7 +129,7 @@ app.post("/logout", async (req, res) => {
         res.header("Access-Control-Allow-Credentials", true);
         res.send("success");
     } catch (err) {
-        res.status(440).send();
+        res.status(401).send();
     }
 });
 
@@ -140,7 +140,7 @@ app.post("/revokeAll", async (req, res) => {
         await SuperTokens.revokeAllSessionsForUser(userId);
         res.send("success");
     } catch (err) {
-        res.status(440).send();
+        res.status(401).send();
     }
 });
 
@@ -152,7 +152,7 @@ app.post("/refresh", async (req, res) => {
     } catch (err) {
         res.header("Access-Control-Allow-Origin", "http://127.0.0.1:8080");
         res.header("Access-Control-Allow-Credentials", true);
-        res.status(440).send();
+        res.status(401).send();
         return;
     }
     res.header("Access-Control-Allow-Origin", "http://127.0.0.1:8080");
