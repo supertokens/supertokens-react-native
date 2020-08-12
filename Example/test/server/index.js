@@ -73,6 +73,7 @@ app.post("/beforeeach", async (req, res) => {
     await setupST();
     await setKeyValueInConfig("cookie_domain", '"localhost"');
     await setKeyValueInConfig("cookie_secure", "false");
+    await setKeyValueInConfig("refresh_api_path", "/refresh");
     res.send();
 });
 
