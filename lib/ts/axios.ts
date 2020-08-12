@@ -136,7 +136,7 @@ export default class AuthHttpRequest {
     private static refreshAPICustomHeaders: any;
 
     static init(refreshTokenUrl: string, refreshAPICustomHeaders?: any, sessionExpiredStatusCode?: number) {
-        FetchAuthRequest.init(refreshTokenUrl, undefined, undefined, sessionExpiredStatusCode);
+        FetchAuthRequest.init(refreshTokenUrl, null, undefined, sessionExpiredStatusCode);
         AuthHttpRequest.refreshTokenUrl = refreshTokenUrl;
         AuthHttpRequest.refreshAPICustomHeaders = refreshAPICustomHeaders === undefined ? {} : refreshAPICustomHeaders;
 

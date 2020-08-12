@@ -80,13 +80,15 @@ export default class AuthHttpRequest {
 
     static init(
         refreshTokenUrl: string,
-        viaInterceptor?: boolean,
+        viaInterceptor?: boolean | null,
         refreshAPICustomHeaders?: any,
         sessionExpiredStatusCode?: number
     ) {
-        if (viaInterceptor === undefined) {
+        if (viaInterceptor === undefined || viaInterceptor === null) {
             if (AuthHttpRequest.viaInterceptor === undefined) {
-                viaInterceptor = false;
+                viaInterceptor = viaInterceptor === undefined;
+                // if user uses this function, viaInterceptor will be undefined, in which case, they will by default have it on
+                // if axios calls this function, then viaInterceptor will be null, in which case, no interception from fetch will happen
             } else {
                 viaInterceptor = AuthHttpRequest.viaInterceptor;
             }

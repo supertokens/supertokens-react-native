@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Default session expiry status code is 401
 - Changes to `init` function
+- If using `fetch`, makes that interception on by default
 
 ## [1.0.1] - 2020-06-14
 ### Fixes
