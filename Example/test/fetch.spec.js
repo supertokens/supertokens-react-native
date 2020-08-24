@@ -104,7 +104,10 @@ describe("Fetch AuthHttpRequest class tests", function() {
     });
 
     it("testing with fetch api methods without config", async function() {
-        AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, false);
+        AuthHttpRequestFetch.init({
+            refreshTokenUrl: `${BASE_URL}/refresh`,
+            viaInterceptor: false
+        });
 
         let getResponse = await AuthHttpRequestFetch.get(`${BASE_URL}/testing`);
         let postResponse = await AuthHttpRequestFetch.post(`${BASE_URL}/testing`);
@@ -126,7 +129,10 @@ describe("Fetch AuthHttpRequest class tests", function() {
     });
 
     it("testing with fetch api methods with config", async function() {
-        AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, false);
+        AuthHttpRequestFetch.init({
+            refreshTokenUrl: `${BASE_URL}/refresh`,
+            viaInterceptor: false
+        });
 
         let testing = "testing";
         let getResponse = await AuthHttpRequestFetch.get(`${BASE_URL}/${testing}`, { headers: { testing } });
@@ -170,7 +176,10 @@ describe("Fetch AuthHttpRequest class tests", function() {
     });
 
     it("testing with fetch api methods that doesn't exists", async function() {
-        AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, false);
+        AuthHttpRequestFetch.init({
+            refreshTokenUrl: `${BASE_URL}/refresh`,
+            viaInterceptor: false
+        });
 
         let getResponse = await AuthHttpRequestFetch.get(`${BASE_URL}/fail`);
         let postResponse = await AuthHttpRequestFetch.post(`${BASE_URL}/fail`);
@@ -199,7 +208,10 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(10000);
             await startST(3);
 
-            AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, true);
+            AuthHttpRequestFetch.init({
+                refreshTokenUrl: `${BASE_URL}/refresh`,
+                viaInterceptor: true
+            });
             let userId = "testing-supertokens-react-native";
 
             let loginResponse = await global.fetch(`${BASE_URL}/login`, {
@@ -239,7 +251,9 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(10000);
             await startST();
 
-            AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, true);
+            AuthHttpRequestFetch.init({
+                refreshTokenUrl: `${BASE_URL}/refresh`
+            });
             let userId = "testing-supertokens-react-native";
 
             //send loing request
@@ -304,7 +318,9 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST(5);
 
-            AuthHttpRequestFetch.init(`${BASE_URL}/refresh`);
+            AuthHttpRequestFetch.init({
+                refreshTokenUrl: `${BASE_URL}/refresh`
+            });
             let userId = "testing-supertokens-react-native";
 
             //send loing request
@@ -331,7 +347,9 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST(5);
 
-            AuthHttpRequestFetch.init(`${BASE_URL}/refresh`);
+            AuthHttpRequestFetch.init({
+                refreshTokenUrl: `${BASE_URL}/refresh`
+            });
             let userId = "testing-supertokens-react-native";
 
             // send api request to login
@@ -371,7 +389,9 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST(5);
 
-            AuthHttpRequestFetch.init(`${BASE_URL}/refresh`);
+            AuthHttpRequestFetch.init({
+                refreshTokenUrl: `${BASE_URL}/refresh`
+            });
             let userId = "testing-supertokens-react-native";
 
             // send api request to login
@@ -422,8 +442,9 @@ describe("Fetch AuthHttpRequest class tests", function() {
         try {
             jest.setTimeout(15000);
             await startST(3, false);
-
-            AuthHttpRequestFetch.init(`${BASE_URL}/refresh`);
+            AuthHttpRequestFetch.init({
+                refreshTokenUrl: `${BASE_URL}/refresh`
+            });
             let userId = "testing-supertokens-react-native";
 
             // send api request to login
@@ -468,8 +489,10 @@ describe("Fetch AuthHttpRequest class tests", function() {
         try {
             jest.setTimeout(15000);
             await startST();
-
-            AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, true);
+            AuthHttpRequestFetch.init({
+                refreshTokenUrl: `${BASE_URL}/refresh`,
+                viaInterceptor: true
+            });
             let userId = "testing-supertokens-react-native";
 
             // send request to check if deviceInfo is beinf added to headers
@@ -486,8 +509,9 @@ describe("Fetch AuthHttpRequest class tests", function() {
         try {
             jest.setTimeout(15000);
             await startST();
-
-            AuthHttpRequestFetch.init(`${BASE_URL}/refresh`);
+            AuthHttpRequestFetch.init({
+                refreshTokenUrl: `${BASE_URL}/refresh`
+            });
 
             let val = await global.fetch(`${BASE_URL}/testError`);
             assertEqual(await val.text(), "test error message");
@@ -504,8 +528,10 @@ describe("Fetch AuthHttpRequest class tests", function() {
         try {
             jest.setTimeout(15000);
             await startST();
-
-            AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, false);
+            AuthHttpRequestFetch.init({
+                refreshTokenUrl: `${BASE_URL}/refresh`,
+                viaInterceptor: false
+            });
 
             let val = await AuthHttpRequestFetch.get(`${BASE_URL}/testError`);
             assertEqual(await val.text(), "test error message");
@@ -522,9 +548,12 @@ describe("Fetch AuthHttpRequest class tests", function() {
         try {
             jest.setTimeout(15000);
             await startST();
-
-            AuthHttpRequestFetch.init(`${BASE_URL}/refresh`);
-            AuthHttpRequestFetch.init(`${BASE_URL}/refresh`);
+            AuthHttpRequestFetch.init({
+                refreshTokenUrl: `${BASE_URL}/refresh`
+            });
+            AuthHttpRequestFetch.init({
+                refreshTokenUrl: `${BASE_URL}/refresh`
+            });
             let userId = "testing-supertokens-react-native";
 
             let loginResponse = await global.fetch(`${BASE_URL}/login`, {
@@ -537,8 +566,9 @@ describe("Fetch AuthHttpRequest class tests", function() {
             });
 
             assertEqual(await loginResponse.text(), userId);
-
-            AuthHttpRequestFetch.init(`${BASE_URL}/refresh`, true);
+            AuthHttpRequestFetch.init({
+                refreshTokenUrl: `${BASE_URL}/refresh`
+            });
 
             let logoutResponse = await global.fetch(`${BASE_URL}/logout`, {
                 method: "post",
@@ -576,8 +606,9 @@ describe("Fetch AuthHttpRequest class tests", function() {
         try {
             jest.setTimeout(15000);
             await startST(3);
-
-            AuthHttpRequestFetch.init(`${BASE_URL}/refresh`);
+            AuthHttpRequestFetch.init({
+                refreshTokenUrl: `${BASE_URL}/refresh`
+            });
             let userId = "testing-supertokens-react-native";
 
             // send api request to login
@@ -614,8 +645,9 @@ describe("Fetch AuthHttpRequest class tests", function() {
         try {
             jest.setTimeout(15000);
             await startST(5);
-
-            AuthHttpRequestFetch.init(`${BASE_URL}/refresh`);
+            AuthHttpRequestFetch.init({
+                refreshTokenUrl: `${BASE_URL}/refresh`
+            });
             let userId = "testing-supertokens-react-native";
 
             let loginResponse = await global.fetch(`${BASE_URL}/login`, {
@@ -657,8 +689,9 @@ describe("Fetch AuthHttpRequest class tests", function() {
         try {
             jest.setTimeout(15000);
             await startST(5);
-
-            AuthHttpRequestFetch.init(`${BASE_URL}/refresh`);
+            AuthHttpRequestFetch.init({
+                refreshTokenUrl: `${BASE_URL}/refresh`
+            });
             let userId = "testing-supertokens-react-native";
 
             // send api request to login
@@ -693,7 +726,9 @@ describe("Fetch AuthHttpRequest class tests", function() {
         try {
             jest.setTimeout(15000);
             await startST(5);
-            AuthHttpRequestFetch.init(`${BASE_URL}/refresh`);
+            AuthHttpRequestFetch.init({
+                refreshTokenUrl: `${BASE_URL}/refresh`
+            });
             let userId = "testing-supertokens-react-native";
 
             // this is technically not doing interception, but it is equavalent to doing it since the inteceptor just calls the function below.
@@ -732,7 +767,9 @@ describe("Fetch AuthHttpRequest class tests", function() {
         try {
             jest.setTimeout(15000);
             await startST(5);
-            AuthHttpRequestFetch.init(`${BASE_URL}/refresh`);
+            AuthHttpRequestFetch.init({
+                refreshTokenUrl: `${BASE_URL}/refresh`
+            });
             let userId = "testing-supertokens-react-native";
 
             let myFetch = async (url, config) => {

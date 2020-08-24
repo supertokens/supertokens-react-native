@@ -135,8 +135,16 @@ export default class AuthHttpRequest {
     static apiDomain = "";
     private static refreshAPICustomHeaders: any;
 
-    static init(refreshTokenUrl: string, refreshAPICustomHeaders?: any, sessionExpiredStatusCode?: number) {
-        FetchAuthRequest.init(refreshTokenUrl, null, undefined, sessionExpiredStatusCode);
+    static init(options: {
+        refreshTokenUrl: string;
+        refreshAPICustomHeaders?: any;
+        sessionExpiredStatusCode?: number;
+    }) {
+        let { refreshTokenUrl, refreshAPICustomHeaders, sessionExpiredStatusCode } = options;
+        FetchAuthRequest.init({
+            ...options,
+            viaInterceptor: null
+        });
         AuthHttpRequest.refreshTokenUrl = refreshTokenUrl;
         AuthHttpRequest.refreshAPICustomHeaders = refreshAPICustomHeaders === undefined ? {} : refreshAPICustomHeaders;
 

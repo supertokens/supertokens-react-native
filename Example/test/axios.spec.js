@@ -126,7 +126,9 @@ describe("Axios AuthHttpRequest class tests", function() {
     });
 
     it("testing api methods without config", async function() {
-        AuthHttpRequest.init(`${BASE_URL}/refresh`);
+        AuthHttpRequest.init({
+            refreshTokenUrl: `${BASE_URL}/refresh`
+        });
 
         let getResponse = await AuthHttpRequest.get(`${BASE_URL}/testing`);
         let postResponse = await AuthHttpRequest.post(`${BASE_URL}/testing`);
@@ -148,7 +150,9 @@ describe("Axios AuthHttpRequest class tests", function() {
     });
 
     it("testing api methods with config", async function() {
-        AuthHttpRequest.init(`${BASE_URL}/refresh`);
+        AuthHttpRequest.init({
+            refreshTokenUrl: `${BASE_URL}/refresh`
+        });
 
         let testing = "testing";
         let getResponse = await AuthHttpRequest.get(`${BASE_URL}/${testing}`, { headers: { testing } });
@@ -196,7 +200,9 @@ describe("Axios AuthHttpRequest class tests", function() {
     });
 
     it("testing api methods that doesn't exists", async function() {
-        AuthHttpRequest.init(`${BASE_URL}/refresh`);
+        AuthHttpRequest.init({
+            refreshTokenUrl: `${BASE_URL}/refresh`
+        });
         let expectedStatusCode = 404;
         try {
             await AuthHttpRequest.get(`${BASE_URL}/fail`);
@@ -266,8 +272,9 @@ describe("Axios AuthHttpRequest class tests", function() {
             await startST();
 
             let BASE_URL = "http://localhost:8080";
-
-            AuthHttpRequest.init(`${BASE_URL}/refresh`);
+            AuthHttpRequest.init({
+                refreshTokenUrl: `${BASE_URL}/refresh`
+            });
             let userId = "testing-supertokens-react-native";
             let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
                 headers: {
@@ -296,8 +303,9 @@ describe("Axios AuthHttpRequest class tests", function() {
         try {
             jest.setTimeout(15000);
             await startST();
-
-            AuthHttpRequest.init(`${BASE_URL}/refresh`);
+            AuthHttpRequest.init({
+                refreshTokenUrl: `${BASE_URL}/refresh`
+            });
             let userId = "testing-supertokens-react-native";
 
             // send api request to login
@@ -352,8 +360,9 @@ describe("Axios AuthHttpRequest class tests", function() {
         try {
             jest.setTimeout(15000);
             await startST(5);
-
-            AuthHttpRequest.init(`${BASE_URL}/refresh`);
+            AuthHttpRequest.init({
+                refreshTokenUrl: `${BASE_URL}/refresh`
+            });
             let userId = "testing-supertokens-react-native";
 
             // send api request to login
@@ -376,8 +385,9 @@ describe("Axios AuthHttpRequest class tests", function() {
         try {
             jest.setTimeout(15000);
             await startST();
-
-            AuthHttpRequest.init(`${BASE_URL}/refresh`);
+            AuthHttpRequest.init({
+                refreshTokenUrl: `${BASE_URL}/refresh`
+            });
             let userId = "testing-supertokens-react-native";
 
             // send api request to login
@@ -412,8 +422,9 @@ describe("Axios AuthHttpRequest class tests", function() {
         try {
             jest.setTimeout(15000);
             await startST(5, true);
-
-            AuthHttpRequest.init(`${BASE_URL}/refresh`);
+            AuthHttpRequest.init({
+                refreshTokenUrl: `${BASE_URL}/refresh`
+            });
             let userId = "testing-supertokens-react-native";
 
             // send api request to login
@@ -461,8 +472,9 @@ describe("Axios AuthHttpRequest class tests", function() {
         try {
             jest.setTimeout(15000);
             await startST(3, false);
-
-            AuthHttpRequest.init(`${BASE_URL}/refresh`);
+            AuthHttpRequest.init({
+                refreshTokenUrl: `${BASE_URL}/refresh`
+            });
             let userId = "testing-supertokens-react-native";
             // test out anti-csrf
             //check that login works correctly
@@ -504,8 +516,9 @@ describe("Axios AuthHttpRequest class tests", function() {
         try {
             jest.setTimeout(15000);
             await startST();
-
-            AuthHttpRequest.init(`${BASE_URL}/refresh`);
+            AuthHttpRequest.init({
+                refreshTokenUrl: `${BASE_URL}/refresh`
+            });
             let userId = "testing-supertokens-react-native";
 
             let deviceInfoIsAdded = await axiosInstance.get(`${BASE_URL}/checkDeviceInfo`);
@@ -524,7 +537,9 @@ describe("Axios AuthHttpRequest class tests", function() {
 
             AuthHttpRequest.makeSuper(axiosInstance);
             AuthHttpRequest.makeSuper(axiosInstance);
-            AuthHttpRequest.init(`${BASE_URL}/refresh`);
+            AuthHttpRequest.init({
+                refreshTokenUrl: `${BASE_URL}/refresh`
+            });
             let userId = "testing-supertokens-react-native";
 
             let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
@@ -581,8 +596,9 @@ describe("Axios AuthHttpRequest class tests", function() {
         try {
             jest.setTimeout(15000);
             await startST();
-
-            AuthHttpRequest.init(`${BASE_URL}/refresh`);
+            AuthHttpRequest.init({
+                refreshTokenUrl: `${BASE_URL}/refresh`
+            });
             let userId = "testing-supertokens-react-native";
 
             let userConfigResponse = await axiosInstance.post(
@@ -609,8 +625,9 @@ describe("Axios AuthHttpRequest class tests", function() {
         try {
             jest.setTimeout(15000);
             await startST();
-
-            AuthHttpRequest.init(`${BASE_URL}/refresh`);
+            AuthHttpRequest.init({
+                refreshTokenUrl: `${BASE_URL}/refresh`
+            });
             try {
                 await axiosInstance.get(`${BASE_URL}/testError`);
                 assertEqual(false, "should not have come here");
@@ -629,8 +646,9 @@ describe("Axios AuthHttpRequest class tests", function() {
         try {
             jest.setTimeout(15000);
             await startST();
-
-            AuthHttpRequest.init(`${BASE_URL}/refresh`);
+            AuthHttpRequest.init({
+                refreshTokenUrl: `${BASE_URL}/refresh`
+            });
             try {
                 await AuthHttpRequest.get(`${BASE_URL}/testError`);
                 assert(false, "should not have come here");
@@ -650,9 +668,12 @@ describe("Axios AuthHttpRequest class tests", function() {
         try {
             jest.setTimeout(15000);
             await startST();
-
-            AuthHttpRequest.init(`${BASE_URL}/refresh`);
-            AuthHttpRequest.init(`${BASE_URL}/refresh`);
+            AuthHttpRequest.init({
+                refreshTokenUrl: `${BASE_URL}/refresh`
+            });
+            AuthHttpRequest.init({
+                refreshTokenUrl: `${BASE_URL}/refresh`
+            });
             let userId = "testing-supertokens-react-native";
 
             let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
@@ -663,7 +684,9 @@ describe("Axios AuthHttpRequest class tests", function() {
             });
             assertEqual(userId, loginResponse.data);
 
-            AuthHttpRequest.init(`${BASE_URL}/refresh`);
+            AuthHttpRequest.init({
+                refreshTokenUrl: `${BASE_URL}/refresh`
+            });
 
             let logoutResponse = await axiosInstance.post(`${BASE_URL}/logout`, JSON.stringify({ userId }), {
                 headers: {
@@ -697,8 +720,9 @@ describe("Axios AuthHttpRequest class tests", function() {
         try {
             jest.setTimeout(15000);
             await startST(3);
-
-            AuthHttpRequest.init(`${BASE_URL}/refresh`);
+            AuthHttpRequest.init({
+                refreshTokenUrl: `${BASE_URL}/refresh`
+            });
             let userId = "testing-supertokens-react-native";
 
             // send api request to login
@@ -733,7 +757,9 @@ describe("Axios AuthHttpRequest class tests", function() {
         try {
             jest.setTimeout(15000);
             await startST(5);
-            AuthHttpRequest.init(`${BASE_URL}/refresh`);
+            AuthHttpRequest.init({
+                refreshTokenUrl: `${BASE_URL}/refresh`
+            });
 
             await axiosInstance.get(`https://www.google.com`);
             let verifyRequestState = await ProcessState.getInstance().waitForEvent(
@@ -780,8 +806,9 @@ describe("Axios AuthHttpRequest class tests", function() {
         try {
             jest.setTimeout(15000);
             await startST(5);
-
-            AuthHttpRequest.init(`${BASE_URL}/refresh`);
+            AuthHttpRequest.init({
+                refreshTokenUrl: `${BASE_URL}/refresh`
+            });
             let userId = "testing-supertokens-react-native";
 
             let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
@@ -821,8 +848,9 @@ describe("Axios AuthHttpRequest class tests", function() {
         try {
             jest.setTimeout(15000);
             await startST(5);
-
-            AuthHttpRequest.init(`${BASE_URL}/refresh`);
+            AuthHttpRequest.init({
+                refreshTokenUrl: `${BASE_URL}/refresh`
+            });
             let userId = "testing-supertokens-react-native";
 
             // send api request to login
@@ -855,8 +883,9 @@ describe("Axios AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST();
             makeSuperTest(axiosInstance);
-
-            AuthHttpRequest.init(`${BASE_URL}/refresh`);
+            AuthHttpRequest.init({
+                refreshTokenUrl: `${BASE_URL}/refresh`
+            });
             let userId = "testing-supertokens-react-native";
             let multipleInterceptorResponse = await axiosInstance.post(
                 `${BASE_URL}/multipleInterceptors`,

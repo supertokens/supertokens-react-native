@@ -78,12 +78,13 @@ export default class AuthHttpRequest {
     private static viaInterceptor: boolean | undefined;
     private static refreshAPICustomHeaders: any;
 
-    static init(
-        refreshTokenUrl: string,
-        viaInterceptor?: boolean | null,
-        refreshAPICustomHeaders?: any,
-        sessionExpiredStatusCode?: number
-    ) {
+    static init(options: {
+        refreshTokenUrl: string;
+        viaInterceptor?: boolean | null;
+        refreshAPICustomHeaders?: any;
+        sessionExpiredStatusCode?: number;
+    }) {
+        let { refreshTokenUrl, viaInterceptor, refreshAPICustomHeaders, sessionExpiredStatusCode } = options;
         if (viaInterceptor === undefined || viaInterceptor === null) {
             if (AuthHttpRequest.viaInterceptor === undefined) {
                 viaInterceptor = viaInterceptor === undefined;
