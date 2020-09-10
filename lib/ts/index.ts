@@ -302,7 +302,7 @@ async function onUnauthorisedResponse(
         const antiCsrfToken = AntiCSRF.getToken(preRequestIdToken);
         let headers: any = {
             ...refreshAPICustomHeaders,
-            "supertokens-sdk-name": "website",
+            "supertokens-sdk-name": "react-native",
             "supertokens-sdk-version": package_version
         };
         if (antiCsrfToken !== undefined) {
