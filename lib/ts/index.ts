@@ -299,7 +299,7 @@ async function onUnauthorisedResponse(
             // means that some other process has already called this API and succeeded. so we need to call it again
             return { result: "RETRY" };
         }
-        const antiCsrfToken = AntiCSRF.getToken(preRequestIdToken);
+        const antiCsrfToken = await AntiCSRF.getToken(preRequestIdToken);
         let headers: any = {
             ...refreshAPICustomHeaders,
             "supertokens-sdk-name": "react-native",
