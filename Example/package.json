@@ -26,7 +26,7 @@
     "react-test-renderer": "16.11.0",
     "babel-preset-react-app": "7.0.0",
     "ts-jest": "25.3.0",
-    "node-fetch": "2.6.0",
+    "node-fetch": "2.6.1",
     "fetch-cookie": "0.8.0",
     "axios-cookiejar-support": "0.5.1"
   },
