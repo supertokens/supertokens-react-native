@@ -57,7 +57,9 @@ describe("Fetch AuthHttpRequest class tests", function() {
     }
 
     beforeAll(async function() {
-        spawn("./test/startServer", ["../../com-root"]);
+        spawn("./test/startServer", [
+            process.env.INSTALL_PATH === undefined ? "../../com-root" : process.env.INSTALL_PATH
+        ]);
         await new Promise(r => setTimeout(r, 1000));
     });
 
