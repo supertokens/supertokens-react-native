@@ -46,16 +46,19 @@ We're so excited you're interested in helping with SuperTokens! We are happy to 
    ./startTestingEnv --wait
    ```
 3. In a new terminal, navigate to the `supertokens-react-native` repository.
-4. Start a node server required for testing
+4. Setup the node server required for testing. In the last command, put your github username instead of `<your username>`
    ```
-   cd ./test/server/
+   cd ./Example/test/server/
    npm i -d
    npm i git+https://github.com:supertokens/supertokens-node.git
-   TEST_MODE=testing INSTALL_PATH=../../../supertokens-root NODE_PORT=8082 node .
+   cd ../../
+   npm i -d
+   cp -r ./test/tough-cookie ./node_modules/
+   npm i git+https://github.com:<your username>/supertokens-react-native.git
    ```
-5. Open a new terminal in `supertokens-react-native` and run all tests
+5. Navigate to `supertokens-react-native/Example` and run all tests
    ```
-   INSTALL_PATH=../supertokens-root npm test
+   INSTALL_PATH=../../supertokens-root npm test
    ```
 6. If all tests pass the output should be:
 
