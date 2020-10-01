@@ -329,7 +329,7 @@ async function onUnauthorisedResponse(
                 await IdRefreshToken.setToken("remove");
             }
         }
-        if (response.status !== 200) {
+        if (response.status >= 300) {
             throw response;
         }
         if ((await IdRefreshToken.getToken()) === undefined) {
