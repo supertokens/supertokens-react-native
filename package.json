@@ -30,13 +30,16 @@
   },
   "homepage": "https://github.com/supertokens/supertokens-react-native#readme",
   "peerDependencies": {
-    "react-native": ">=0.61.5 <1.0.x",
-    "axios": "*"
+    "axios": "*",
+    "react-native": ">=0.61.5 <1.0.x"
   },
   "devDependencies": {
     "@types/react-native": "0.62.0",
+    "axios": "*",
     "prettier": "1.18.2",
-    "typescript": "3.5.2",
-    "axios": "*"
+    "typescript": "3.5.2"
+  },
+  "dependencies": {
+    "@react-native-community/async-storage": "^1.12.0"
   }
 }
