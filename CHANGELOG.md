@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2020-10-03
+### Changed
+- Refresh API succeeds if status code is >=200 && < 300
+- Uses `@react-native-community/async-storage`
+
 ## [1.2.0] - 2020-09-11
 ### Changed
 - Compatibility with FDI 1.2
