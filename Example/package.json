@@ -12,7 +12,7 @@
   "dependencies": {
     "axios": "0.19.2",
     "react": "16.11.0",
-    "react-native": "0.62.0",
+    "react-native": "0.62.3",
     "supertokens-react-native": "git+https://github.com/supertokens/supertokens-react-native.git#1.2"
   },
   "devDependencies": {
