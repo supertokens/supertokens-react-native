@@ -12,13 +12,14 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-import axios, { AxiosPromise, AxiosRequestConfig, AxiosResponse } from "axios";
+import axios, { AxiosPromise, AxiosRequestConfig, AxiosResponse, Method } from "axios";
 
-import FetchAuthRequest, { getDomainFromUrl, handleUnauthorised } from "./index";
-import { PROCESS_STATE, ProcessState } from "./processState";
-import { package_version } from "./version";
-import IdRefreshToken from "./idRefreshToken";
+import AuthHttpRequestFetch, { handleUnauthorised } from "./fetch";
+import FrontToken from "./frontToken";
 import AntiCSRF from "./antiCsrf";
+import { PROCESS_STATE, ProcessState } from "./processState";
+import IdRefreshToken from "./idRefreshToken";
+import { shouldDoInterceptionBasedOnUrl } from "./utils";
 
 function getUrlFromConfig(config: AxiosRequestConfig) {
     let url: string = config.url === undefined ? "" : config.url;
@@ -37,65 +38,125 @@ function getUrlFromConfig(config: AxiosRequestConfig) {
 
 export async function interceptorFunctionRequestFulfilled(config: AxiosRequestConfig) {
     let url = getUrlFromConfig(config);
-    if (typeof url === "string" && getDomainFromUrl(url) !== AuthHttpRequest.apiDomain) {
+
+    let doNotDoInterception = false;
+
+    try {
+        doNotDoInterception =
+            typeof url === "string" &&
+            !shouldDoInterceptionBasedOnUrl(
+                url,
+                AuthHttpRequestFetch.config.apiDomain,
+                AuthHttpRequestFetch.config.cookieDomain
+            );
+    } catch (err) {
+        if (err.message === "Please provide a valid domain name") {
+            // .origin gives the port as well..
+            doNotDoInterception = !shouldDoInterceptionBasedOnUrl(
+                window.location.origin,
+                AuthHttpRequestFetch.config.apiDomain,
+                AuthHttpRequestFetch.config.cookieDomain
+            );
+        } else {
+            throw err;
+        }
+    }
+
+    if (doNotDoInterception) {
         // this check means that if you are using axios via inteceptor, then we only do the refresh steps if you are calling your APIs.
         return config;
     }
+
     ProcessState.getInstance().addState(PROCESS_STATE.CALLING_INTERCEPTION_REQUEST);
-    const preRequestIdToken = await IdRefreshToken.getToken();
-    const antiCsrfToken = await AntiCSRF.getToken(preRequestIdToken);
+    const preRequestIdToken = await IdRefreshToken.getIdRefreshToken(true);
     let configWithAntiCsrf: AxiosRequestConfig = config;
-    if (antiCsrfToken !== undefined) {
+
+    if (preRequestIdToken.status === "EXISTS") {
+        const antiCsrfToken = await AntiCSRF.getToken(preRequestIdToken.token);
+        if (antiCsrfToken !== undefined) {
+            configWithAntiCsrf = {
+                ...configWithAntiCsrf,
+                headers:
+                    configWithAntiCsrf === undefined
+                        ? {
+                              "anti-csrf": antiCsrfToken
+                          }
+                        : {
+                              ...configWithAntiCsrf.headers,
+                              "anti-csrf": antiCsrfToken
+                          }
+            };
+        }
+    }
+
+    if (AuthHttpRequestFetch.config.autoAddCredentials && configWithAntiCsrf.withCredentials === undefined) {
         configWithAntiCsrf = {
             ...configWithAntiCsrf,
-            headers:
-                configWithAntiCsrf === undefined
-                    ? {
-                          "anti-csrf": antiCsrfToken
-                      }
-                    : {
-                          ...configWithAntiCsrf.headers,
-                          "anti-csrf": antiCsrfToken
-                      }
+            withCredentials: true
         };
     }
 
-    // Add package info to headers
+    // adding rid for anti-csrf protection: Anti-csrf via custom header
     configWithAntiCsrf = {
         ...configWithAntiCsrf,
         headers:
             configWithAntiCsrf === undefined
                 ? {
-                      "supertokens-sdk-name": "react-native",
-                      "supertokens-sdk-version": package_version
+                      rid: AuthHttpRequestFetch.rid
                   }
                 : {
-                      ...configWithAntiCsrf.headers,
-                      "supertokens-sdk-name": "react-native",
-                      "supertokens-sdk-version": package_version
+                      rid: AuthHttpRequestFetch.rid,
+                      ...configWithAntiCsrf.headers
                   }
     };
+
     return configWithAntiCsrf;
 }
 
 export function responseInterceptor(axiosInstance: any) {
     return async (response: AxiosResponse) => {
+        let doNotDoInterception = false;
+
         try {
             if (!AuthHttpRequest.initCalled) {
                 throw new Error("init function not called");
             }
             let url = getUrlFromConfig(response.config);
-            if (typeof url === "string" && getDomainFromUrl(url) !== AuthHttpRequest.apiDomain) {
+
+            try {
+                doNotDoInterception =
+                    typeof url === "string" &&
+                    !shouldDoInterceptionBasedOnUrl(
+                        url,
+                        AuthHttpRequestFetch.config.apiDomain,
+                        AuthHttpRequestFetch.config.cookieDomain
+                    );
+            } catch (err) {
+                if (err.message === "Please provide a valid domain name") {
+                    // .origin gives the port as well..
+                    doNotDoInterception = !shouldDoInterceptionBasedOnUrl(
+                        window.location.origin,
+                        AuthHttpRequestFetch.config.apiDomain,
+                        AuthHttpRequestFetch.config.cookieDomain
+                    );
+                } else {
+                    throw err;
+                }
+            }
+
+            if (doNotDoInterception) {
                 // this check means that if you are using axios via inteceptor, then we only do the refresh steps if you are calling your APIs.
                 return response;
             }
+
             ProcessState.getInstance().addState(PROCESS_STATE.CALLING_INTERCEPTION_RESPONSE);
 
             let idRefreshToken = response.headers["id-refresh-token"];
             if (idRefreshToken !== undefined) {
-                await IdRefreshToken.setToken(idRefreshToken);
+                await IdRefreshToken.setIdRefreshToken(idRefreshToken, response.status);
             }
-            if (response.status === AuthHttpRequest.sessionExpiredStatusCode) {
+
+            if (response.status === AuthHttpRequestFetch.config.sessionExpiredStatusCode) {
                 let config = response.config;
                 return AuthHttpRequest.doRequest(
                     (config: AxiosRequestConfig) => {
@@ -112,14 +173,51 @@ export function responseInterceptor(axiosInstance: any) {
             } else {
                 let antiCsrfToken = response.headers["anti-csrf"];
                 if (antiCsrfToken !== undefined) {
-                    await AntiCSRF.setToken(antiCsrfToken, await IdRefreshToken.getToken());
+                    let tok = await IdRefreshToken.getIdRefreshToken(true);
+                    if (tok.status === "EXISTS") {
+                        await AntiCSRF.setItem(tok.token, antiCsrfToken);
+                    }
+                }
+                let frontToken = response.headers["front-token"];
+                if (frontToken !== undefined) {
+                    await FrontToken.setItem(frontToken);
                 }
                 return response;
             }
         } finally {
-            if ((await IdRefreshToken.getToken()) === undefined) {
+            if (
+                !doNotDoInterception &&
+                !(await AuthHttpRequestFetch.recipeImpl.doesSessionExist(AuthHttpRequestFetch.config))
+            ) {
                 await AntiCSRF.removeToken();
+                await FrontToken.removeToken();
             }
+        }
+    };
+}
+
+export function responseErrorInterceptor(axiosInstance: any) {
+    return (error: any) => {
+        if (
+            error.response !== undefined &&
+            error.response.status === AuthHttpRequestFetch.config.sessionExpiredStatusCode
+        ) {
+            let config = error.config;
+            return AuthHttpRequest.doRequest(
+                (config: AxiosRequestConfig) => {
+                    // we create an instance since we don't want to intercept this.
+                    // const instance = axios.create();
+                    // return instance(config);
+                    return axiosInstance(config);
+                },
+                config,
+                getUrlFromConfig(config),
+                undefined,
+                error,
+                true
+            );
+        } else {
+            throw error;
         }
     };
 }
@@ -135,26 +233,6 @@ export default class AuthHttpRequest {
     static apiDomain = "";
     private static refreshAPICustomHeaders: any;
 
-    static init(options: {
-        refreshTokenUrl: string;
-        refreshAPICustomHeaders?: any;
-        sessionExpiredStatusCode?: number;
-    }) {
-        let { refreshTokenUrl, refreshAPICustomHeaders, sessionExpiredStatusCode } = options;
-        FetchAuthRequest.init({
-            ...options,
-            viaInterceptor: null
-        });
-        AuthHttpRequest.refreshTokenUrl = refreshTokenUrl;
-        AuthHttpRequest.refreshAPICustomHeaders = refreshAPICustomHeaders === undefined ? {} : refreshAPICustomHeaders;
-
-        if (sessionExpiredStatusCode !== undefined) {
-            AuthHttpRequest.sessionExpiredStatusCode = sessionExpiredStatusCode;
-        }
-        AuthHttpRequest.apiDomain = getDomainFromUrl(refreshTokenUrl);
-        AuthHttpRequest.initCalled = true;
-    }
-
     /**
      * @description sends the actual http request and returns a response if successful/
      * If not successful due to session expiry reasons, it
@@ -169,55 +247,110 @@ export default class AuthHttpRequest {
         prevError?: any,
         viaInterceptor: boolean = false
     ): Promise<AxiosResponse<any>> => {
-        if (!AuthHttpRequest.initCalled) {
+        if (!AuthHttpRequestFetch.initCalled) {
             throw Error("init function not called");
         }
-        if (typeof url === "string" && getDomainFromUrl(url) !== AuthHttpRequest.apiDomain && viaInterceptor) {
+
+        let doNotDoInterception = false;
+        try {
+            doNotDoInterception =
+                typeof url === "string" &&
+                !shouldDoInterceptionBasedOnUrl(
+                    url,
+                    AuthHttpRequestFetch.config.apiDomain,
+                    AuthHttpRequestFetch.config.cookieDomain
+                ) &&
+                viaInterceptor;
+        } catch (err) {
+            if (err.message === "Please provide a valid domain name") {
+                // .origin gives the port as well..
+                doNotDoInterception =
+                    !shouldDoInterceptionBasedOnUrl(
+                        window.location.origin,
+                        AuthHttpRequestFetch.config.apiDomain,
+                        AuthHttpRequestFetch.config.cookieDomain
+                    ) && viaInterceptor;
+            } else {
+                throw err;
+            }
+        }
+
+        if (doNotDoInterception) {
             if (prevError !== undefined) {
                 throw prevError;
             } else if (prevResponse !== undefined) {
                 return prevResponse;
             }
-            // this check means that if you are using fetch via inteceptor, then we only do the refresh steps if you are calling your APIs.
             return await httpCall(config);
         }
+
+        // We make refresh calls through axios so that we have axios response object in case it makes it out of the API.
+        // This happens if there is an unexpected error during refresh (not sessionExpiredStatusCode).
+        const axiosFetch = async (url: string, config?: RequestInit) => {
+            const res = await axios({
+                url,
+                validateStatus: null, // With this flag we disable status code based rejects, so all network calls will resolve, like fetch
+                withCredentials: config && config.credentials === "include",
+                data: config ? config.body : undefined,
+                ...config,
+                method: config ? (config.method as Method) : undefined
+            });
+
+            return new Response(res.data, {
+                status: res.status,
+                statusText: res.statusText,
+                headers: new Headers(res.headers)
+            });
+        };
+
         try {
             let throwError = false;
             let returnObj = undefined;
             while (true) {
                 // we read this here so that if there is a session expiry error, then we can compare this value (that caused the error) with the value after the request is sent.
                 // to avoid race conditions
-                const preRequestIdToken = await IdRefreshToken.getToken();
-                const antiCsrfToken = await AntiCSRF.getToken(preRequestIdToken);
+                const preRequestIdToken = await IdRefreshToken.getIdRefreshToken(true);
                 let configWithAntiCsrf: AxiosRequestConfig = config;
-                if (antiCsrfToken !== undefined) {
+
+                if (preRequestIdToken.status === "EXISTS") {
+                    const antiCsrfToken = await AntiCSRF.getToken(preRequestIdToken.token);
+                    if (antiCsrfToken !== undefined) {
+                        configWithAntiCsrf = {
+                            ...configWithAntiCsrf,
+                            headers:
+                                configWithAntiCsrf === undefined
+                                    ? {
+                                          "anti-csrf": antiCsrfToken
+                                      }
+                                    : {
+                                          ...configWithAntiCsrf.headers,
+                                          "anti-csrf": antiCsrfToken
+                                      }
+                        };
+                    }
+                }
+
+                if (
+                    AuthHttpRequestFetch.config.autoAddCredentials &&
+                    configWithAntiCsrf.withCredentials === undefined
+                ) {
                     configWithAntiCsrf = {
                         ...configWithAntiCsrf,
-                        headers:
-                            configWithAntiCsrf === undefined
-                                ? {
-                                      "anti-csrf": antiCsrfToken
-                                  }
-                                : {
-                                      ...configWithAntiCsrf.headers,
-                                      "anti-csrf": antiCsrfToken
-                                  }
+                        withCredentials: true
                     };
                 }
 
-                // Add package info to headers
+                // adding rid for anti-csrf protection: Anti-csrf via custom header
                 configWithAntiCsrf = {
                     ...configWithAntiCsrf,
                     headers:
                         configWithAntiCsrf === undefined
                             ? {
-                                  "supertokens-sdk-name": "react-native",
-                                  "supertokens-sdk-version": package_version
+                                  rid: AuthHttpRequestFetch.rid
                               }
                             : {
-                                  ...configWithAntiCsrf.headers,
-                                  "supertokens-sdk-name": "react-native",
-                                  "supertokens-sdk-version": package_version
+                                  rid: AuthHttpRequestFetch.rid,
+                                  ...configWithAntiCsrf.headers
                               }
                 };
                 try {
@@ -232,15 +365,10 @@ export default class AuthHttpRequest {
                         localPrevResponse === undefined ? await httpCall(configWithAntiCsrf) : localPrevResponse;
                     let idRefreshToken = response.headers["id-refresh-token"];
                     if (idRefreshToken !== undefined) {
-                        await IdRefreshToken.setToken(idRefreshToken);
+                        await IdRefreshToken.setIdRefreshToken(idRefreshToken, response.status);
                     }
-                    if (response.status === AuthHttpRequest.sessionExpiredStatusCode) {
-                        let retry = await handleUnauthorised(
-                            AuthHttpRequest.refreshTokenUrl,
-                            preRequestIdToken,
-                            AuthHttpRequest.refreshAPICustomHeaders,
-                            AuthHttpRequest.sessionExpiredStatusCode
-                        );
+                    if (response.status === AuthHttpRequestFetch.config.sessionExpiredStatusCode) {
+                        const retry = await handleUnauthorised(preRequestIdToken, axiosFetch);
                         if (!retry) {
                             returnObj = response;
                             break;
@@ -248,21 +376,23 @@ export default class AuthHttpRequest {
                     } else {
                         let antiCsrfToken = response.headers["anti-csrf"];
                         if (antiCsrfToken !== undefined) {
-                            await AntiCSRF.setToken(antiCsrfToken, await IdRefreshToken.getToken());
+                            let tok = await IdRefreshToken.getIdRefreshToken(true);
+                            if (tok.status === "EXISTS") {
+                                await AntiCSRF.setItem(tok.token, antiCsrfToken);
+                            }
+                        }
+                        let frontToken = response.headers["front-token"];
+                        if (frontToken !== undefined) {
+                            await FrontToken.setItem(frontToken);
                         }
                         return response;
                     }
                 } catch (err) {
                     if (
                         err.response !== undefined &&
-                        err.response.status === AuthHttpRequest.sessionExpiredStatusCode
+                        err.response.status === AuthHttpRequestFetch.config.sessionExpiredStatusCode
                     ) {
-                        let retry = await handleUnauthorised(
-                            AuthHttpRequest.refreshTokenUrl,
-                            preRequestIdToken,
-                            AuthHttpRequest.refreshAPICustomHeaders,
-                            AuthHttpRequest.sessionExpiredStatusCode
-                        );
+                        const retry = await handleUnauthorised(preRequestIdToken, axiosFetch);
                         if (!retry) {
                             throwError = true;
                             returnObj = err;
@@ -280,123 +410,10 @@ export default class AuthHttpRequest {
                 return returnObj;
             }
         } finally {
-            if ((await IdRefreshToken.getToken()) === undefined) {
+            if (!(await AuthHttpRequestFetch.recipeImpl.doesSessionExist(AuthHttpRequestFetch.config))) {
                 await AntiCSRF.removeToken();
+                await FrontToken.removeToken();
             }
         }
-    };
-
-    static get = async <T = any, R = AxiosResponse<T>>(url: string, config?: AxiosRequestConfig) => {
-        return await AuthHttpRequest.axios({
-            method: "get",
-            url,
-            ...config
-        });
-    };
-
-    static post = async <T = any, R = AxiosResponse<T>>(url: string, data?: any, config?: AxiosRequestConfig) => {
-        return await AuthHttpRequest.axios({
-            method: "post",
-            url,
-            data,
-            ...config
-        });
-    };
-
-    static delete = async <T = any, R = AxiosResponse<T>>(url: string, config?: AxiosRequestConfig) => {
-        return await AuthHttpRequest.axios({
-            method: "delete",
-            url,
-            ...config
-        });
-    };
-
-    static put = async <T = any, R = AxiosResponse<T>>(url: string, data?: any, config?: AxiosRequestConfig) => {
-        return await AuthHttpRequest.axios({
-            method: "put",
-            url,
-            data,
-            ...config
-        });
-    };
-
-    static axios = async (anything: AxiosRequestConfig | string, maybeConfig?: AxiosRequestConfig) => {
-        let config: AxiosRequestConfig = {};
-        if (typeof anything === "string") {
-            if (maybeConfig === undefined) {
-                config = {
-                    url: anything,
-                    method: "get"
-                };
-            } else {
-                config = {
-                    url: anything,
-                    ...maybeConfig
-                };
-            }
-        } else {
-            config = anything;
-        }
-        return await AuthHttpRequest.doRequest(
-            (config: AxiosRequestConfig) => {
-                // we create an instance since we don't want to intercept this.
-                const instance = axios.create();
-                return instance(config);
-            },
-            config,
-            config.url
-        );
-    };
-
-    static makeSuper = (axiosInstance: any) => {
-        // we first check if this axiosInstance already has our interceptors.
-        let requestInterceptors = axiosInstance.interceptors.request;
-        for (let i = 0; i < requestInterceptors.handlers.length; i++) {
-            if (requestInterceptors.handlers[i].fulfilled === interceptorFunctionRequestFulfilled) {
-                return;
-            }
-        }
-        // Add a request interceptor
-        axiosInstance.interceptors.request.use(interceptorFunctionRequestFulfilled, async function(error: any) {
-            throw error;
-        });
-
-        // Add a response interceptor
-        axiosInstance.interceptors.response.use(responseInterceptor(axiosInstance), async function(error: any) {
-            if (!AuthHttpRequest.initCalled) {
-                throw new Error("init function not called");
-            }
-            try {
-                if (
-                    error.response !== undefined &&
-                    error.response.status === AuthHttpRequest.sessionExpiredStatusCode
-                ) {
-                    let config = error.config;
-                    return AuthHttpRequest.doRequest(
-                        (config: AxiosRequestConfig) => {
-                            // we create an instance since we don't want to intercept this.
-                            // const instance = axios.create();
-                            // return instance(config);
-                            return axiosInstance(config);
-                        },
-                        config,
-                        getUrlFromConfig(config),
-                        undefined,
-                        error,
-                        true
-                    );
-                } else {
-                    throw error;
-                }
-            } finally {
-                if ((await IdRefreshToken.getToken()) === undefined) {
-                    await AntiCSRF.removeToken();
-                }
-            }
-        });
-    };
-
-    static doesSessionExist = async () => {
-        return (await IdRefreshToken.getToken()) !== undefined;
     };
 }
