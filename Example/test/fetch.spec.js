@@ -16,7 +16,7 @@ import axios from "axios";
 const tough = require("tough-cookie");
 import AntiCsrfToken from "supertokens-react-native/lib/build/antiCsrf";
 import AuthHttpRequestFetch from "supertokens-react-native/lib/build/fetch";
-import AuthHttpRequest from "supertokens-react-native/axios";
+import AuthHttpRequest from "supertokens-react-native";
 import assert from "assert";
 import {
     checkIfIdRefreshIsCleared,
@@ -73,7 +73,6 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
     beforeEach(async function() {
         AuthHttpRequestFetch.initCalled = false;
-        AuthHttpRequest.initCalled = false;
         AuthHttpRequestFetch.originalFetch = undefined;
         AuthHttpRequestFetch.viaInterceptor = undefined;
         ProcessState.getInstance().reset();
@@ -244,10 +243,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
             let getResponse = await fetch(`${BASE_URL}/`);
 
-            let responseText = await getResponse.text();
-            console.log("Response: ", responseText);
             //check that the response to getSession was success
-            assert(responseText === "success");
+            assert((await getResponse.text()) === userId);
 
             //check that the number of time the refreshAPI was called is 1
             assert((await getNumberOfTimesRefreshCalled()) === 1);
@@ -265,7 +262,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             await startST();
 
             AuthHttpRequestFetch.init({
-                refreshTokenUrl: `${BASE_URL}/refresh`
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -332,7 +329,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             await startST(5);
 
             AuthHttpRequestFetch.init({
-                refreshTokenUrl: `${BASE_URL}/refresh`
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -347,7 +344,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             });
             assertEqual(await loginResponse.text(), userId);
 
-            assertEqual(await AuthHttpRequestFetch.doesSessionExist(), true);
+            assertEqual(await AuthHttpRequest.doesSessionExist(), true);
             done();
         } catch (err) {
             done(err);
@@ -361,7 +358,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             await startST(5);
 
             AuthHttpRequestFetch.init({
-                refreshTokenUrl: `${BASE_URL}/refresh`
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -376,7 +373,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             });
             assertEqual(await loginResponse.text(), userId);
 
-            assertEqual(await AuthHttpRequestFetch.doesSessionExist(), true);
+            assertEqual(await AuthHttpRequest.doesSessionExist(), true);
 
             // send api request to logout
             let logoutResponse = await global.fetch(`${BASE_URL}/logout`, {
@@ -388,8 +385,9 @@ describe("Fetch AuthHttpRequest class tests", function() {
                 body: JSON.stringify({ userId })
             });
 
-            assertEqual(await logoutResponse.text(), "success");
-            assertEqual(await AuthHttpRequestFetch.doesSessionExist(), false);
+            let responseText = await logoutResponse.text();
+            assertEqual(responseText, "success");
+            assertEqual(await AuthHttpRequest.doesSessionExist(), false);
             done();
         } catch (err) {
             done(err);

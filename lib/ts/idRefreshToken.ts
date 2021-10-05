@@ -26,21 +26,45 @@ export default class IdRefreshToken {
     // if tryRefresh is true & this token doesn't exist, we try and refresh the session
     // else we return undefined.
     static async getIdRefreshToken(tryRefresh: boolean): Promise<IdRefreshTokenType> {
-        if (IdRefreshToken.idRefreshInMemory === undefined) {
-            let k = await AsyncStorage.getItem(ID_KEY);
-            IdRefreshToken.idRefreshInMemory = k === null ? undefined : k;
-        }
-
-        if (IdRefreshToken.idRefreshInMemory !== undefined) {
-            let splitted = IdRefreshToken.idRefreshInMemory.split(";");
-            let expiry = Number(splitted[1]);
-            let currentTime = Date.now();
-            if (expiry < currentTime) {
-                await IdRefreshToken.removeToken();
+        async function getIdRefreshFromStorage() {
+            if (IdRefreshToken.idRefreshInMemory === undefined) {
+                let k = await AsyncStorage.getItem(ID_KEY);
+                IdRefreshToken.idRefreshInMemory = k === null ? undefined : k;
             }
+
+            if (IdRefreshToken.idRefreshInMemory !== undefined) {
+                let value = ";" + IdRefreshToken.idRefreshInMemory;
+                let parts = value.split(";" + ID_REFRESH_TOKEN_NAME + "=");
+
+                if (parts.length >= 2) {
+                    let last = parts.pop();
+                    if (last === "remove") {
+                        // it means no session exists. This is different from
+                        // it being undefined since in that case a session may or may not exist.
+                        return "remove";
+                    }
+                    if (last !== undefined) {
+                        return last.split(";").shift();
+                    }
+                }
+
+                // Check for expiry
+                let splitForExpiry = IdRefreshToken.idRefreshInMemory.split(";");
+                let expiry = Date.parse(splitForExpiry[1].split("=")[1]);
+                let currentTime = Date.now();
+
+                if (expiry < currentTime) {
+                    await IdRefreshToken.removeToken();
+                    // We return undefined here because the token has expired and we dont know if the user is logged out
+                    // so a session may exist
+                    return undefined;
+                }
+            }
+
+            return undefined;
         }
 
-        let token = IdRefreshToken.idRefreshInMemory;
+        let token = await getIdRefreshFromStorage();
 
         if (token === "remove") {
             return {
