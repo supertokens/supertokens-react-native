@@ -13,14 +13,19 @@
  * under the License.
  */
 let SuperTokens = require("supertokens-node");
+let SuperTokensRaw = require("supertokens-node/lib/build/supertokens").default;
+let SessionRecipeRaw = require("supertokens-node/lib/build/recipe/session/recipe").default;
+let Session = require("supertokens-node/recipe/session");
 let express = require("express");
 let cookieParser = require("cookie-parser");
 let bodyParser = require("body-parser");
 let http = require("http");
+let cors = require("cors");
 let { startST, stopST, killAllST, setupST, cleanST, setKeyValueInConfig } = require("./utils");
-let { package_version } = require("./version");
+// let { package_version } = require("../../../lib/build/version");
 let noOfTimesRefreshCalledDuringTest = 0;
 let noOfTimesGetSessionCalledDuringTest = 0;
+let noOfTimesRefreshAttemptedDuringTest = 0;
 
 let urlencodedParser = bodyParser.urlencoded({ limit: "20mb", extended: true, parameterLimit: 20000 });
 let jsonParser = bodyParser.json({ limit: "20mb" });
@@ -30,35 +35,72 @@ app.use(urlencodedParser);
 app.use(jsonParser);
 app.use(cookieParser());
 
-SuperTokens.init({
-    hosts: "http://localhost:9000"
-});
+function getConfig(enableAntiCsrf) {
+    return {
+        appInfo: {
+            appName: "SuperTokens",
+            apiDomain: "0.0.0.0:" + (process.env.NODE_PORT === undefined ? 8080 : process.env.NODE_PORT),
+            websiteDomain: "http://localhost.org:8080"
+        },
+        supertokens: {
+            connectionURI: "http://localhost:9000"
+        },
+        recipeList: [
+            Session.init({
+                errorHandlers: {
+                    onUnauthorised: (err, req, res) => {
+                        res.setStatusCode(401);
+                        res.sendJSONResponse({});
+                    }
+                },
+                antiCsrf: enableAntiCsrf ? "VIA_TOKEN" : "NONE",
+                override: {
+                    apis: oI => {
+                        return {
+                            ...oI,
+                            refreshPOST: undefined
+                        };
+                    }
+                }
+            })
+        ]
+    };
+}
 
-app.options("*", async (req, res) => {
-    res.header("Access-Control-Allow-Origin", "http://127.0.0.1:8080");
-    res.header("Access-Control-Allow-Headers", "content-type");
-    res.header("Access-Control-Allow-Methods", "*");
-    SuperTokens.setRelevantHeadersForOptionsAPI(res);
-    res.send("");
-});
+SuperTokens.init(getConfig(true));
+
+app.use(
+    cors({
+        origin: "http://localhost.org:8080",
+        allowedHeaders: ["content-type", ...SuperTokens.getAllCORSHeaders()],
+        methods: ["GET", "PUT", "POST", "DELETE"],
+        credentials: true
+    })
+);
+
+app.use(SuperTokens.middleware());
 
 app.post("/login", async (req, res) => {
-    try {
-        let userId = req.body.userId;
-        let session = await SuperTokens.createNewSession(res, userId);
-        res.header("Access-Control-Allow-Origin", "http://127.0.0.1:8080");
-        res.header("Access-Control-Allow-Credentials", true);
-        res.send(session.userId);
-    } catch (err) {
-        res.status(500).send("");
-    }
+    let userId = req.body.userId;
+    let session = await Session.createNewSession(res, userId);
+    res.send(session.userId);
 });
 
-app.post("/startst", async (req, res) => {
+app.post("/startST", async (req, res) => {
     let accessTokenValidity = req.body.accessTokenValidity === undefined ? 1 : req.body.accessTokenValidity;
     let enableAntiCsrf = req.body.enableAntiCsrf === undefined ? true : req.body.enableAntiCsrf;
     await setKeyValueInConfig("access_token_validity", accessTokenValidity);
-    await setKeyValueInConfig("enable_anti_csrf", enableAntiCsrf);
+    if (req.body.accessTokenSigningKeyUpdateInterval !== undefined) {
+        await setKeyValueInConfig(
+            "access_token_signing_key_update_interval",
+            req.body.accessTokenSigningKeyUpdateInterval
+        );
+    }
+    if (enableAntiCsrf !== undefined) {
+        SuperTokensRaw.reset();
+        SessionRecipeRaw.reset();
+        SuperTokens.init(getConfig(enableAntiCsrf));
+    }
     let pid = await startST();
     res.send(pid + "");
 });
@@ -66,11 +108,9 @@ app.post("/startst", async (req, res) => {
 app.post("/beforeeach", async (req, res) => {
     noOfTimesRefreshCalledDuringTest = 0;
     noOfTimesGetSessionCalledDuringTest = 0;
+    noOfTimesRefreshAttemptedDuringTest = 0;
     await killAllST();
     await setupST();
-    await setKeyValueInConfig("cookie_domain", '"localhost"');
-    await setKeyValueInConfig("cookie_secure", "false");
-    await setKeyValueInConfig("refresh_api_path", "/refresh");
     res.send();
 });
 
@@ -97,19 +137,40 @@ app.post("/multipleInterceptors", async (req, res) => {
     );
 });
 
-app.get("/", async (req, res) => {
-    try {
+app.get(
+    "/",
+    (req, res, next) => Session.verifySession()(req, res, next),
+    async (req, res) => {
         noOfTimesGetSessionCalledDuringTest += 1;
-        await SuperTokens.getSession(req, res, true);
-        res.header("Access-Control-Allow-Origin", "http://127.0.0.1:8080");
-        res.header("Access-Control-Allow-Credentials", true);
-        res.send("success");
-    } catch (err) {
-        res.header("Access-Control-Allow-Origin", "http://127.0.0.1:8080");
-        res.header("Access-Control-Allow-Credentials", true);
-        res.status(401).send();
+        res.send(req.session.getUserId());
     }
-});
+);
+
+app.get(
+    "/check-rid",
+    (req, res, next) => Session.verifySession()(req, res, next),
+    async (req, res) => {
+        let response = req.headers["rid"];
+        res.send(response === undefined ? "fail" : "success");
+    }
+);
+
+app.get(
+    "/update-jwt",
+    (req, res, next) => Session.verifySession()(req, res, next),
+    async (req, res) => {
+        res.json(req.session.getJWTPayload());
+    }
+);
+
+app.post(
+    "/update-jwt",
+    (req, res, next) => Session.verifySession()(req, res, next),
+    async (req, res) => {
+        await req.session.updateJWTPayload(req.body);
+        res.json(req.session.getJWTPayload());
+    }
+);
 
 app.use("/testing", async (req, res) => {
     let tH = req.headers["testing"];
@@ -119,48 +180,48 @@ app.use("/testing", async (req, res) => {
     res.send("success");
 });
 
-app.post("/logout", async (req, res) => {
-    try {
-        let sessionInfo = await SuperTokens.getSession(req, res, true);
-        await sessionInfo.revokeSession();
-        res.header("Access-Control-Allow-Origin", "http://127.0.0.1:8080");
-        res.header("Access-Control-Allow-Credentials", true);
+app.post(
+    "/logout",
+    (req, res, next) => Session.verifySession()(req, res, next),
+    async (req, res) => {
+        await req.session.revokeSession();
         res.send("success");
-    } catch (err) {
-        res.status(401).send();
     }
-});
+);
 
-app.post("/revokeAll", async (req, res) => {
-    try {
-        let sessionInfo = await SuperTokens.getSession(req, res, true);
-        let userId = sessionInfo.userId;
+app.post(
+    "/revokeAll",
+    (req, res, next) => Session.verifySession()(req, res, next),
+    async (req, res) => {
+        let userId = req.session.getUserId();
         await SuperTokens.revokeAllSessionsForUser(userId);
         res.send("success");
-    } catch (err) {
-        res.status(401).send();
     }
-});
+);
 
-app.post("/refresh", async (req, res) => {
-    try {
-        await SuperTokens.refreshSession(req, res);
-        refreshCalled = true;
-        noOfTimesRefreshCalledDuringTest += 1;
-    } catch (err) {
-        res.header("Access-Control-Allow-Origin", "http://127.0.0.1:8080");
-        res.header("Access-Control-Allow-Credentials", true);
-        res.status(401).send();
-        return;
-    }
-    res.header("Access-Control-Allow-Origin", "http://127.0.0.1:8080");
-    res.header("Access-Control-Allow-Credentials", true);
-    res.send("refresh success");
+app.post("/auth/session/refresh", async (req, res, next) => {
+    noOfTimesRefreshAttemptedDuringTest += 1;
+    Session.verifySession()(req, res, err => {
+        if (err) {
+            next(err);
+        } else {
+            if (req.headers["rid"] === undefined) {
+                res.send("refresh failed");
+            } else {
+                refreshCalled = true;
+                noOfTimesRefreshCalledDuringTest += 1;
+                res.send("refresh success");
+            }
+        }
+    });
 });
 
 app.get("/refreshCalledTime", async (req, res) => {
-    res.header("Access-Control-Allow-Origin", "http://127.0.0.1:8080");
     res.status(200).send("" + noOfTimesRefreshCalledDuringTest);
+});
+
+app.get("/refreshAttemptedTime", async (req, res) => {
+    res.status(200).send("" + noOfTimesRefreshAttemptedDuringTest);
 });
 
 app.get("/getSessionCalledTime", async (req, res) => {
@@ -186,16 +247,13 @@ app.get("/testHeader", async (req, res) => {
     res.send(JSON.stringify(data));
 });
 
-app.get("/checkDeviceInfo", (req, res) => {
-    let sdkName = req.headers["supertokens-sdk-name"];
-    let sdkVersion = req.headers["supertokens-sdk-version"];
-    res.send(sdkName === "react-native" && sdkVersion === package_version ? true : false);
-});
-
 app.post("/checkAllowCredentials", (req, res) => {
     res.send(req.headers["allow-credentials"] !== undefined ? true : false);
 });
 
+app.get("/index.html", (req, res) => {
+    res.sendFile("index.html", { root: __dirname });
+});
 app.get("/testError", (req, res) => {
     res.status(500).send("test error message");
 });
@@ -208,9 +266,14 @@ app.use("*", async (req, res, next) => {
     res.status(404).send();
 });
 
-app.use("*", async (err, req, res, next) => {
+app.use(SuperTokens.errorHandler());
+
+app.use(async (err, req, res, next) => {
     res.send(500).send(err);
 });
 
 let server = http.createServer(app);
-server.listen(8080, "0.0.0.0");
+server.listen(
+    process.env.NODE_PORT === undefined || process.env.NODE_PORT.length === 0 ? 8080 : process.env.NODE_PORT,
+    "::"
+);

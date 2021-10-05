@@ -13,8 +13,6 @@
  * under the License.
  */
 const { exec } = require("child_process");
-let { HandshakeInfo } = require("supertokens-node/lib/build/handshakeInfo");
-let { DeviceInfo } = require("supertokens-node/lib/build/deviceInfo");
 let fs = require("fs");
 
 module.exports.executeCommand = async function(cmd) {
@@ -62,11 +60,11 @@ module.exports.setKeyValueInConfig = async function(key, value) {
 module.exports.cleanST = async function() {
     let installationPath = process.env.INSTALL_PATH;
     try {
-        await module.exports.executeCommand("cd " + installationPath + " && (rm licenseKey || true)");
+        await module.exports.executeCommand("cd " + installationPath + " && rm licenseKey");
     } catch (ignored) {}
-    await module.exports.executeCommand("cd " + installationPath + " && (rm config.yaml || true)");
-    await module.exports.executeCommand("cd " + installationPath + " && (rm -rf .webserver-temp-* || true)");
-    await module.exports.executeCommand("cd " + installationPath + " && (rm -rf .started || true)");
+    await module.exports.executeCommand("cd " + installationPath + " && rm config.yaml");
+    await module.exports.executeCommand("cd " + installationPath + " && rm -rf .webserver-temp-*");
+    await module.exports.executeCommand("cd " + installationPath + " && rm -rf .started");
 };
 
 module.exports.stopST = async function(pid) {
@@ -93,8 +91,6 @@ module.exports.killAllST = async function() {
     for (let i = 0; i < pids.length; i++) {
         await module.exports.stopST(pids[i]);
     }
-    HandshakeInfo.reset();
-    DeviceInfo.reset();
 };
 
 module.exports.startST = async function(host = "localhost", port = 9000) {
@@ -109,7 +105,8 @@ module.exports.startST = async function(host = "localhost", port = 9000) {
                     ` && java -Djava.security.egd=file:/dev/urandom -classpath "./core/*:./plugin-interface/*" io.supertokens.Main ./ DEV host=` +
                     host +
                     " port=" +
-                    port
+                    port +
+                    " test_mode"
             )
             .catch(err => {
                 if (!returned) {
