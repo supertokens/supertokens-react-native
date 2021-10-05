@@ -15,7 +15,7 @@
 import axios from "axios";
 const tough = require("tough-cookie");
 import AntiCsrfToken from "supertokens-react-native/lib/build/antiCsrf";
-import AuthHttpRequestFetch from "supertokens-react-native";
+import AuthHttpRequestFetch from "supertokens-react-native/lib/build/fetch";
 import AuthHttpRequest from "supertokens-react-native/axios";
 import assert from "assert";
 import {
@@ -87,10 +87,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
     it("checking in fetch that methods exists", function() {
         assert.strictEqual(typeof AuthHttpRequestFetch.doRequest, "function");
-        assert.strictEqual(typeof AuthHttpRequestFetch.get, "function");
-        assert.strictEqual(typeof AuthHttpRequestFetch.post, "function");
-        assert.strictEqual(typeof AuthHttpRequestFetch.delete, "function");
-        assert.strictEqual(typeof AuthHttpRequestFetch.put, "function");
+        assert.strictEqual(typeof AuthHttpRequestFetch.attemptRefreshingSession, "function");
     });
 
     it("testing with fetch for init check in doRequest", async function() {
@@ -107,48 +104,53 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
     it("testing with fetch api methods without config", async function() {
         AuthHttpRequestFetch.init({
-            refreshTokenUrl: `${BASE_URL}/refresh`,
-            viaInterceptor: false
+            apiDomain: BASE_URL
         });
 
-        let getResponse = await AuthHttpRequestFetch.get(`${BASE_URL}/testing`);
-        let postResponse = await AuthHttpRequestFetch.post(`${BASE_URL}/testing`);
-        let deleteResponse = await AuthHttpRequestFetch.delete(`${BASE_URL}/testing`);
-        let putResponse = await AuthHttpRequestFetch.put(`${BASE_URL}/testing`);
-        let doRequestResponse = await AuthHttpRequestFetch.fetch(`${BASE_URL}/testing`, { method: "GET" });
+        let getResponse = await fetch(`${BASE_URL}/testing`, {
+            method: "GET"
+        });
+        let postResponse = await fetch(`${BASE_URL}/testing`, {
+            method: "POST"
+        });
+        let deleteResponse = await fetch(`${BASE_URL}/testing`, {
+            method: "DELETE"
+        });
+        let putResponse = await fetch(`${BASE_URL}/testing`, {
+            method: "PUT"
+        });
+
         getResponse = await getResponse.text();
         putResponse = await putResponse.text();
         postResponse = await postResponse.text();
         deleteResponse = await deleteResponse.text();
-        doRequestResponse = await doRequestResponse.text();
         let expectedResponse = "success";
 
         assert.strictEqual(getResponse, expectedResponse);
         assert.strictEqual(putResponse, expectedResponse);
         assert.strictEqual(postResponse, expectedResponse);
         assert.strictEqual(deleteResponse, expectedResponse);
-        assert.strictEqual(doRequestResponse, expectedResponse);
     });
 
     it("testing with fetch api methods with config", async function() {
         AuthHttpRequestFetch.init({
-            refreshTokenUrl: `${BASE_URL}/refresh`,
-            viaInterceptor: false
+            apiDomain: BASE_URL
         });
 
         let testing = "testing";
-        let getResponse = await AuthHttpRequestFetch.get(`${BASE_URL}/${testing}`, { headers: { testing } });
+        let getResponse = await fetch(`${BASE_URL}/${testing}`, { method: "GET", headers: { testing } });
         let postResponse = await fetch(`${BASE_URL}/${testing}`, { method: "post", headers: { testing } });
-        let deleteResponse = await AuthHttpRequestFetch.delete(`${BASE_URL}/${testing}`, { headers: { testing } });
-        let putResponse = await AuthHttpRequestFetch.put(`${BASE_URL}/${testing}`, { headers: { testing } });
+        let deleteResponse = await fetch(`${BASE_URL}/${testing}`, { method: "delete", headers: { testing } });
+        let putResponse = await fetch(`${BASE_URL}/${testing}`, { method: "put", headers: { testing } });
         let doRequestResponse1 = await fetch(`${BASE_URL}/${testing}`, {
             method: "GET",
             headers: { testing }
         });
-        let doRequestResponse2 = await AuthHttpRequestFetch.fetch(`${BASE_URL}/${testing}`, {
+        let doRequestResponse2 = await fetch(`${BASE_URL}/${testing}`, {
             method: "GET",
             headers: { testing }
         });
+
         let getResponseHeader = getResponse.headers.get(testing);
         getResponse = await getResponse.text();
         let putResponseHeader = putResponse.headers.get(testing);
@@ -179,16 +181,24 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
     it("testing with fetch api methods that doesn't exists", async function() {
         AuthHttpRequestFetch.init({
-            refreshTokenUrl: `${BASE_URL}/refresh`,
-            viaInterceptor: false
+            apiDomain: BASE_URL
         });
 
-        let getResponse = await AuthHttpRequestFetch.get(`${BASE_URL}/fail`);
-        let postResponse = await AuthHttpRequestFetch.post(`${BASE_URL}/fail`);
-        let deleteResponse = await AuthHttpRequestFetch.delete(`${BASE_URL}/fail`);
-        let putResponse = await AuthHttpRequestFetch.put(`${BASE_URL}/fail`);
-        let doRequestResponse1 = await AuthHttpRequestFetch.fetch(`${BASE_URL}/fail`, { method: "GET" });
-        let doRequestResponse2 = await AuthHttpRequestFetch.fetch(`${BASE_URL}/fail`, { method: "GET" });
+        let getResponse = await fetch(`${BASE_URL}/fail`, {
+            method: "GET"
+        });
+        let postResponse = await fetch(`${BASE_URL}/fail`, {
+            method: "POST"
+        });
+        let deleteResponse = await fetch(`${BASE_URL}/fail`, {
+            method: "DELETE"
+        });
+        let putResponse = await fetch(`${BASE_URL}/fail`, {
+            method: "PUT"
+        });
+        let doRequestResponse1 = await fetch(`${BASE_URL}/fail`, { method: "GET" });
+        let doRequestResponse2 = await fetch(`${BASE_URL}/fail`, { method: "GET" });
+
         let getResponseCode = getResponse.status;
         let putResponseCode = putResponse.status;
         let postResponseCode = postResponse.status;
@@ -211,12 +221,11 @@ describe("Fetch AuthHttpRequest class tests", function() {
             await startST(3);
 
             AuthHttpRequestFetch.init({
-                refreshTokenUrl: `${BASE_URL}/refresh`,
-                viaInterceptor: true
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
-            let loginResponse = await global.fetch(`${BASE_URL}/login`, {
+            let loginResponse = await fetch(`${BASE_URL}/login`, {
                 method: "post",
                 headers: {
                     Accept: "application/json",
@@ -233,10 +242,12 @@ describe("Fetch AuthHttpRequest class tests", function() {
             //check that the number of times the refreshAPI was called is 0
             assert((await getNumberOfTimesRefreshCalled()) === 0);
 
-            let getResponse = await global.fetch(`${BASE_URL}/`);
+            let getResponse = await fetch(`${BASE_URL}/`);
 
+            let responseText = await getResponse.text();
+            console.log("Response: ", responseText);
             //check that the response to getSession was success
-            assert((await getResponse.text()) === "success");
+            assert(responseText === "success");
 
             //check that the number of time the refreshAPI was called is 1
             assert((await getNumberOfTimesRefreshCalled()) === 1);

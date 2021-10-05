@@ -14,6 +14,10 @@
  */
 let axios = require("axios");
 
+const BASE_URL = "http://localhost.org:8080";
+const BASE_URL_FOR_ST =
+    process.env.NODE_PORT === undefined ? "http://localhost.org:8080" : "http://localhost.org:" + process.env.NODE_PORT;
+
 export function checkIfIdRefreshIsCleared() {
     const ID_COOKIE_NAME = "sIdRefreshToken";
     let value = "; " + document.cookie;
@@ -37,21 +41,36 @@ export function checkIfIdRefreshIsCleared() {
 
 export async function getNumberOfTimesRefreshCalled() {
     let instance = axios.create();
-    let response = await instance.get("http://localhost:8080/refreshCalledTime");
+    let response = await instance.get(BASE_URL + "/refreshCalledTime");
     return response.data;
 }
 
-export async function startST(accessTokenValidity = 1, enableAntiCsrf = true) {
-    let instance = axios.create();
-    let response = await instance.post("http://localhost:8080/startST", {
-        accessTokenValidity,
-        enableAntiCsrf
-    });
-    return response.data;
+export async function startST(
+    accessTokenValidity = 1,
+    enableAntiCsrf = true,
+    accessTokenSigningKeyUpdateInterval = undefined
+) {
+    {
+        if (BASE_URL !== BASE_URL_FOR_ST) {
+            let instance = axios.create();
+            await instance.post(BASE_URL + "/setAntiCsrf", {
+                enableAntiCsrf
+            });
+        }
+    }
+    {
+        let instance = axios.create();
+        let response = await instance.post(BASE_URL_FOR_ST + "/startST", {
+            accessTokenValidity,
+            enableAntiCsrf,
+            accessTokenSigningKeyUpdateInterval
+        });
+        return response.data;
+    }
 }
 
 export async function getNumberOfTimesGetSessionCalled() {
     let instance = axios.create();
-    let response = await instance.get("http://localhost:8080/getSessionCalledTime");
+    let response = await instance.get(BASE_URL + "/getSessionCalledTime");
     return response.data;
 }
