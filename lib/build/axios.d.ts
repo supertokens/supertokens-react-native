@@ -7,10 +7,6 @@ export declare function responseErrorInterceptor(axiosInstance: any): (error: an
  * @description wrapper for common http methods.
  */
 export default class AuthHttpRequest {
-    private static refreshTokenUrl;
-    static sessionExpiredStatusCode: number;
-    static apiDomain: string;
-    private static refreshAPICustomHeaders;
     /**
      * @description sends the actual http request and returns a response if successful/
      * If not successful due to session expiry reasons, it

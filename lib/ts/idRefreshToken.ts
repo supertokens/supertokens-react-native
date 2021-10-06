@@ -14,7 +14,7 @@
  */
 
 import AsyncStorage from "@react-native-community/async-storage";
-import AuthHttpRequest, { handleUnauthorised } from "./fetch";
+import AuthHttpRequest, { onUnauthorisedResponse } from "./fetch";
 import { IdRefreshTokenType } from "./types";
 
 const ID_KEY = "supertokens-rn-idrefreshtoken-key";
@@ -80,14 +80,13 @@ export default class IdRefreshToken {
             if (tryRefresh) {
                 // either session doesn't exist, or the
                 // cookies have expired (privacy feature that caps lifetime of cookies to 7 days)
-                try {
-                    await handleUnauthorised(response);
-                } catch (err) {
+                const res = await onUnauthorisedResponse(response);
+                if (res.result !== "RETRY") {
+                    // in case the backend is not working, we treat it as the session not existing...
                     return {
                         status: "NOT_EXISTS"
                     };
                 }
-
                 return await this.getIdRefreshToken(tryRefresh);
             } else {
                 return response;

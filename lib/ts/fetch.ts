@@ -26,37 +26,6 @@ import RecipeImplementation from "./recipeImplementation";
 declare let global: any;
 
 /**
- * @description returns true if retry, else false is session has expired completely.
- */
-export async function handleUnauthorised(
-    preRequestIdToken: IdRefreshTokenType,
-    httpCall?: (url: string, init?: RequestInit) => Promise<Response>
-): Promise<boolean> {
-    let result = await onUnauthorisedResponse(preRequestIdToken, httpCall);
-    if (result.result === "SESSION_EXPIRED") {
-        return false;
-    } else if (result.result === "API_ERROR") {
-        throw result.error;
-    }
-    return true;
-}
-
-export function getDomainFromUrl(url: string): string {
-    // if (window.fetch === undefined) {
-    //     // we are testing
-    //     return "http://localhost:8888";
-    // }
-    if (url.startsWith("https://") || url.startsWith("http://")) {
-        return url
-            .split("/")
-            .filter((_, i) => i <= 2)
-            .join("/");
-    } else {
-        throw new Error("Please make sure that the provided URL starts with http:// or https://");
-    }
-}
-
-/**
  * @class AuthHttpRequest
  * @description wrapper for common http methods.
  */
@@ -147,7 +116,6 @@ export default class AuthHttpRequest {
         ProcessState.getInstance().addState(PROCESS_STATE.CALLING_INTERCEPTION_REQUEST);
 
         try {
-            let throwError = false;
             let returnObj = undefined;
             while (true) {
                 // we read this here so that if there is a session expiry error, then we can compare this value (that caused the error) with the value after the request is sent.
@@ -200,54 +168,38 @@ export default class AuthHttpRequest {
                               }
                 };
 
-                try {
-                    let response = await httpCall(configWithAntiCsrf);
-                    const idRefreshToken = response.headers.get("id-refresh-token");
+                let response = await httpCall(configWithAntiCsrf);
+                const idRefreshToken = response.headers.get("id-refresh-token");
 
-                    if (idRefreshToken) {
-                        await IdRefreshToken.setIdRefreshToken(idRefreshToken, response.status);
+                if (idRefreshToken) {
+                    await IdRefreshToken.setIdRefreshToken(idRefreshToken, response.status);
+                }
+
+                if (response.status === AuthHttpRequest.config.sessionExpiredStatusCode) {
+                    let refreshResponse = await onUnauthorisedResponse(preRequestIdToken);
+                    if (refreshResponse.result !== "RETRY") {
+                        returnObj = refreshResponse.error !== undefined ? refreshResponse.error : response;
+                        break;
+                    }
+                } else {
+                    const antiCsrfToken = response.headers.get("anti-csrf");
+                    if (antiCsrfToken) {
+                        const tok = await IdRefreshToken.getIdRefreshToken(true);
+                        if (tok.status === "EXISTS") {
+                            await AntiCSRF.setItem(tok.token, antiCsrfToken);
+                        }
                     }
 
-                    if (response.status === AuthHttpRequest.config.sessionExpiredStatusCode) {
-                        let retry = await handleUnauthorised(preRequestIdToken);
-                        if (!retry) {
-                            returnObj = response;
-                            break;
-                        }
-                    } else {
-                        const antiCsrfToken = response.headers.get("anti-csrf");
-                        if (antiCsrfToken) {
-                            const tok = await IdRefreshToken.getIdRefreshToken(true);
-                            if (tok.status === "EXISTS") {
-                                await AntiCSRF.setItem(tok.token, antiCsrfToken);
-                            }
-                        }
-
-                        const frontToken = response.headers.get("front-token");
-                        if (frontToken) {
-                            await FrontToken.setItem(frontToken);
-                        }
-                        return response;
+                    const frontToken = response.headers.get("front-token");
+                    if (frontToken) {
+                        await FrontToken.setItem(frontToken);
                     }
-                } catch (err) {
-                    if (err.status === AuthHttpRequest.config.sessionExpiredStatusCode) {
-                        let retry = await handleUnauthorised(preRequestIdToken);
-                        if (!retry) {
-                            throwError = true;
-                            returnObj = err;
-                            break;
-                        }
-                    } else {
-                        throw err;
-                    }
+                    return response;
                 }
             }
+
             // if it comes here, means we breaked. which happens only if we have logged out.
-            if (throwError) {
-                throw returnObj;
-            } else {
-                return returnObj;
-            }
+            return returnObj;
         } finally {
             if (!(await AuthHttpRequest.recipeImpl.doesSessionExist(AuthHttpRequest.config))) {
                 await AntiCSRF.removeToken();
@@ -258,16 +210,21 @@ export default class AuthHttpRequest {
 
     static attemptRefreshingSession = async (): Promise<boolean> => {
         const preRequestIdToken = await IdRefreshToken.getIdRefreshToken(false);
-        return await handleUnauthorised(preRequestIdToken);
+        const refreshResponse = await onUnauthorisedResponse(preRequestIdToken);
+
+        if (refreshResponse.result === "API_ERROR") {
+            throw refreshResponse.error;
+        }
+
+        return refreshResponse.result === "RETRY";
     };
 }
 
 const LOCK_NAME = "REFRESH_TOKEN_USE";
 
-async function onUnauthorisedResponse(
-    preRequestIdToken: IdRefreshTokenType,
-    httpCall?: (url: string, init?: RequestInit) => Promise<Response>
-): Promise<{ result: "SESSION_EXPIRED" } | { result: "API_ERROR"; error: any } | { result: "RETRY" }> {
+export async function onUnauthorisedResponse(
+    preRequestIdToken: IdRefreshTokenType
+): Promise<{ result: "SESSION_EXPIRED"; error?: any } | { result: "API_ERROR"; error: any } | { result: "RETRY" }> {
     let lock = getLock();
     await lock.lock(LOCK_NAME);
     try {
@@ -321,8 +278,10 @@ async function onUnauthorisedResponse(
             url: AuthHttpRequest.refreshTokenUrl
         });
 
-        const makeRequest = httpCall || AuthHttpRequest.env.__supertokensOriginalFetch;
-        const response = await makeRequest(preAPIResult.url, preAPIResult.requestInit);
+        const response = await AuthHttpRequest.env.__supertokensOriginalFetch(
+            preAPIResult.url,
+            preAPIResult.requestInit
+        );
 
         let removeIdRefreshToken = true;
         const idRefreshToken = response.headers.get("id-refresh-token");

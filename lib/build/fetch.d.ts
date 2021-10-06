@@ -1,11 +1,6 @@
 import { IdRefreshTokenType, InputType, NormalisedInputType } from "./types";
 import RecipeImplementation from "./recipeImplementation";
 /**
- * @description returns true if retry, else false is session has expired completely.
- */
-export declare function handleUnauthorised(preRequestIdToken: IdRefreshTokenType, httpCall?: (url: string, init?: RequestInit) => Promise<Response>): Promise<boolean>;
-export declare function getDomainFromUrl(url: string): string;
-/**
  * @class AuthHttpRequest
  * @description wrapper for common http methods.
  */
@@ -27,3 +22,12 @@ export default class AuthHttpRequest {
     static doRequest: (httpCall: (config?: RequestInit | undefined) => Promise<Response>, config?: RequestInit | undefined, url?: any) => Promise<Response>;
     static attemptRefreshingSession: () => Promise<boolean>;
 }
+export declare function onUnauthorisedResponse(preRequestIdToken: IdRefreshTokenType): Promise<{
+    result: "SESSION_EXPIRED";
+    error?: any;
+} | {
+    result: "API_ERROR";
+    error: any;
+} | {
+    result: "RETRY";
+}>;

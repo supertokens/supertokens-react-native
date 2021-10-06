@@ -12,6 +12,32 @@ export default class FrontToken {
 
     private constructor() {}
 
+    static async getFrontToken(): Promise<string | null> {
+        if (!(await AuthHttpRequest.recipeImpl.doesSessionExist(AuthHttpRequest.config))) {
+            return null;
+        }
+
+        async function getFrontTokenFromStorage(): Promise<string | null> {
+            let frontTokenFromStorage = await AsyncStorage.getItem(FRONT_TOKEN_KEY);
+            let value = "; " + frontTokenFromStorage;
+            let parts = value.split("; " + FRONT_TOKEN_NAME + "=");
+            if (parts.length >= 2) {
+                let last = parts.pop();
+                if (last !== undefined) {
+                    let temp = last.split(";").shift();
+                    if (temp === undefined) {
+                        return null;
+                    }
+                    return temp;
+                }
+            }
+            return null;
+        }
+
+        let token = await getFrontTokenFromStorage();
+        return token;
+    }
+
     static async getTokenInfo(): Promise<
         | {
               uid: string;
@@ -36,27 +62,8 @@ export default class FrontToken {
         return JSON.parse(decodeURIComponent(escape(atob(frontToken))));
     }
 
-    static async getFrontToken(): Promise<string | null> {
-        if (!(await AuthHttpRequest.recipeImpl.doesSessionExist(AuthHttpRequest.config))) {
-            return null;
-        }
-
-        let frontTokenFromStorage = await AsyncStorage.getItem(FRONT_TOKEN_KEY);
-
-        if (frontTokenFromStorage !== undefined && frontTokenFromStorage !== null) {
-            let splitted = frontTokenFromStorage.split(";");
-            let expiry = Number(splitted[1]);
-            let currentTime = Date.now();
-            if (expiry < currentTime) {
-                await FrontToken.removeToken();
-            }
-        }
-
-        return frontTokenFromStorage;
-    }
-
     static async setFrontToken(frontToken: string | undefined) {
-        async function setFrontTokenToCookie(frontToken: string | undefined, domain: string) {
+        async function setFrontTokenToStorage(frontToken: string | undefined, domain: string) {
             let expires: string | undefined = "Thu, 01 Jan 1970 00:00:01 GMT";
             let cookieVal = "";
             if (frontToken !== undefined) {
@@ -75,7 +82,7 @@ export default class FrontToken {
             await AsyncStorage.setItem(FRONT_TOKEN_KEY, valueToSet);
         }
 
-        await setFrontTokenToCookie(frontToken, "");
+        await setFrontTokenToStorage(frontToken, "");
     }
 
     static async removeToken() {

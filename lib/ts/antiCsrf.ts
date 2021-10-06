@@ -34,7 +34,24 @@ export default class AntiCSRF {
             return null;
         }
 
-        let fromStorage = await AsyncStorage.getItem(TOKEN_KEY);
+        async function getAntiCSRFFromStorage(): Promise<string | null> {
+            let fromStorage = await AsyncStorage.getItem(TOKEN_KEY);
+            let value = "; " + fromStorage;
+            let parts = value.split("; " + ANTI_CSRF_NAME + "=");
+            if (parts.length >= 2) {
+                let last = parts.pop();
+                if (last !== undefined) {
+                    let temp = last.split(";").shift();
+                    if (temp === undefined) {
+                        return null;
+                    }
+                    return temp;
+                }
+            }
+            return null;
+        }
+
+        let fromStorage = await getAntiCSRFFromStorage();
         return fromStorage;
     }
 
@@ -65,7 +82,7 @@ export default class AntiCSRF {
 
     // give antiCSRFToken as undefined to remove it.
     private static async setAntiCSRF(antiCSRFToken: string | undefined) {
-        async function setAntiCSRFToCookie(antiCSRFToken: string | undefined, domain: string) {
+        async function setAntiCSRFToStorage(antiCSRFToken: string | undefined, domain: string) {
             let expires: string | undefined = "Thu, 01 Jan 1970 00:00:01 GMT";
             let cookieVal = "";
             if (antiCSRFToken !== undefined) {
@@ -84,7 +101,7 @@ export default class AntiCSRF {
             await AsyncStorage.setItem(TOKEN_KEY, valueToSet);
         }
 
-        await setAntiCSRFToCookie(antiCSRFToken, "");
+        await setAntiCSRFToStorage(antiCSRFToken, "");
     }
 
     static async setItem(associatedIdRefreshToken: string | undefined, antiCsrf: string) {
