@@ -17,7 +17,7 @@ const axiosCookieJarSupport = require("axios-cookiejar-support").default;
 const tough = require("tough-cookie");
 import AntiCsrfToken from "supertokens-react-native/lib/build/antiCsrf";
 import AuthHttpRequestFetch from "supertokens-react-native";
-import AuthHttpRequest from "supertokens-react-native/axios";
+import AuthHttpRequest from "supertokens-react-native";
 import { interceptorFunctionRequestFulfilled, responseInterceptor } from "supertokens-react-native/lib/build/axios";
 import assert from "assert";
 import {
@@ -25,7 +25,8 @@ import {
     checkIfIdRefreshIsCleared,
     getNumberOfTimesRefreshCalled,
     startST,
-    getNumberOfTimesGetSessionCalled
+    getNumberOfTimesGetSessionCalled,
+    BASE_URL_FOR_ST
 } from "./utils";
 import { spawn } from "child_process";
 import { ProcessState, PROCESS_STATE } from "supertokens-react-native/lib/build/processState";
@@ -58,25 +59,26 @@ describe("Axios AuthHttpRequest class tests", function() {
 
     beforeAll(async function() {
         spawn("./test/startServer", [
-            process.env.INSTALL_PATH === undefined ? "../../com-root" : process.env.INSTALL_PATH
+            process.env.INSTALL_PATH,
+            process.env.NODE_PORT === undefined ? 8080 : process.env.NODE_PORT
         ]);
         await new Promise(r => setTimeout(r, 1000));
     });
 
     afterAll(async function() {
         let instance = axios.create();
-        await instance.post(BASE_URL + "/after");
+        await instance.post(BASE_URL_FOR_ST + "/after");
         try {
-            await instance.get(BASE_URL + "/stop");
+            await instance.get(BASE_URL_FOR_ST + "/stop");
         } catch (err) {}
     });
 
     beforeEach(async function() {
         AuthHttpRequestFetch.initCalled = false;
-        AuthHttpRequest.initCalled = false;
-        AuthHttpRequestFetch.originalFetch = undefined;
         ProcessState.getInstance().reset();
         let instance = axios.create();
+        await instance.post(BASE_URL_FOR_ST + "/beforeeach");
+        // await instance.post("http://localhost.org:8082/beforeeach"); // for cross domain // TODO NEMI: Uncomment this when cross domain tests are added
         await instance.post(BASE_URL + "/beforeeach");
 
         let cookieJar = new tough.CookieJar();
@@ -85,33 +87,10 @@ describe("Axios AuthHttpRequest class tests", function() {
         });
         axiosCookieJarSupport(axiosInstance);
         axiosInstance.defaults.jar = cookieJar;
-        AuthHttpRequest.makeSuper(axiosInstance);
 
         let nodeFetch = require("node-fetch").default;
         const fetch = require("fetch-cookie")(nodeFetch, cookieJar);
         global.fetch = fetch;
-    });
-
-    it("checking that methods exists", function(done) {
-        assert.strictEqual(typeof AuthHttpRequest.doRequest, "function");
-        assert.strictEqual(typeof AuthHttpRequest.get, "function");
-        assert.strictEqual(typeof AuthHttpRequest.post, "function");
-        assert.strictEqual(typeof AuthHttpRequest.delete, "function");
-        assert.strictEqual(typeof AuthHttpRequest.put, "function");
-        done();
-    });
-
-    it("testing for init check in doRequest", async function(done) {
-        let failed = false;
-        try {
-            await AuthHttpRequest.doRequest(async () => {});
-            failed = true;
-        } catch (err) {}
-
-        if (failed) {
-            throw Error("test failed");
-        }
-        done();
     });
 
     it("testing for init check in attemptRefreshingSession", async function(done) {
@@ -128,15 +107,16 @@ describe("Axios AuthHttpRequest class tests", function() {
     });
 
     it("testing api methods without config", async function() {
-        AuthHttpRequest.init({
-            refreshTokenUrl: `${BASE_URL}/refresh`
+        AuthHttpRequestFetch.init({
+            apiDomain: BASE_URL
         });
 
-        let getResponse = await AuthHttpRequest.get(`${BASE_URL}/testing`);
-        let postResponse = await AuthHttpRequest.post(`${BASE_URL}/testing`);
-        let deleteResponse = await AuthHttpRequest.delete(`${BASE_URL}/testing`);
-        let putResponse = await AuthHttpRequest.put(`${BASE_URL}/testing`);
-        let doRequestResponse = await AuthHttpRequest.axios({ method: "GET", url: `${BASE_URL}/testing` });
+        let getResponse = await axiosInstance.get(`${BASE_URL}/testing`);
+        let postResponse = await axiosInstance.post(`${BASE_URL}/testing`);
+        let deleteResponse = await axiosInstance.delete(`${BASE_URL}/testing`);
+        let putResponse = await axiosInstance.put(`${BASE_URL}/testing`);
+        let doRequestResponse = await axiosInstance({ method: "GET", url: `${BASE_URL}/testing` });
+
         getResponse = await getResponse.data;
         putResponse = await putResponse.data;
         postResponse = await postResponse.data;
@@ -152,27 +132,28 @@ describe("Axios AuthHttpRequest class tests", function() {
     });
 
     it("testing api methods with config", async function() {
-        AuthHttpRequest.init({
-            refreshTokenUrl: `${BASE_URL}/refresh`
+        AuthHttpRequestFetch.init({
+            apiDomain: BASE_URL
         });
 
         let testing = "testing";
-        let getResponse = await AuthHttpRequest.get(`${BASE_URL}/${testing}`, { headers: { testing } });
-        let postResponse = await axios.post(`${BASE_URL}/${testing}`, undefined, {
+        let getResponse = await axiosInstance.get(`${BASE_URL}/${testing}`, { headers: { testing } });
+        let postResponse = await axiosInstance.post(`${BASE_URL}/${testing}`, undefined, {
             headers: { testing }
         });
-        let deleteResponse = await AuthHttpRequest.delete(`${BASE_URL}/${testing}`, { headers: { testing } });
-        let putResponse = await axios.put(`${BASE_URL}/${testing}`, undefined, { headers: { testing } });
-        let doRequestResponse1 = await AuthHttpRequest.axios({
+        let deleteResponse = await axiosInstance.delete(`${BASE_URL}/${testing}`, { headers: { testing } });
+        let putResponse = await axiosInstance.put(`${BASE_URL}/${testing}`, undefined, { headers: { testing } });
+        let doRequestResponse1 = await axiosInstance({
             url: `${BASE_URL}/${testing}`,
             method: "GET",
             headers: { testing }
         });
-        let doRequestResponse2 = await axios({
+        let doRequestResponse2 = await axiosInstance({
             url: `${BASE_URL}/${testing}`,
             method: "GET",
             headers: { testing }
         });
+
         let getResponseHeader = getResponse.headers[testing];
         getResponse = await getResponse.data;
         let putResponseHeader = putResponse.headers[testing];
@@ -202,12 +183,12 @@ describe("Axios AuthHttpRequest class tests", function() {
     });
 
     it("testing api methods that doesn't exists", async function() {
-        AuthHttpRequest.init({
-            refreshTokenUrl: `${BASE_URL}/refresh`
+        AuthHttpRequestFetch.init({
+            apiDomain: BASE_URL
         });
         let expectedStatusCode = 404;
         try {
-            await AuthHttpRequest.get(`${BASE_URL}/fail`);
+            await axiosInstance.get(`${BASE_URL}/fail`);
             throw Error();
         } catch (err) {
             if (err.response !== undefined) {
@@ -217,7 +198,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             }
         }
         try {
-            await AuthHttpRequest.post(`${BASE_URL}/fail`);
+            await axiosInstance.post(`${BASE_URL}/fail`);
             throw Error();
         } catch (err) {
             if (err.response !== undefined) {
@@ -227,7 +208,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             }
         }
         try {
-            await AuthHttpRequest.delete(`${BASE_URL}/fail`);
+            await axiosInstance.delete(`${BASE_URL}/fail`);
             throw Error();
         } catch (err) {
             if (err.response !== undefined) {
@@ -237,7 +218,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             }
         }
         try {
-            await AuthHttpRequest.put(`${BASE_URL}/fail`);
+            await axiosInstance.put(`${BASE_URL}/fail`);
             throw Error();
         } catch (err) {
             if (err.response !== undefined) {
@@ -247,7 +228,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             }
         }
         try {
-            await AuthHttpRequest.axios({ url: `${BASE_URL}/fail`, method: "GET" });
+            await axiosInstance({ url: `${BASE_URL}/fail`, method: "GET" });
             throw Error();
         } catch (err) {
             if (err.response !== undefined) {
@@ -257,7 +238,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             }
         }
         try {
-            await AuthHttpRequest.axios({ url: `${BASE_URL}/fail`, method: "GET" });
+            await axiosInstance({ url: `${BASE_URL}/fail`, method: "GET" });
             throw Error();
         } catch (err) {
             if (err.response !== undefined) {
@@ -273,10 +254,10 @@ describe("Axios AuthHttpRequest class tests", function() {
             jest.setTimeout(10000);
             await startST();
 
-            let BASE_URL = "http://localhost:8080";
-            AuthHttpRequest.init({
-                refreshTokenUrl: `${BASE_URL}/refresh`
+            AuthHttpRequestFetch.init({
+                apiDomain: BASE_URL
             });
+            AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             let userId = "testing-supertokens-react-native";
             let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
                 headers: {

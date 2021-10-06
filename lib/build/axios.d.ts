@@ -9,7 +9,6 @@ export declare function responseErrorInterceptor(axiosInstance: any): (error: an
 export default class AuthHttpRequest {
     private static refreshTokenUrl;
     static sessionExpiredStatusCode: number;
-    static initCalled: boolean;
     static apiDomain: string;
     private static refreshAPICustomHeaders;
     /**

@@ -118,7 +118,7 @@ export function responseInterceptor(axiosInstance: any) {
         let doNotDoInterception = false;
 
         try {
-            if (!AuthHttpRequest.initCalled) {
+            if (!AuthHttpRequestFetch.initCalled) {
                 throw new Error("init function not called");
             }
             let url = getUrlFromConfig(response.config);
@@ -229,7 +229,6 @@ export function responseErrorInterceptor(axiosInstance: any) {
 export default class AuthHttpRequest {
     private static refreshTokenUrl: string | undefined;
     static sessionExpiredStatusCode = 401;
-    static initCalled = false;
     static apiDomain = "";
     private static refreshAPICustomHeaders: any;
 
