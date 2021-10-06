@@ -15,7 +15,7 @@
 let axios = require("axios");
 
 const BASE_URL = "http://localhost.org:8080";
-const BASE_URL_FOR_ST =
+export const BASE_URL_FOR_ST =
     process.env.NODE_PORT === undefined ? "http://localhost.org:8080" : "http://localhost.org:" + process.env.NODE_PORT;
 
 export function checkIfIdRefreshIsCleared() {

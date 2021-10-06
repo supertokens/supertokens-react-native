@@ -22,7 +22,8 @@ import {
     checkIfIdRefreshIsCleared,
     getNumberOfTimesRefreshCalled,
     startST,
-    getNumberOfTimesGetSessionCalled
+    getNumberOfTimesGetSessionCalled,
+    BASE_URL_FOR_ST
 } from "./utils";
 import { spawn } from "child_process";
 import { ProcessState, PROCESS_STATE } from "supertokens-react-native/lib/build/processState";
@@ -58,25 +59,26 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
     beforeAll(async function() {
         spawn("./test/startServer", [
-            process.env.INSTALL_PATH === undefined ? "../../com-root" : process.env.INSTALL_PATH
+            process.env.INSTALL_PATH,
+            process.env.NODE_PORT === undefined ? 8080 : process.env.NODE_PORT
         ]);
         await new Promise(r => setTimeout(r, 1000));
     });
 
     afterAll(async function() {
         let instance = axios.create();
-        await instance.post(BASE_URL + "/after");
+        await instance.post(BASE_URL_FOR_ST + "/after");
         try {
-            await instance.get(BASE_URL + "/stop");
+            await instance.get(BASE_URL_FOR_ST + "/stop");
         } catch (err) {}
     });
 
     beforeEach(async function() {
         AuthHttpRequestFetch.initCalled = false;
-        AuthHttpRequestFetch.originalFetch = undefined;
-        AuthHttpRequestFetch.viaInterceptor = undefined;
         ProcessState.getInstance().reset();
         let instance = axios.create();
+        await instance.post(BASE_URL_FOR_ST + "/beforeeach");
+        // await instance.post("http://localhost.org:8082/beforeeach"); // for cross domain // TODO NEMI: Uncomment this when cross domain tests are added
         await instance.post(BASE_URL + "/beforeeach");
 
         let nodeFetch = require("node-fetch").default;
@@ -106,16 +108,16 @@ describe("Fetch AuthHttpRequest class tests", function() {
             apiDomain: BASE_URL
         });
 
-        let getResponse = await fetch(`${BASE_URL}/testing`, {
+        let getResponse = await global.fetch(`${BASE_URL}/testing`, {
             method: "GET"
         });
-        let postResponse = await fetch(`${BASE_URL}/testing`, {
+        let postResponse = await global.fetch(`${BASE_URL}/testing`, {
             method: "POST"
         });
-        let deleteResponse = await fetch(`${BASE_URL}/testing`, {
+        let deleteResponse = await global.fetch(`${BASE_URL}/testing`, {
             method: "DELETE"
         });
-        let putResponse = await fetch(`${BASE_URL}/testing`, {
+        let putResponse = await global.fetch(`${BASE_URL}/testing`, {
             method: "PUT"
         });
 
@@ -137,15 +139,15 @@ describe("Fetch AuthHttpRequest class tests", function() {
         });
 
         let testing = "testing";
-        let getResponse = await fetch(`${BASE_URL}/${testing}`, { method: "GET", headers: { testing } });
-        let postResponse = await fetch(`${BASE_URL}/${testing}`, { method: "post", headers: { testing } });
-        let deleteResponse = await fetch(`${BASE_URL}/${testing}`, { method: "delete", headers: { testing } });
-        let putResponse = await fetch(`${BASE_URL}/${testing}`, { method: "put", headers: { testing } });
-        let doRequestResponse1 = await fetch(`${BASE_URL}/${testing}`, {
+        let getResponse = await global.fetch(`${BASE_URL}/${testing}`, { method: "GET", headers: { testing } });
+        let postResponse = await global.fetch(`${BASE_URL}/${testing}`, { method: "post", headers: { testing } });
+        let deleteResponse = await global.fetch(`${BASE_URL}/${testing}`, { method: "delete", headers: { testing } });
+        let putResponse = await global.fetch(`${BASE_URL}/${testing}`, { method: "put", headers: { testing } });
+        let doRequestResponse1 = await global.fetch(`${BASE_URL}/${testing}`, {
             method: "GET",
             headers: { testing }
         });
-        let doRequestResponse2 = await fetch(`${BASE_URL}/${testing}`, {
+        let doRequestResponse2 = await global.fetch(`${BASE_URL}/${testing}`, {
             method: "GET",
             headers: { testing }
         });
@@ -183,20 +185,20 @@ describe("Fetch AuthHttpRequest class tests", function() {
             apiDomain: BASE_URL
         });
 
-        let getResponse = await fetch(`${BASE_URL}/fail`, {
+        let getResponse = await global.fetch(`${BASE_URL}/fail`, {
             method: "GET"
         });
-        let postResponse = await fetch(`${BASE_URL}/fail`, {
+        let postResponse = await global.fetch(`${BASE_URL}/fail`, {
             method: "POST"
         });
-        let deleteResponse = await fetch(`${BASE_URL}/fail`, {
+        let deleteResponse = await global.fetch(`${BASE_URL}/fail`, {
             method: "DELETE"
         });
-        let putResponse = await fetch(`${BASE_URL}/fail`, {
+        let putResponse = await global.fetch(`${BASE_URL}/fail`, {
             method: "PUT"
         });
-        let doRequestResponse1 = await fetch(`${BASE_URL}/fail`, { method: "GET" });
-        let doRequestResponse2 = await fetch(`${BASE_URL}/fail`, { method: "GET" });
+        let doRequestResponse1 = await global.fetch(`${BASE_URL}/fail`, { method: "GET" });
+        let doRequestResponse2 = await global.fetch(`${BASE_URL}/fail`, { method: "GET" });
 
         let getResponseCode = getResponse.status;
         let putResponseCode = putResponse.status;
@@ -224,7 +226,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             });
             let userId = "testing-supertokens-react-native";
 
-            let loginResponse = await fetch(`${BASE_URL}/login`, {
+            let loginResponse = await global.fetch(`${BASE_URL}/login`, {
                 method: "post",
                 headers: {
                     Accept: "application/json",
@@ -239,18 +241,22 @@ describe("Fetch AuthHttpRequest class tests", function() {
             await delay(5);
 
             //check that the number of times the refreshAPI was called is 0
+            console.log(await getNumberOfTimesRefreshCalled());
             assert((await getNumberOfTimesRefreshCalled()) === 0);
 
-            let getResponse = await fetch(`${BASE_URL}/`);
+            let getResponse = await global.fetch(`${BASE_URL}/`);
 
             //check that the response to getSession was success
-            assert((await getResponse.text()) === userId);
+            let responseText = await getResponse.text();
+            console.log(responseText);
+            assert(responseText === userId);
 
             //check that the number of time the refreshAPI was called is 1
             assert((await getNumberOfTimesRefreshCalled()) === 1);
 
             done();
         } catch (err) {
+            console.log("Error", err);
             done(err);
         }
     });
@@ -401,7 +407,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             await startST(5);
 
             AuthHttpRequestFetch.init({
-                refreshTokenUrl: `${BASE_URL}/refresh`
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -414,6 +420,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
                 },
                 body: JSON.stringify({ userId })
             });
+
             assertEqual(await loginResponse.text(), userId);
             assertEqual(await getNumberOfTimesRefreshCalled(), 0);
 
@@ -434,7 +441,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
             //check that reponse of all requests are success
             let noOfResponeSuccesses = 0;
             for (let i = 0; i < multipleGetSessionResponse.length; i++) {
-                assertEqual(await multipleGetSessionResponse[i].text(), "success");
+                let responseText = await multipleGetSessionResponse[i].text();
+                assertEqual(responseText, userId);
                 noOfResponeSuccesses += 1;
             }
 
@@ -454,7 +462,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST(3, false);
             AuthHttpRequestFetch.init({
-                refreshTokenUrl: `${BASE_URL}/refresh`
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -468,14 +476,14 @@ describe("Fetch AuthHttpRequest class tests", function() {
                 body: JSON.stringify({ userId })
             });
             assertEqual(await loginResponse.text(), userId);
-            assertEqual(await AuthHttpRequestFetch.doesSessionExist(), true);
+            assertEqual(await AuthHttpRequest.doesSessionExist(), true);
             assertEqual(await getNumberOfTimesRefreshCalled(), 0);
 
             await delay(5);
 
             let getSessionResponse = await global.fetch(`${BASE_URL}/`);
 
-            assertEqual(await getSessionResponse.text(), "success");
+            assertEqual(await getSessionResponse.text(), userId);
             assertEqual(await getNumberOfTimesRefreshCalled(), 1);
 
             let logoutResponse = await global.fetch(`${BASE_URL}/logout`, {
@@ -487,28 +495,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
                 body: JSON.stringify({ userId })
             });
 
-            assertEqual(await AuthHttpRequestFetch.doesSessionExist(), false);
+            assertEqual(await AuthHttpRequest.doesSessionExist(), false);
             assertEqual(await logoutResponse.text(), "success");
-            done();
-        } catch (err) {
-            done(err);
-        }
-    });
-
-    // device info tests******
-    it("test with fetch that device info is sent", async function(done) {
-        try {
-            jest.setTimeout(15000);
-            await startST();
-            AuthHttpRequestFetch.init({
-                refreshTokenUrl: `${BASE_URL}/refresh`,
-                viaInterceptor: true
-            });
-            let userId = "testing-supertokens-react-native";
-
-            // send request to check if deviceInfo is beinf added to headers
-            let deviceInfoIsAdded = await fetch(`${BASE_URL}/checkDeviceInfo`);
-            assertEqual(await deviceInfoIsAdded.text(), "true");
             done();
         } catch (err) {
             done(err);
@@ -521,7 +509,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST();
             AuthHttpRequestFetch.init({
-                refreshTokenUrl: `${BASE_URL}/refresh`
+                apiDomain: BASE_URL
             });
 
             let val = await global.fetch(`${BASE_URL}/testError`);
@@ -560,10 +548,10 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST();
             AuthHttpRequestFetch.init({
-                refreshTokenUrl: `${BASE_URL}/refresh`
+                apiDomain: BASE_URL
             });
             AuthHttpRequestFetch.init({
-                refreshTokenUrl: `${BASE_URL}/refresh`
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -578,7 +566,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
             assertEqual(await loginResponse.text(), userId);
             AuthHttpRequestFetch.init({
-                refreshTokenUrl: `${BASE_URL}/refresh`
+                apiDomain: BASE_URL
             });
 
             let logoutResponse = await global.fetch(`${BASE_URL}/logout`, {
@@ -593,7 +581,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             assertEqual(await logoutResponse.text(), "success");
 
             //check that session does not exist
-            assertEqual(await AuthHttpRequestFetch.doesSessionExist(), false);
+            assertEqual(await AuthHttpRequest.doesSessionExist(), false);
 
             //check that login still works correctly
             loginResponse = await global.fetch(`${BASE_URL}/login`, {
@@ -612,13 +600,14 @@ describe("Fetch AuthHttpRequest class tests", function() {
         }
     });
 
+    // TODO NEMI: Is this test no longer relevant?
     //If via interception, make sure that initially, just an endpoint is just hit twice in case of access token expiry*****
     it("test with fetch that if via interception, initially an endpoint is hit just twice in case of access token expiry", async done => {
         try {
             jest.setTimeout(15000);
             await startST(3);
             AuthHttpRequestFetch.init({
-                refreshTokenUrl: `${BASE_URL}/refresh`
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -638,7 +627,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             await delay(5);
 
             let getSessionResponse = await global.fetch(`${BASE_URL}/`);
-            assertEqual(await getSessionResponse.text(), "success");
+            assertEqual(await getSessionResponse.text(), userId);
 
             //check that the number of times getSession was called is 2
             assertEqual(await getNumberOfTimesGetSessionCalled(), 2);
@@ -657,7 +646,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST(5);
             AuthHttpRequestFetch.init({
-                refreshTokenUrl: `${BASE_URL}/refresh`
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -701,7 +690,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST(5);
             AuthHttpRequestFetch.init({
-                refreshTokenUrl: `${BASE_URL}/refresh`
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -718,7 +707,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             assertEqual(await loginResponse.text(), userId);
 
             let getSessionResponse = await global.fetch(`${BASE_URL}/`);
-            assertEqual(await getSessionResponse.text(), "success");
+            assertEqual(await getSessionResponse.text(), userId);
 
             //check that the number of times getSession was called is 1
             assertEqual(await getNumberOfTimesGetSessionCalled(), 1);
@@ -738,12 +727,12 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST(5);
             AuthHttpRequestFetch.init({
-                refreshTokenUrl: `${BASE_URL}/refresh`
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
             // this is technically not doing interception, but it is equavalent to doing it since the inteceptor just calls the function below.
-            await AuthHttpRequestFetch.fetch(`https://www.google.com`);
+            await fetch(`https://www.google.com`);
 
             let verifyRequestState = await ProcessState.getInstance().waitForEvent(
                 PROCESS_STATE.CALLING_INTERCEPTION_REQUEST,
@@ -752,7 +741,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
             assertEqual(verifyRequestState, undefined);
 
-            let loginResponse = await AuthHttpRequestFetch.fetch(`${BASE_URL}/login`, {
+            let loginResponse = await global.fetch(`${BASE_URL}/login`, {
                 method: "post",
                 headers: {
                     Accept: "application/json",
@@ -779,7 +768,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST(5);
             AuthHttpRequestFetch.init({
-                refreshTokenUrl: `${BASE_URL}/refresh`
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -793,7 +782,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
                         interceptorHeader2: "value2"
                     }
                 };
-                let response = await AuthHttpRequestFetch.fetch(url, testConfig);
+                let response = await global.fetch(url, testConfig);
                 let requestValue = await response.text();
                 response = {
                     ...response,
