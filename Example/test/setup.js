@@ -22,6 +22,6 @@ jest.mock("react-native", () => {
     };
 });
 
-jest.mock("@react-native-community/async-storage", () => {
+jest.mock("@react-native-async-storage/async-storage", () => {
     return new MockStorage({});
 });
