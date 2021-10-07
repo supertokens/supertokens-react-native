@@ -13,7 +13,7 @@
  * under the License.
  */
 
-import AsyncStorage from "@react-native-community/async-storage";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import AuthHttpRequest from "./fetch";
 
 const TOKEN_KEY = "supertokens-rn-anticsrf-key";
