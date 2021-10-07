@@ -75,6 +75,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
     beforeEach(async function() {
         AuthHttpRequestFetch.initCalled = false;
+        AuthHttpRequestFetch.env = {};
         ProcessState.getInstance().reset();
         let instance = axios.create();
         await instance.post(BASE_URL_FOR_ST + "/beforeeach");
@@ -261,7 +262,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
         }
     });
 
-    //test custom headers are being sent when logged in and when not*****
+    // test custom headers are being sent when logged in and when not*****
     it("test with fetch that custom headers are being sent", async function(done) {
         try {
             jest.setTimeout(10000);
