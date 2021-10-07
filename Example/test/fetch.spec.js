@@ -75,7 +75,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
     beforeEach(async function() {
         AuthHttpRequestFetch.initCalled = false;
-        AuthHttpRequestFetch.env = {};
+        global = {};
         ProcessState.getInstance().reset();
         let instance = axios.create();
         await instance.post(BASE_URL_FOR_ST + "/beforeeach");

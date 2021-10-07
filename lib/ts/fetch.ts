@@ -23,6 +23,8 @@ import { shouldDoInterceptionBasedOnUrl, validateAndNormaliseInputOrThrowError }
 import FrontToken from "./frontToken";
 import RecipeImplementation from "./recipeImplementation";
 
+declare let global: any;
+
 /**
  * @class AuthHttpRequest
  * @description wrapper for common http methods.
@@ -38,7 +40,7 @@ export default class AuthHttpRequest {
 
     static init(options: InputType) {
         let config = validateAndNormaliseInputOrThrowError(options);
-        AuthHttpRequest.env = {};
+        AuthHttpRequest.env = global;
 
         AuthHttpRequest.refreshTokenUrl = config.apiDomain + config.apiBasePath + "/session/refresh";
         AuthHttpRequest.signOutUrl = config.apiDomain + config.apiBasePath + "/signout";
