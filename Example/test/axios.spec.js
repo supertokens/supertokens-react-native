@@ -26,7 +26,8 @@ import {
     getNumberOfTimesRefreshCalled,
     startST,
     getNumberOfTimesGetSessionCalled,
-    BASE_URL_FOR_ST
+    BASE_URL_FOR_ST,
+    BASE_URL as UTILS_BASE_URL
 } from "./utils";
 import { spawn } from "child_process";
 import { ProcessState, PROCESS_STATE } from "supertokens-react-native/lib/build/processState";
@@ -91,6 +92,8 @@ describe("Axios AuthHttpRequest class tests", function() {
         let nodeFetch = require("node-fetch").default;
         const fetch = require("fetch-cookie")(nodeFetch, cookieJar);
         global.fetch = fetch;
+        global.__supertokensOriginalFetch = undefined;
+        global.__supertokensSessionRecipe = undefined;
     });
 
     it("testing for init check in attemptRefreshingSession", async function(done) {
@@ -253,13 +256,12 @@ describe("Axios AuthHttpRequest class tests", function() {
         try {
             jest.setTimeout(10000);
             await startST();
-
-            AuthHttpRequestFetch.init({
-                apiDomain: BASE_URL
-            });
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
+            AuthHttpRequestFetch.init({
+                apiDomain: UTILS_BASE_URL
+            });
             let userId = "testing-supertokens-react-native";
-            let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
+            let loginResponse = await axiosInstance.post(`${UTILS_BASE_URL}/login`, JSON.stringify({ userId }), {
                 headers: {
                     Accept: "application/json",
                     "Content-Type": "application/json"
@@ -271,10 +273,10 @@ describe("Axios AuthHttpRequest class tests", function() {
             await delay(3);
 
             assertEqual(await getNumberOfTimesRefreshCalled(), 0);
-            let getResponse = await axiosInstance({ url: `${BASE_URL}/`, method: "GET" });
+            let getResponse = await axiosInstance({ url: `${UTILS_BASE_URL}/`, method: "GET" });
             assertEqual(await getNumberOfTimesRefreshCalled(), 1);
             getResponse = await getResponse.data;
-            assertEqual(getResponse, "success");
+            assertEqual(getResponse, userId);
             done();
         } catch (err) {
             done(err);

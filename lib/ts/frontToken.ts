@@ -19,9 +19,11 @@ export default class FrontToken {
 
         async function getFrontTokenFromStorage(): Promise<string | null> {
             let frontTokenFromStorage = await AsyncStorage.getItem(FRONT_TOKEN_KEY);
-            let value = "; " + frontTokenFromStorage;
-            let parts = value.split("; " + FRONT_TOKEN_NAME + "=");
-            if (parts.length >= 2) {
+
+            if (frontTokenFromStorage !== null) {
+                let value = "; " + frontTokenFromStorage;
+                let parts = value.split("; " + FRONT_TOKEN_NAME + "=");
+
                 let last = parts.pop();
                 if (last !== undefined) {
                     let temp = last.split(";").shift();
@@ -31,6 +33,7 @@ export default class FrontToken {
                     return temp;
                 }
             }
+
             return null;
         }
 

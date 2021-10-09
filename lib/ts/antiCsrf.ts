@@ -36,9 +36,11 @@ export default class AntiCSRF {
 
         async function getAntiCSRFFromStorage(): Promise<string | null> {
             let fromStorage = await AsyncStorage.getItem(TOKEN_KEY);
-            let value = "; " + fromStorage;
-            let parts = value.split("; " + ANTI_CSRF_NAME + "=");
-            if (parts.length >= 2) {
+
+            if (fromStorage !== null) {
+                let value = "; " + fromStorage;
+                let parts = value.split("; " + ANTI_CSRF_NAME + "=");
+
                 let last = parts.pop();
                 if (last !== undefined) {
                     let temp = last.split(";").shift();
@@ -48,6 +50,7 @@ export default class AntiCSRF {
                     return temp;
                 }
             }
+
             return null;
         }
 
