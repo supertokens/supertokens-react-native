@@ -23,7 +23,8 @@ import {
     getNumberOfTimesRefreshCalled,
     startST,
     getNumberOfTimesGetSessionCalled,
-    BASE_URL_FOR_ST
+    BASE_URL_FOR_ST,
+    coreTagEqualToOrAfter
 } from "./utils";
 import { spawn } from "child_process";
 import { ProcessState, PROCESS_STATE } from "supertokens-react-native/lib/build/processState";
@@ -97,6 +98,19 @@ describe("Fetch AuthHttpRequest class tests", function() {
         let failed = false;
         try {
             await AuthHttpRequestFetch.doRequest(async () => {});
+            failed = true;
+        } catch (err) {}
+
+        if (failed) {
+            throw Error("test failed");
+        }
+    });
+
+    // TODO NEMI: Is this actually testing the right thing?
+    it("testing with fetch for init check in attemptRefreshingSession", async function() {
+        let failed = false;
+        try {
+            await AuthHttpRequestFetch.attemptRefreshingSession();
             failed = true;
         } catch (err) {}
 
@@ -259,10 +273,199 @@ describe("Fetch AuthHttpRequest class tests", function() {
         }
     });
 
-    // test custom headers are being sent when logged in and when not*****
-    it("test with fetch that custom headers are being sent", async function(done) {
+    it("test session after signing key change", async function(done) {
+        try {
+            jest.setTimeout(15000);
+            // We can have access tokens valid for longer than the signing key update interval
+            await startST(100, true, "0.002");
+
+            AuthHttpRequestFetch.init({
+                apiDomain: BASE_URL
+            });
+
+            let userId = "testing-supertokens-react-native";
+
+            //send loing request
+            let loginResponse = await global.fetch(`${BASE_URL}/login`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+            assertEqual(await loginResponse.text(), userId);
+
+            //delay for 11 seconds for access token signing key to change
+            assertEqual(await getNumberOfTimesRefreshCalled(), 0);
+            await delay(11);
+
+            //check that the number of times the refreshAPI was called is 0
+            assertEqual(await getNumberOfTimesRefreshCalled(), 0);
+
+            const promises = [];
+            for (let i = 0; i < 250; i++) {
+                promises.push(global.fetch(`${BASE_URL}/`).catch(() => {}));
+            }
+            await Promise.all(promises);
+
+            let coreSupportsMultipleSignigKeys = coreTagEqualToOrAfter("3.6.0");
+
+            assertEqual(await getNumberOfTimesRefreshCalled(), coreSupportsMultipleSignigKeys ? 0 : 1);
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    it("test rid is there", async function(done) {
         try {
             jest.setTimeout(10000);
+            await startST(3);
+
+            AuthHttpRequestFetch.init({
+                apiDomain: BASE_URL
+            });
+
+            let userId = "testing-supertokens-react-native";
+
+            //send loing request
+            let loginResponse = await global.fetch(`${BASE_URL}/login`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+            assertEqual(await loginResponse.text(), userId);
+
+            let getResponse = await global.fetch(`${BASE_URL}/check-rid`);
+
+            assertEqual(await getResponse.text(), "success");
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    it("signout with expired access token", async function(done) {
+        try {
+            jest.setTimeout(10000);
+            await startST();
+
+            AuthHttpRequestFetch.init({
+                apiDomain: BASE_URL
+            });
+
+            let userId = "testing-supertokens-react-native";
+
+            //send loing request
+            let loginResponse = await global.fetch(`${BASE_URL}/login`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+            assertEqual(await loginResponse.text(), userId);
+            await delay(5);
+
+            assertEqual(await getNumberOfTimesRefreshCalled(), 0);
+            await AuthHttpRequest.signOut();
+            assertEqual(await getNumberOfTimesRefreshCalled(), 1);
+            assertEqual(await AuthHttpRequest.doesSessionExist(), false);
+
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    it.only("test update jwt data with fetch", async function(done) {
+        try {
+            jest.setTimeout(10000);
+            await startST(3);
+
+            AuthHttpRequestFetch.init({
+                apiDomain: BASE_URL
+            });
+
+            let userId = "testing-supertokens-react-native";
+
+            let loginResponse = await global.fetch(`${BASE_URL}/login`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+            assertEqual(await loginResponse.text(), userId);
+
+            let data = await AuthHttpRequest.getJWTPayloadSecurely();
+            assertEqual(Object.keys(data).length, 0);
+
+            // update jwt data
+            let testResponse1 = await global.fetch(`${BASE_URL}/update-jwt`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ key: "łukasz 馬 / 马" })
+            });
+            let data1 = await testResponse1.json();
+            assertEqual(data1.key, "łukasz 馬 / 马");
+
+            data = await AuthHttpRequest.getJWTPayloadSecurely();
+            assertEqual(data.key, "łukasz 馬 / 马");
+
+            //delay for 5 seconds for access token validity expiry
+            await delay(5);
+
+            //check that the number of times the refreshAPI was called is 0
+            assertEqual(await getNumberOfTimesRefreshCalled(), 0);
+
+            // get jwt data
+            let testResponse2 = await global.fetch(`${BASE_URL}/update-jwt`, { method: "get" });
+            let data2 = await testResponse2.json();
+            assertEqual(data2.key, "łukasz 馬 / 马");
+            assertEqual(await getNumberOfTimesRefreshCalled(), 1);
+
+            // update jwt data
+            let testResponse3 = await global.fetch(`${BASE_URL}/update-jwt`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ key1: " łukasz data1" })
+            });
+            let data3 = await testResponse3.json();
+            assertEqual(data3.key1, " łukasz data1");
+            assertEqual(data3.key, undefined);
+
+            data = await AuthHttpRequest.getJWTPayloadSecurely();
+            assertEqual(data.key1, " łukasz data1");
+            assertEqual(data.key, undefined);
+
+            // get jwt data
+            let testResponse4 = await global.fetch(`${BASE_URL}/update-jwt`, { method: "get" });
+            let data4 = await testResponse4.json();
+            assertEqual(data4.key1, " łukasz data1");
+            assertEqual(data4.key, undefined);
+
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    // test custom headers are being sent when logged in and when not*****
+    it("test with fetch that custom headers are being sent", async function() {
+        try {
             await startST();
 
             AuthHttpRequestFetch.init({

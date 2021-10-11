@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import AuthHttpRequest from "./fetch";
 import IdRefreshToken from "./idRefreshToken";
+import { decode as atob } from "base-64";
 
 const FRONT_TOKEN_KEY = "supertokens-rn-front-token-key";
 const FRONT_TOKEN_NAME = "sFrontToken";

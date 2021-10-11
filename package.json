@@ -35,10 +35,14 @@
     "@react-native-async-storage/async-storage": "^1.12.1"
   },
   "devDependencies": {
+    "@react-native-async-storage/async-storage": "^1.12.1",
+    "@types/base-64": "^1.0.0",
     "@types/react-native": "0.62.0",
     "axios": "*",
     "prettier": "1.18.2",
-    "typescript": "3.5.2",
-    "@react-native-async-storage/async-storage": "^1.12.1"
+    "typescript": "3.5.2"
+  },
+  "dependencies": {
+    "base-64": "^1.0.0"
   }
 }
