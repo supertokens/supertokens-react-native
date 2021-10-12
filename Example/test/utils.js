@@ -45,6 +45,12 @@ export async function getNumberOfTimesRefreshCalled() {
     return response.data;
 }
 
+export async function getNumberOfTimesRefreshAttempted(BASE = BASE_URL) {
+    let instance = axios.create();
+    let response = await instance.get(BASE + "/refreshAttemptedTime");
+    return response.data;
+}
+
 export async function startST(
     accessTokenValidity = 1,
     enableAntiCsrf = true,

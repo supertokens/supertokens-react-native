@@ -7,7 +7,7 @@ export default class FrontToken {
         ate: number;
         up: any;
     } | undefined>;
-    static setFrontToken(frontToken: string | undefined): Promise<void>;
+    private static setFrontToken;
     static removeToken(): Promise<void>;
     static setItem(frontToken: string): Promise<void>;
 }

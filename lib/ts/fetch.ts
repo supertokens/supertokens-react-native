@@ -97,6 +97,8 @@ export default class AuthHttpRequest {
                         AuthHttpRequest.config.cookieDomain
                     ));
         } catch (err) {
+            // This is because in react native it is not possible to call fetch with only a path (Example fetch("/login"))
+            // so we dont need to check for that here
             throw err;
         }
 

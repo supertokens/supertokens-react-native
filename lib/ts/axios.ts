@@ -258,17 +258,9 @@ export default class AuthHttpRequest {
                 ) &&
                 viaInterceptor;
         } catch (err) {
-            if (err.message === "Please provide a valid domain name") {
-                // .origin gives the port as well..
-                doNotDoInterception =
-                    !shouldDoInterceptionBasedOnUrl(
-                        window.location.origin,
-                        AuthHttpRequestFetch.config.apiDomain,
-                        AuthHttpRequestFetch.config.cookieDomain
-                    ) && viaInterceptor;
-            } else {
-                throw err;
-            }
+            // This is because when this function is called we always have a full URL (refer to getUrlFromConfig),
+            // so we do not need to check for the case where axios is called with just a path (for example axios.post("/login"))
+            throw err;
         }
 
         if (doNotDoInterception) {

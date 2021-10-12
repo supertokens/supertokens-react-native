@@ -43,6 +43,15 @@ export default class AntiCSRF {
 
                 let last = parts.pop();
                 if (last !== undefined) {
+                    let splitForExpiry = fromStorage.split(";");
+                    let expiry = Date.parse(splitForExpiry[1].split("=")[1]);
+                    let currentTime = Date.now();
+
+                    if (expiry < currentTime) {
+                        await AntiCSRF.removeToken();
+                        return null;
+                    }
+
                     let temp = last.split(";").shift();
                     if (temp === undefined) {
                         return null;

@@ -27,6 +27,15 @@ export default class FrontToken {
 
                 let last = parts.pop();
                 if (last !== undefined) {
+                    let splitForExpiry = frontTokenFromStorage.split(";");
+                    let expiry = Date.parse(splitForExpiry[1].split("=")[1]);
+                    let currentTime = Date.now();
+
+                    if (expiry < currentTime) {
+                        await FrontToken.removeToken();
+                        return null;
+                    }
+
                     let temp = last.split(";").shift();
                     if (temp === undefined) {
                         return null;
@@ -66,7 +75,7 @@ export default class FrontToken {
         return JSON.parse(decodeURIComponent(escape(atob(frontToken))));
     }
 
-    static async setFrontToken(frontToken: string | undefined) {
+    private static async setFrontToken(frontToken: string | undefined) {
         async function setFrontTokenToStorage(frontToken: string | undefined, domain: string) {
             let expires: string | undefined = "Thu, 01 Jan 1970 00:00:01 GMT";
             let cookieVal = "";
