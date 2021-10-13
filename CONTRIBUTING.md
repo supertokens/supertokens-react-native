@@ -14,7 +14,6 @@ We're so excited you're interested in helping with SuperTokens! We are happy to 
 ## Development Setup  
 
 ### Prerequisites
-- OS: Linux or macOS
 - Nodejs & npm
 - IDE: [VSCode](https://code.visualstudio.com/download)(recommended) or equivalent IDE  
 

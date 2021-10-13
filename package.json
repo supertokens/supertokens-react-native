@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build-check": "cd lib && npx tsc -p tsconfig.json --skipLibCheck --noEmit",
-    "build": "cd lib && npx tsc -p tsconfig.json --skipLibCheck && cd ../",
+    "build": "cd lib && npx tsc -p tsconfig.json --skipLibCheck && cd ../ && cd test/playground && npx tsc -p tsconfig.json",
     "pretty": "cd lib && npx prettier --write --config .prettierrc \"ts/**/*.ts\" \"build/**/*.js\" \"../TestingApp/test/**/*.js\"",
     "build-pretty": "npm run build && npm run pretty",
     "pretty-check": "cd lib && npx prettier --check --config .prettierrc \"ts/**/*.ts\" \"build/**/*.js\" \"../TestingApp/test/**/*.js\"",
@@ -32,7 +32,7 @@
   "peerDependencies": {
     "axios": "*",
     "react-native": ">=0.61.5 <1.0.x",
-    "@react-native-async-storage/async-storage": "^1.12.1"
+    "@react-native-async-storage/async-storage": ">=1.12.1 <2.0.x"
   },
   "devDependencies": {
     "@react-native-async-storage/async-storage": "^1.12.1",

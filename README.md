@@ -1,4 +1,3 @@
-
 ![SuperTokens banner](https://raw.githubusercontent.com/supertokens/supertokens-logo/master/images/Artboard%20%E2%80%93%2027%402x.png)
 
 # SuperTokens React Native SDK
@@ -13,7 +12,7 @@ This is a react native SDK that is responsible for maintaining a SuperTokens ses
 Learn more at https://supertokens.io
 
 ## Documentation
-To see documentation, please click [here](https://supertokens.io/docs/react-native/installation).
+To see documentation, please click [here](https://supertokens.io/docs/community/introduction).
 
 ## Contributing
 Please refer to the [CONTRIBUTING.md](https://github.com/supertokens/supertokens-react-native/blob/master/CONTRIBUTING.md) file in this repo.
