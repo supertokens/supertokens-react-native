@@ -12,17 +12,10 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-let axios = require("axios");
-const axiosCookieJarSupport = require("axios-cookiejar-support").default;
 const tough = require("tough-cookie");
-import AntiCsrfToken from "supertokens-react-native/lib/build/antiCsrf";
-import IdRefreshToken from "supertokens-react-native/lib/build/idRefreshToken";
-import FrontToken from "supertokens-react-native/lib/build/frontToken";
 import AuthHttpRequestFetch from "supertokens-react-native/lib/build/fetch";
 import AuthHttpRequest from "supertokens-react-native";
 import assert from "assert";
-import { BASE_URL_FOR_ST, BASE_URL as UTILS_BASE_URL } from "./utils";
-import { spawn } from "child_process";
 import { ProcessState } from "supertokens-react-native/lib/build/processState";
 import {
     normalisCookieDomainOrThrowError,
