@@ -281,7 +281,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
     it("test session after signing key change", async function(done) {
         try {
-            jest.setTimeout(15000);
+            jest.setTimeout(20000);
             // We can have access tokens valid for longer than the signing key update interval
             await startST(100, true, "0.002");
 
