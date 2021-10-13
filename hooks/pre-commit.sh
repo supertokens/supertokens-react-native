@@ -88,7 +88,6 @@ while IFS='"' read -ra ADDR; do
     done
 done <<< "$version"
 
-# TODO: also check in podspec and android version files
 codeversion=`cat lib/build/version.js | grep -e 'package_version'`
 while IFS='"' read -ra ADDR; do
     counter=0
@@ -106,26 +105,6 @@ then
     RED='\033[0;31m'
     NC='\033[0m' # No Color
     printf "${RED}Version codes in version.ts and package.json are not the same${NC}\n"
-    exit 1
-fi
-
-testversion=`cat TestingApp/test/server/version.js | grep -e 'module.exports.package_version'`
-while IFS='"' read -ra ADDR; do
-    counter=0
-    for i in "${ADDR[@]}"; do
-        if [ $counter == 1 ]
-        then
-            testversion=$i
-        fi
-        counter=$(($counter+1))
-    done
-done <<< "$testversion"
-
-if [ $version != $testversion ]
-then
-    RED='\033[0;31m'
-    NC='\033[0m' # No Color
-    printf "${RED}Version codes in version.ts and version.js in test server are not the same${NC}\n"
     exit 1
 fi
 
