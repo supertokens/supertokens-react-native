@@ -27,14 +27,15 @@ export default class IdRefreshToken {
     // else we return undefined.
     static async getIdRefreshToken(tryRefresh: boolean): Promise<IdRefreshTokenType> {
         async function getIdRefreshFromStorage() {
-            // TODO NEMI: This method should not directly reference the in memory variable
             if (IdRefreshToken.idRefreshInMemory === undefined) {
                 let k = await AsyncStorage.getItem(ID_KEY);
                 IdRefreshToken.idRefreshInMemory = k === null ? undefined : k;
             }
 
-            if (IdRefreshToken.idRefreshInMemory !== undefined) {
-                let value = "; " + IdRefreshToken.idRefreshInMemory;
+            let tokenInMemory = IdRefreshToken.idRefreshInMemory;
+
+            if (tokenInMemory !== undefined) {
+                let value = "; " + tokenInMemory;
                 let parts = value.split("; " + ID_REFRESH_TOKEN_NAME + "=");
 
                 let last = parts.pop();
@@ -46,7 +47,7 @@ export default class IdRefreshToken {
                 if (last !== undefined) {
                     // If a token does exist but is expired, just returning the value would indicate that a session exists
                     // when we do not know that for sure. So we check for expiry first
-                    let splitForExpiry = IdRefreshToken.idRefreshInMemory.split(";");
+                    let splitForExpiry = tokenInMemory.split(";");
                     let expiry = Date.parse(splitForExpiry[1].split("=")[1]);
                     let currentTime = Date.now();
 

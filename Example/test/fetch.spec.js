@@ -19,9 +19,8 @@ import IdRefreshToken from "supertokens-react-native/lib/build/idRefreshToken";
 import FrontToken from "supertokens-react-native/lib/build/frontToken";
 import AuthHttpRequestFetch from "supertokens-react-native/lib/build/fetch";
 import AuthHttpRequest from "supertokens-react-native";
-import assert, { fail } from "assert";
+import assert from "assert";
 import {
-    checkIfIdRefreshIsCleared,
     getNumberOfTimesRefreshCalled,
     startST,
     getNumberOfTimesGetSessionCalled,
@@ -32,6 +31,7 @@ import {
 import { spawn } from "child_process";
 import { ProcessState, PROCESS_STATE } from "supertokens-react-native/lib/build/processState";
 
+// TODO NEMI: This should just use base url from utils
 const BASE_URL = "http://localhost:8080";
 
 /* TODO: 
@@ -87,7 +87,6 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
         let instance = axios.create();
         await instance.post(BASE_URL_FOR_ST + "/beforeeach");
-        // await instance.post("http://localhost.org:8082/beforeeach"); // for cross domain // TODO NEMI: Uncomment this when cross domain tests are added
         await instance.post(BASE_URL + "/beforeeach");
 
         let nodeFetch = require("node-fetch").default;
@@ -114,7 +113,6 @@ describe("Fetch AuthHttpRequest class tests", function() {
         }
     });
 
-    // TODO NEMI: Is this actually testing the right thing?
     it("testing with fetch for init check in attemptRefreshingSession", async function() {
         let failed = false;
         try {
@@ -128,7 +126,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
     });
 
     it("testing with fetch api methods without config", async function() {
-        AuthHttpRequestFetch.init({
+        AuthHttpRequest.init({
             apiDomain: BASE_URL
         });
 
@@ -158,7 +156,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
     });
 
     it("testing with fetch api methods with config", async function() {
-        AuthHttpRequestFetch.init({
+        AuthHttpRequest.init({
             apiDomain: BASE_URL
         });
 
@@ -205,7 +203,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
     });
 
     it("testing with fetch api methods that doesn't exists", async function() {
-        AuthHttpRequestFetch.init({
+        AuthHttpRequest.init({
             apiDomain: BASE_URL
         });
 
@@ -245,7 +243,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(10000);
             await startST(3);
 
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
@@ -287,7 +285,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             // We can have access tokens valid for longer than the signing key update interval
             await startST(100, true, "0.002");
 
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
 
@@ -331,7 +329,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(10000);
             await startST(3);
 
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
 
@@ -362,7 +360,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(10000);
             await startST();
 
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
 
@@ -396,7 +394,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(10000);
             await startST(3);
 
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
 
@@ -476,7 +474,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
         try {
             await startST();
 
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
@@ -543,7 +541,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST(5);
 
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
@@ -572,7 +570,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST(5);
 
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
@@ -614,7 +612,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST(5);
 
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
@@ -656,7 +654,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST(5);
 
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
@@ -711,7 +709,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
         try {
             jest.setTimeout(15000);
             await startST(3, false);
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
@@ -758,7 +756,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
         try {
             jest.setTimeout(15000);
             await startST();
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
 
@@ -777,7 +775,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
         try {
             jest.setTimeout(15000);
             await startST();
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
 
@@ -796,10 +794,10 @@ describe("Fetch AuthHttpRequest class tests", function() {
         try {
             jest.setTimeout(15000);
             await startST();
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
@@ -814,7 +812,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             });
 
             assertEqual(await loginResponse.text(), userId);
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
 
@@ -849,13 +847,12 @@ describe("Fetch AuthHttpRequest class tests", function() {
         }
     });
 
-    // TODO (During Review): Should this test be renamed to "once" instead of "twice"? Using the same name as website package for now
     //If via interception, make sure that initially, just an endpoint is just hit twice in case of access token expiry*****
-    it("test with fetch that if via interception, initially an endpoint is hit just twice in case of access token expiry", async done => {
+    it("test with fetch that if via interception, initially an endpoint is hit just once in case of access token expiry", async done => {
         try {
             jest.setTimeout(15000);
             await startST(3);
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
@@ -878,7 +875,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             let getSessionResponse = await global.fetch(`${BASE_URL}/`);
             assertEqual(await getSessionResponse.text(), userId);
 
-            //check that the number of times getSession was called is 2
+            //check that the number of times getSession was called is 1
             assertEqual(await getNumberOfTimesGetSessionCalled(), 1);
 
             //check that the number of times refesh session was called is 1
@@ -894,7 +891,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
         try {
             jest.setTimeout(15000);
             await startST(5);
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
@@ -938,7 +935,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
         try {
             jest.setTimeout(15000);
             await startST(5);
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
@@ -975,7 +972,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
         try {
             jest.setTimeout(15000);
             await startST(5);
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
@@ -1012,26 +1009,11 @@ describe("Fetch AuthHttpRequest class tests", function() {
         }
     });
 
-    it("test with fetch cross domain", async function() {
-        // TODO NEMI: implement
-        fail();
-    });
-
-    it("test with fetch cross domain, auto add credentials", async function() {
-        // TODO NEMI: implement
-        fail();
-    });
-
-    it("test with fetch cross domain, no auto add credentials, fail", async function() {
-        // TODO NEMI: implement
-        fail();
-    });
-
     it("test with fetch that if multiple interceptors are there, they should all work", async function(done) {
         try {
             jest.setTimeout(15000);
             await startST(5);
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
@@ -1084,7 +1066,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
         try {
             jest.setTimeout(10000);
             await startST();
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
 
@@ -1132,7 +1114,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
         try {
             jest.setTimeout(10000);
             await startST(3, false);
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
 
@@ -1180,7 +1162,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
     it("fetch check clearing all frontend set cookies logs our user (with anti-csrf)", async function() {
         await startST();
-        AuthHttpRequestFetch.init({
+        AuthHttpRequest.init({
             apiDomain: BASE_URL
         });
 
@@ -1226,7 +1208,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
         let events = [];
 
-        AuthHttpRequestFetch.init({
+        AuthHttpRequest.init({
             apiDomain: BASE_URL,
             onHandleEvent: event => {
                 events.push("ST_" + event.action);
@@ -1255,7 +1237,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
         let events = [];
 
-        AuthHttpRequestFetch.init({
+        AuthHttpRequest.init({
             apiDomain: BASE_URL,
             onHandleEvent: event => {
                 events.push(`ST_${event.action}:${JSON.stringify(event)}`);
@@ -1278,7 +1260,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
         let events = [];
 
-        AuthHttpRequestFetch.init({
+        AuthHttpRequest.init({
             apiDomain: BASE_URL,
             onHandleEvent: event => {
                 events.push(`ST_${event.action}:${JSON.stringify(event)}`);

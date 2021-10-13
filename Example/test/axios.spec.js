@@ -18,12 +18,11 @@ const tough = require("tough-cookie");
 import AntiCsrfToken from "supertokens-react-native/lib/build/antiCsrf";
 import IdRefreshToken from "supertokens-react-native/lib/build/idRefreshToken";
 import FrontToken from "supertokens-react-native/lib/build/frontToken";
-// TODO NEMI: This should be removed and AuthHttpRequest should be used everywhere instead?
-import AuthHttpRequestFetch from "supertokens-react-native";
+import AuthHttpRequestFetch from "supertokens-react-native/lib/build/fetch";
 import AuthHttpRequestAxios from "supertokens-react-native/axios";
 import AuthHttpRequest from "supertokens-react-native";
 import { interceptorFunctionRequestFulfilled, responseInterceptor } from "supertokens-react-native/lib/build/axios";
-import assert, { fail } from "assert";
+import assert from "assert";
 import {
     getNumberOfTimesRefreshCalled,
     startST,
@@ -88,7 +87,6 @@ describe("Axios AuthHttpRequest class tests", function() {
 
         let instance = axios.create();
         await instance.post(BASE_URL_FOR_ST + "/beforeeach");
-        // await instance.post("http://localhost.org:8082/beforeeach"); // for cross domain // TODO NEMI: Uncomment this when cross domain tests are added
         await instance.post(BASE_URL + "/beforeeach");
 
         let cookieJar = new tough.CookieJar();
@@ -135,7 +133,7 @@ describe("Axios AuthHttpRequest class tests", function() {
     });
 
     it("testing getDomain", async function() {
-        AuthHttpRequestFetch.init({
+        AuthHttpRequest.init({
             apiDomain: BASE_URL
         });
 
@@ -159,7 +157,7 @@ describe("Axios AuthHttpRequest class tests", function() {
     });
 
     it("testing api methods without config", async function() {
-        AuthHttpRequestFetch.init({
+        AuthHttpRequest.init({
             apiDomain: BASE_URL
         });
 
@@ -184,7 +182,7 @@ describe("Axios AuthHttpRequest class tests", function() {
     });
 
     it("testing api methods with config", async function() {
-        AuthHttpRequestFetch.init({
+        AuthHttpRequest.init({
             apiDomain: BASE_URL
         });
 
@@ -235,7 +233,7 @@ describe("Axios AuthHttpRequest class tests", function() {
     });
 
     it("testing api methods that doesn't exists", async function() {
-        AuthHttpRequestFetch.init({
+        AuthHttpRequest.init({
             apiDomain: BASE_URL
         });
         let expectedStatusCode = 404;
@@ -306,7 +304,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             jest.setTimeout(10000);
             await startST();
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: UTILS_BASE_URL
             });
             let userId = "testing-supertokens-react-native";
@@ -338,7 +336,7 @@ describe("Axios AuthHttpRequest class tests", function() {
         AuthHttpRequest.addAxiosInterceptors(axiosInstance);
         let events = [];
 
-        AuthHttpRequestFetch.init({
+        AuthHttpRequest.init({
             apiDomain: BASE_URL,
             onHandleEvent: event => {
                 events.push("ST_" + event.action);
@@ -365,7 +363,7 @@ describe("Axios AuthHttpRequest class tests", function() {
         AuthHttpRequest.addAxiosInterceptors(axiosInstance);
         let events = [];
 
-        AuthHttpRequestFetch.init({
+        AuthHttpRequest.init({
             apiDomain: BASE_URL,
             onHandleEvent: event => {
                 events.push(`ST_${event.action}:${JSON.stringify(event)}`);
@@ -393,7 +391,7 @@ describe("Axios AuthHttpRequest class tests", function() {
         AuthHttpRequest.addAxiosInterceptors(axiosInstance);
         let events = [];
 
-        AuthHttpRequestFetch.init({
+        AuthHttpRequest.init({
             apiDomain: BASE_URL,
             onHandleEvent: event => {
                 events.push(`ST_${event.action}:${JSON.stringify(event)}`);
@@ -435,7 +433,7 @@ describe("Axios AuthHttpRequest class tests", function() {
         await startST(3);
         AuthHttpRequest.addAxiosInterceptors(axiosInstance);
 
-        AuthHttpRequestFetch.init({
+        AuthHttpRequest.init({
             apiDomain: BASE_URL
         });
 
@@ -461,7 +459,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             await startST();
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
 
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
 
@@ -491,7 +489,7 @@ describe("Axios AuthHttpRequest class tests", function() {
         await startST();
         AuthHttpRequest.addAxiosInterceptors(axiosInstance);
 
-        AuthHttpRequestFetch.init({
+        AuthHttpRequest.init({
             apiDomain: BASE_URL
         });
 
@@ -516,7 +514,7 @@ describe("Axios AuthHttpRequest class tests", function() {
         await startST();
         AuthHttpRequest.addAxiosInterceptors(axiosInstance);
 
-        AuthHttpRequestFetch.init({
+        AuthHttpRequest.init({
             apiDomain: BASE_URL
         });
 
@@ -566,7 +564,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST();
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
@@ -624,7 +622,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST(5);
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
@@ -649,7 +647,7 @@ describe("Axios AuthHttpRequest class tests", function() {
         try {
             await startST();
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
@@ -686,7 +684,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST(5);
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
 
@@ -725,7 +723,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST(5, true);
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
@@ -776,7 +774,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST(3, false);
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
@@ -822,7 +820,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             await startST(3);
 
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
@@ -882,7 +880,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST();
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
@@ -912,7 +910,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST();
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
             try {
@@ -933,7 +931,7 @@ describe("Axios AuthHttpRequest class tests", function() {
         try {
             jest.setTimeout(15000);
             await startST();
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
             try {
@@ -956,10 +954,10 @@ describe("Axios AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST();
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
@@ -972,7 +970,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             });
             assertEqual(userId, loginResponse.data);
 
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
 
@@ -1009,7 +1007,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST(5);
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
 
@@ -1059,7 +1057,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST(5);
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
@@ -1102,7 +1100,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST(5);
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
@@ -1138,7 +1136,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST();
             addAxiosInterceptorsTest(axiosInstance);
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: UTILS_BASE_URL
             });
             let userId = "testing-supertokens-react-native";
@@ -1161,30 +1159,10 @@ describe("Axios AuthHttpRequest class tests", function() {
         }
     });
 
-    it("cross domain", async function() {
-        // TODO: implement
-        fail();
-    });
-
-    it("cross domain with auto add credentials", async function() {
-        // TODO: implement
-        fail();
-    });
-
-    it("cross domain with no auto add credentials, fail", async function() {
-        // TODO: implement
-        fail();
-    });
-
-    it("cross domain with BaseURL", async function() {
-        // TODO: implement
-        fail();
-    });
-
     it("check sessionDoes exist calls refresh API just once", async function() {
         await startST();
         AuthHttpRequest.addAxiosInterceptors(axiosInstance);
-        AuthHttpRequestFetch.init({
+        AuthHttpRequest.init({
             apiDomain: BASE_URL
         });
 
@@ -1225,7 +1203,7 @@ describe("Axios AuthHttpRequest class tests", function() {
     it("check clearing all frontend set cookies still works (without anti-csrf)", async function() {
         await startST(3, false);
         AuthHttpRequest.addAxiosInterceptors(axiosInstance);
-        AuthHttpRequestFetch.init({
+        AuthHttpRequest.init({
             apiDomain: BASE_URL
         });
 
@@ -1265,7 +1243,7 @@ describe("Axios AuthHttpRequest class tests", function() {
     it("check clearing all frontend set cookies logs our user (with anti-csrf)", async function() {
         await startST();
         AuthHttpRequest.addAxiosInterceptors(axiosInstance);
-        AuthHttpRequestFetch.init({
+        AuthHttpRequest.init({
             apiDomain: BASE_URL
         });
 

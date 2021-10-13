@@ -19,19 +19,15 @@ const tough = require("tough-cookie");
 import AntiCsrfToken from "supertokens-react-native/lib/build/antiCsrf";
 import IdRefreshToken from "supertokens-react-native/lib/build/idRefreshToken";
 import FrontToken from "supertokens-react-native/lib/build/frontToken";
-// TODO NEMI: This should be removed and AuthHttpRequest should be used everywhere instead?
-import AuthHttpRequestFetch from "supertokens-react-native";
-import AuthHttpRequestAxios from "supertokens-react-native/axios";
+import AuthHttpRequestFetch from "supertokens-react-native/lib/build/fetch";
 import AuthHttpRequest from "supertokens-react-native";
 
-import { interceptorFunctionRequestFulfilled, responseInterceptor } from "supertokens-react-native/lib/build/axios";
-import { ProcessState, PROCESS_STATE } from "supertokens-react-native/lib/build/processState";
-import assert, { fail } from "assert";
+import { ProcessState } from "supertokens-react-native/lib/build/processState";
+import assert from "assert";
 
 import {
     getNumberOfTimesRefreshCalled,
     startST,
-    getNumberOfTimesGetSessionCalled,
     BASE_URL_FOR_ST,
     BASE_URL as UTILS_BASE_URL,
     getNumberOfTimesRefreshAttempted,
@@ -42,6 +38,7 @@ import { spawn } from "child_process";
 
 process.env.TEST_MODE = "testing";
 
+// TODO NEMI: This should use base url from utils
 const BASE_URL = "http://localhost:8080";
 
 let axiosInstance;
@@ -87,7 +84,6 @@ describe("Axios AuthHttpRequest class tests", function() {
 
         let instance = axios.create();
         await instance.post(BASE_URL_FOR_ST + "/beforeeach");
-        // await instance.post("http://localhost.org:8082/beforeeach"); // for cross domain // TODO NEMI: Uncomment this when cross domain tests are added
         await instance.post(BASE_URL + "/beforeeach");
 
         let cookieJar = new tough.CookieJar();
@@ -109,7 +105,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             jest.setTimeout(20000);
             await startST(100, true, "0.002");
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
-            AuthHttpRequestFetch.init({
+            AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
 
@@ -159,7 +155,7 @@ describe("Axios AuthHttpRequest class tests", function() {
     it("API returning 401 will not call refresh after logout", async function() {
         await startST(100, true, "0.002");
         AuthHttpRequest.addAxiosInterceptors(axiosInstance);
-        AuthHttpRequestFetch.init({
+        AuthHttpRequest.init({
             apiDomain: BASE_URL
         });
 
