@@ -16,18 +16,21 @@ let axios = require("axios");
 const axiosCookieJarSupport = require("axios-cookiejar-support").default;
 const tough = require("tough-cookie");
 import AntiCsrfToken from "supertokens-react-native/lib/build/antiCsrf";
+import IdRefreshToken from "supertokens-react-native/lib/build/idRefreshToken";
+import FrontToken from "supertokens-react-native/lib/build/frontToken";
+// TODO NEMI: This should be removed and AuthHttpRequest should be used everywhere instead?
 import AuthHttpRequestFetch from "supertokens-react-native";
+import AuthHttpRequestAxios from "supertokens-react-native/axios";
 import AuthHttpRequest from "supertokens-react-native";
 import { interceptorFunctionRequestFulfilled, responseInterceptor } from "supertokens-react-native/lib/build/axios";
-import assert from "assert";
+import assert, { fail } from "assert";
 import {
-    delay,
-    checkIfIdRefreshIsCleared,
     getNumberOfTimesRefreshCalled,
     startST,
     getNumberOfTimesGetSessionCalled,
     BASE_URL_FOR_ST,
-    BASE_URL as UTILS_BASE_URL
+    BASE_URL as UTILS_BASE_URL,
+    getNumberOfTimesRefreshAttempted
 } from "./utils";
 import { spawn } from "child_process";
 import { ProcessState, PROCESS_STATE } from "supertokens-react-native/lib/build/processState";
@@ -78,6 +81,11 @@ describe("Axios AuthHttpRequest class tests", function() {
     beforeEach(async function() {
         AuthHttpRequestFetch.initCalled = false;
         ProcessState.getInstance().reset();
+        // reset all tokens
+        await IdRefreshToken.removeToken();
+        await AntiCsrfToken.removeToken();
+        await FrontToken.removeToken();
+
         let instance = axios.create();
         await instance.post(BASE_URL_FOR_ST + "/beforeeach");
         // await instance.post("http://localhost.org:8082/beforeeach"); // for cross domain // TODO NEMI: Uncomment this when cross domain tests are added
@@ -97,6 +105,22 @@ describe("Axios AuthHttpRequest class tests", function() {
         global.__supertokensSessionRecipe = undefined;
     });
 
+    it("testing for init check in doRequest", async function() {
+        let failed = false;
+        try {
+            await AuthHttpRequestAxios.doRequest(async () => {});
+            failed = true;
+        } catch (err) {
+            if (err.message !== "init function not called") {
+                failed = true;
+            }
+        }
+
+        if (failed) {
+            throw Error("test failed");
+        }
+    });
+
     it("testing for init check in attemptRefreshingSession", async function(done) {
         let failed = false;
         try {
@@ -108,6 +132,30 @@ describe("Axios AuthHttpRequest class tests", function() {
             throw Error("test failed");
         }
         done();
+    });
+
+    it("testing getDomain", async function() {
+        AuthHttpRequestFetch.init({
+            apiDomain: BASE_URL
+        });
+
+        let getResponse = await axios.get(`${BASE_URL}/testing`);
+        let postResponse = await axios.post(`${BASE_URL}/testing`);
+        let deleteResponse = await axios.delete(`${BASE_URL}/testing`);
+        let putResponse = await axios.put(`${BASE_URL}/testing`);
+        let doRequestResponse = await axios({ method: "GET", url: `${BASE_URL}/testing` });
+        getResponse = await getResponse.data;
+        putResponse = await putResponse.data;
+        postResponse = await postResponse.data;
+        deleteResponse = await deleteResponse.data;
+        doRequestResponse = await doRequestResponse.data;
+        let expectedResponse = "success";
+
+        assert.strictEqual(getResponse, expectedResponse);
+        assert.strictEqual(putResponse, expectedResponse);
+        assert.strictEqual(postResponse, expectedResponse);
+        assert.strictEqual(deleteResponse, expectedResponse);
+        assert.strictEqual(doRequestResponse, expectedResponse);
     });
 
     it("testing api methods without config", async function() {
@@ -284,6 +332,234 @@ describe("Axios AuthHttpRequest class tests", function() {
         }
     });
 
+    it("test that unauthorised event is not fired on app launch", async function() {
+        await startST();
+
+        AuthHttpRequest.addAxiosInterceptors(axiosInstance);
+        let events = [];
+
+        AuthHttpRequestFetch.init({
+            apiDomain: BASE_URL,
+            onHandleEvent: event => {
+                events.push("ST_" + event.action);
+            }
+        });
+
+        let userId = "testing-supertokens-react-native";
+
+        // send api request to login
+        let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json"
+            }
+        });
+        assertEqual(userId, loginResponse.data);
+        assert(events.length === 1);
+        assert(events[0] === "ST_SESSION_CREATED");
+    });
+
+    it("test that unauthorised event is fired when calling protected route without a session", async function() {
+        await startST();
+
+        AuthHttpRequest.addAxiosInterceptors(axiosInstance);
+        let events = [];
+
+        AuthHttpRequestFetch.init({
+            apiDomain: BASE_URL,
+            onHandleEvent: event => {
+                events.push(`ST_${event.action}:${JSON.stringify(event)}`);
+            }
+        });
+
+        try {
+            await axiosInstance({ url: `${BASE_URL}/`, method: "GET" });
+        } catch (err) {
+            assertEqual(err.response.status, 401);
+        }
+
+        assert(events.length === 1);
+
+        const eventName = "ST_UNAUTHORISED";
+
+        assert(events[0].startsWith(eventName));
+        const parsedEvent = JSON.parse(events[0].substr(eventName.length + 1));
+        assert(parsedEvent.sessionExpiredOrRevoked === false);
+    });
+
+    it("test that after login, and clearing all tokens, if we query a protected route, it fires unauthorised event", async function() {
+        await startST();
+
+        AuthHttpRequest.addAxiosInterceptors(axiosInstance);
+        let events = [];
+
+        AuthHttpRequestFetch.init({
+            apiDomain: BASE_URL,
+            onHandleEvent: event => {
+                events.push(`ST_${event.action}:${JSON.stringify(event)}`);
+            }
+        });
+
+        let userId = "testing-supertokens-react-native";
+
+        // send api request to login
+        let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json"
+            }
+        });
+        assertEqual(userId, loginResponse.data);
+
+        // delete all tokens
+        await IdRefreshToken.removeToken();
+        await AntiCsrfToken.removeToken();
+        await FrontToken.removeToken();
+
+        try {
+            await axiosInstance({ url: `${BASE_URL}/`, method: "GET" });
+        } catch (err) {
+            assertEqual(err.response.status, 401);
+        }
+
+        assert(events.length === 2);
+        assert(events[0].startsWith("ST_SESSION_CREATED"));
+
+        const eventName = "ST_UNAUTHORISED";
+        assert(events[1].startsWith(eventName));
+        const parsedEvent = JSON.parse(events[1].substr(eventName.length + 1));
+        assert(parsedEvent.sessionExpiredOrRevoked === false);
+    });
+
+    it("test rid is there", async function() {
+        await startST(3);
+        AuthHttpRequest.addAxiosInterceptors(axiosInstance);
+
+        AuthHttpRequestFetch.init({
+            apiDomain: BASE_URL
+        });
+
+        let userId = "testing-supertokens-react-native";
+
+        // send api request to login
+        let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json"
+            }
+        });
+        assertEqual(userId, loginResponse.data);
+
+        let getResponse = await axiosInstance({ url: `${BASE_URL}/check-rid`, method: "GET" });
+
+        assertEqual(await getResponse.data, "success");
+    });
+
+    it("signout with expired access token", async function(done) {
+        try {
+            jest.setTimeout(10000);
+            await startST();
+            AuthHttpRequest.addAxiosInterceptors(axiosInstance);
+
+            AuthHttpRequestFetch.init({
+                apiDomain: BASE_URL
+            });
+
+            let userId = "testing-supertokens-react-native";
+
+            // send api request to login
+            let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                }
+            });
+            assertEqual(userId, loginResponse.data);
+            await delay(3);
+
+            assertEqual(await getNumberOfTimesRefreshCalled(), 0);
+            await AuthHttpRequest.signOut();
+            assertEqual(await getNumberOfTimesRefreshCalled(), 1);
+            assertEqual(await AuthHttpRequest.doesSessionExist(), false);
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    it("signout with not expired access token", async function() {
+        await startST();
+        AuthHttpRequest.addAxiosInterceptors(axiosInstance);
+
+        AuthHttpRequestFetch.init({
+            apiDomain: BASE_URL
+        });
+
+        let userId = "testing-supertokens-react-native";
+
+        // send api request to login
+        let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json"
+            }
+        });
+        assertEqual(userId, loginResponse.data);
+
+        assertEqual(await getNumberOfTimesRefreshCalled(), 0);
+        await AuthHttpRequest.signOut();
+        assertEqual(await getNumberOfTimesRefreshCalled(), 0);
+        assertEqual(await AuthHttpRequest.doesSessionExist(), false);
+    });
+
+    it("update jwt data", async function() {
+        await startST();
+        AuthHttpRequest.addAxiosInterceptors(axiosInstance);
+
+        AuthHttpRequestFetch.init({
+            apiDomain: BASE_URL
+        });
+
+        let userId = "testing-supertokens-react-native";
+
+        // send api request to login
+        let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json"
+            }
+        });
+        assertEqual(userId, loginResponse.data);
+
+        let data = await AuthHttpRequest.getJWTPayloadSecurely();
+        assertEqual(Object.keys(data).length, 0);
+
+        // update jwt data
+        let testResponse1 = await axiosInstance.post(`${BASE_URL}/update-jwt`, { key: "data" });
+        assertEqual(testResponse1.data.key, "data");
+
+        data = await AuthHttpRequest.getJWTPayloadSecurely();
+        assertEqual(data.key, "data");
+
+        // get jwt data
+        let testResponse2 = await axiosInstance.get(`${BASE_URL}/update-jwt`);
+        assertEqual(testResponse2.data.key, "data");
+
+        // update jwt data
+        let testResponse3 = await axiosInstance.post(`${BASE_URL}/update-jwt`, { key1: "data1" });
+        assertEqual(testResponse3.data.key1, "data1");
+        assertEqual(testResponse3.data.key, undefined);
+
+        data = await AuthHttpRequest.getJWTPayloadSecurely();
+        assertEqual(data.key1, "data1");
+        assertEqual(data.key, undefined);
+
+        // get jwt data
+        let testResponse4 = await axiosInstance.get(`${BASE_URL}/update-jwt`);
+        assertEqual(testResponse4.data.key1, "data1");
+        assertEqual(testResponse4.data.key, undefined);
+    });
+
     //test custom headers are being sent when logged in and when not*****
     it("test that custom headers are being sent when logged in", async function(done) {
         try {
@@ -371,7 +647,6 @@ describe("Axios AuthHttpRequest class tests", function() {
     //session should not exist when user calls log out - use doesSessionExist & check localstorage is empty
     it("test session should not exist when user calls log out", async function(done) {
         try {
-            jest.setTimeout(15000);
             await startST();
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequestFetch.init({
@@ -400,6 +675,44 @@ describe("Axios AuthHttpRequest class tests", function() {
 
             assertEqual(logoutResponse.data, "success");
             assertEqual(sessionExists, false);
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    it("test that attemptRefreshingSession is working correctly", async function(done) {
+        try {
+            jest.setTimeout(15000);
+            await startST(5);
+            AuthHttpRequest.addAxiosInterceptors(axiosInstance);
+            AuthHttpRequestFetch.init({
+                apiDomain: BASE_URL
+            });
+
+            let userId = "testing-supertokens-react-native";
+
+            // send api request to login
+            let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                }
+            });
+            assertEqual(userId, loginResponse.data);
+
+            await delay(7);
+            let attemptRefresh = await AuthHttpRequest.attemptRefreshingSession();
+            assertEqual(attemptRefresh, true);
+
+            //check that the number of times the refresh API called is 1
+            assertEqual(await getNumberOfTimesRefreshCalled(), 1);
+
+            let getSessionResponse = await axiosInstance.get(`${BASE_URL}/`);
+            assertEqual(getSessionResponse.data, userId);
+
+            //check that the number of times the refresh API called is still 1
+            assertEqual(await getNumberOfTimesRefreshCalled(), 1);
             done();
         } catch (err) {
             done(err);
@@ -503,7 +816,7 @@ describe("Axios AuthHttpRequest class tests", function() {
     });
 
     //test that calling makeSuper many times is not a problem******
-    it("test that calling makeSuper multiple times is not a problem", async done => {
+    it("test that calling addAxiosInterceptors multiple times is not a problem", async done => {
         try {
             jest.setTimeout(15000);
             await startST(3);
@@ -690,45 +1003,6 @@ describe("Axios AuthHttpRequest class tests", function() {
         }
     });
 
-    // TODO (During Review): Is this test no longer relevant?
-    //If via interception, make sure that initially, just an endpoint is just hit twice in case of access token expiry*****
-    // it("test that if via interception, initially an endpoint is hit just twice in case of access token expiary", async done => {
-    //     try {
-    //         jest.setTimeout(15000);
-    //         await startST(3);
-    //         AuthHttpRequest.addAxiosInterceptors(axiosInstance)
-    //         AuthHttpRequestFetch.init({
-    //             apiDomain: BASE_URL
-    //         });
-    //         let userId = "testing-supertokens-react-native";
-
-    //         // send api request to login
-    //         let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
-    //             headers: {
-    //                 Accept: "application/json",
-    //                 "Content-Type": "application/json"
-    //             }
-    //         });
-    //         assertEqual(userId, loginResponse.data);
-
-    //         //wait for 3 seconds such that the session expires
-    //         await delay(5);
-
-    //         let getSessionResponse = await axiosInstance({ url: `${BASE_URL}/`, method: "GET" });
-    //         assertEqual(getSessionResponse.data, userId);
-
-    //         //check that the number of times getSession was called is 2
-    //         assertEqual(await getNumberOfTimesGetSessionCalled(), 2);
-
-    //         //check that the number of times refesh session was called is 1
-    //         assertEqual(await getNumberOfTimesRefreshCalled(), 1);
-
-    //         done();
-    //     } catch (err) {
-    //         done(err);
-    //     }
-    // });
-
     //    - Interception should not happen when domain is not the one that they gave*******
     it("test interception should not happen when domain is not the one that they gave", async function(done) {
         try {
@@ -885,6 +1159,148 @@ describe("Axios AuthHttpRequest class tests", function() {
         } catch (err) {
             done(err);
         }
+    });
+
+    it("cross domain", async function() {
+        // TODO: implement
+        fail();
+    });
+
+    it("cross domain with auto add credentials", async function() {
+        // TODO: implement
+        fail();
+    });
+
+    it("cross domain with no auto add credentials, fail", async function() {
+        // TODO: implement
+        fail();
+    });
+
+    it("cross domain with BaseURL", async function() {
+        // TODO: implement
+        fail();
+    });
+
+    it("check sessionDoes exist calls refresh API just once", async function() {
+        await startST();
+        AuthHttpRequest.addAxiosInterceptors(axiosInstance);
+        AuthHttpRequestFetch.init({
+            apiDomain: BASE_URL
+        });
+
+        let userId = "testing-supertokens-react-native";
+
+        // call sessionDoesExist
+        assertEqual(await AuthHttpRequest.doesSessionExist(), false);
+
+        // check refresh API was called once + document.cookie has removed
+        assertEqual(await getNumberOfTimesRefreshAttempted(), 1);
+        assertEqual(await getNumberOfTimesRefreshCalled(), 0);
+        assertEqual((await IdRefreshToken.getIdRefreshToken(false)).status, "NOT_EXISTS");
+
+        // call sessionDoesExist
+        assertEqual(await AuthHttpRequest.doesSessionExist(), false);
+        // check refresh API not called
+        assertEqual(await getNumberOfTimesRefreshAttempted(), 1);
+        assertEqual(await getNumberOfTimesRefreshCalled(), 0);
+        assertEqual((await IdRefreshToken.getIdRefreshToken(false)).status, "NOT_EXISTS");
+
+        let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json"
+            }
+        });
+        let userIdFromResponse = loginResponse.data;
+        assertEqual(userId, userIdFromResponse);
+
+        // call sessionDoesExist
+        assertEqual(await AuthHttpRequest.doesSessionExist(), true);
+        // check refresh API not called
+        assertEqual(await getNumberOfTimesRefreshAttempted(), 1);
+        assertEqual(await getNumberOfTimesRefreshCalled(), 0);
+        assertEqual((await IdRefreshToken.getIdRefreshToken(false)).status, "EXISTS");
+    });
+
+    it("check clearing all frontend set cookies still works (without anti-csrf)", async function() {
+        await startST(3, false);
+        AuthHttpRequest.addAxiosInterceptors(axiosInstance);
+        AuthHttpRequestFetch.init({
+            apiDomain: BASE_URL
+        });
+
+        let userId = "testing-supertokens-react-native";
+
+        let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json"
+            }
+        });
+        let userIdFromResponse = loginResponse.data;
+        assertEqual(userId, userIdFromResponse);
+
+        // call sessionDoesExist
+        assertEqual(await AuthHttpRequest.doesSessionExist(), true);
+        // check refresh API not called
+        assertEqual(await getNumberOfTimesRefreshAttempted(), 1); // it's one here since it gets called during login..
+        assertEqual(await getNumberOfTimesRefreshCalled(), 0);
+        assertEqual((await IdRefreshToken.getIdRefreshToken(false)).status, "EXISTS");
+
+        await IdRefreshToken.removeToken();
+        await AntiCsrfToken.removeToken();
+        await FrontToken.removeToken();
+
+        // call sessionDoesExist (returns true) + call to refresh
+        assertEqual(await AuthHttpRequest.doesSessionExist(), true);
+        assertEqual(await getNumberOfTimesRefreshAttempted(), 2);
+        assertEqual(await getNumberOfTimesRefreshCalled(), 1);
+
+        // call sessionDoesExist (returns true) + no call to refresh
+        assertEqual(await AuthHttpRequest.doesSessionExist(), true);
+        assertEqual(await getNumberOfTimesRefreshAttempted(), 2);
+        assertEqual(await getNumberOfTimesRefreshCalled(), 1);
+    });
+
+    it("check clearing all frontend set cookies logs our user (with anti-csrf)", async function() {
+        await startST();
+        AuthHttpRequest.addAxiosInterceptors(axiosInstance);
+        AuthHttpRequestFetch.init({
+            apiDomain: BASE_URL
+        });
+
+        let userId = "testing-supertokens-react-native";
+
+        let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json"
+            }
+        });
+        let userIdFromResponse = loginResponse.data;
+        assertEqual(userId, userIdFromResponse);
+
+        // call sessionDoesExist
+        assertEqual(await AuthHttpRequest.doesSessionExist(), true);
+        // check refresh API not called
+        assertEqual(await getNumberOfTimesRefreshAttempted(), 1); // it's one here since it gets called during login..
+        assertEqual(await getNumberOfTimesRefreshCalled(), 0);
+        assertEqual((await IdRefreshToken.getIdRefreshToken(false)).status, "EXISTS");
+
+        // clear all cookies
+        await IdRefreshToken.removeToken();
+        await AntiCsrfToken.removeToken();
+        await FrontToken.removeToken();
+
+        // call sessionDoesExist (returns false) + call to refresh
+        assertEqual(await AuthHttpRequest.doesSessionExist(), false);
+        assertEqual(await getNumberOfTimesRefreshAttempted(), 2);
+        assertEqual(await getNumberOfTimesRefreshCalled(), 0);
+
+        // call sessionDoesExist (returns false) + no call to refresh
+        assertEqual(await AuthHttpRequest.doesSessionExist(), false);
+        assertEqual(await getNumberOfTimesRefreshAttempted(), 2);
+        assertEqual(await getNumberOfTimesRefreshCalled(), 0);
     });
 });
 

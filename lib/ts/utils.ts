@@ -41,7 +41,7 @@ export function normalisCookieDomainOrThrowError(cookieDomain: string): string {
 
             return cookieDomain;
         } catch (err) {
-            throw new Error("Please provide a valid sessionScope");
+            throw new Error("Please provide a valid cookieDomain");
         }
     }
 

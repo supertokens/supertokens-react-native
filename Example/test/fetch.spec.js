@@ -1269,6 +1269,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
         const eventName = "ST_UNAUTHORISED";
 
         assert(events[0].startsWith(eventName));
+        const parsedEvent = JSON.parse(events[0].substr(eventName.length + 1));
         assert(parsedEvent.sessionExpiredOrRevoked === false);
     });
 
