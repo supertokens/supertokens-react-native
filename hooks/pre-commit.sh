@@ -109,7 +109,7 @@ then
     exit 1
 fi
 
-testversion=`cat Example/test/server/version.js | grep -e 'module.exports.package_version'`
+testversion=`cat TestingApp/test/server/version.js | grep -e 'module.exports.package_version'`
 while IFS='"' read -ra ADDR; do
     counter=0
     for i in "${ADDR[@]}"; do
