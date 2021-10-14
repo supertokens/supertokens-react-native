@@ -1302,23 +1302,18 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
     it("Testing jest mocking", async function(done) {
         try {
-            jest.setTimeout(20000);
+            jest.setTimeout(10000);
             let originalFetch = global.fetch;
 
             // We mock specific URLs here, for other URLs we make an actual network call
             let firstGet = true;
             let firstPost = true;
-            function get(name) {
-                return null;
-            }
 
             global.fetch = jest.fn((url, config) => {
-                // console.log("Called for ", url);
                 if (url === BASE_URL + "/") {
                     if (firstGet) {
                         firstGet = false;
 
-                        // let blob = new Blob();
                         let responseInit = {
                             status: 401
                         };
@@ -1332,7 +1327,6 @@ describe("Fetch AuthHttpRequest class tests", function() {
                         Object.defineProperty(response, "url", { value: BASE_URL + "/" });
                         return Promise.resolve(response);
                     } else {
-                        // let blob = new Blob();
                         let responseInit = {
                             status: 200
                         };
@@ -1350,7 +1344,6 @@ describe("Fetch AuthHttpRequest class tests", function() {
                     if (firstPost) {
                         firstPost = false;
 
-                        // let blob = new Blob();
                         let responseInit = {
                             status: 401
                         };
@@ -1364,7 +1357,6 @@ describe("Fetch AuthHttpRequest class tests", function() {
                         Object.defineProperty(response, "url", { value: BASE_URL + "/auth/session/refresh" });
                         return Promise.resolve(response);
                     } else {
-                        // let blob = new Blob();
                         let responseInit = {
                             status: 500
                         };
