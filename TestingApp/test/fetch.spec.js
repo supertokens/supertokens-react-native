@@ -30,6 +30,7 @@ import {
 } from "./utils";
 import { spawn } from "child_process";
 import { ProcessState, PROCESS_STATE } from "supertokens-react-native/lib/build/processState";
+import "isomorphic-fetch";
 
 // TODO NEMI: This should just use base url from utils
 const BASE_URL = "http://localhost:8080";
@@ -1297,5 +1298,116 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
         const parsedEvent = JSON.parse(events[1].substr(eventName.length + 1));
         assert(parsedEvent.sessionExpiredOrRevoked === false);
+    });
+
+    it("Testing jest mocking", async function(done) {
+        try {
+            jest.setTimeout(20000);
+            let originalFetch = global.fetch;
+
+            // We mock specific URLs here, for other URLs we make an actual network call
+            let firstGet = true;
+            let firstPost = true;
+            function get(name) {
+                return null;
+            }
+
+            global.fetch = jest.fn((url, config) => {
+                // console.log("Called for ", url);
+                if (url === BASE_URL + "/") {
+                    if (firstGet) {
+                        firstGet = false;
+
+                        // let blob = new Blob();
+                        let responseInit = {
+                            status: 401
+                        };
+
+                        let response = new Response(
+                            JSON.stringify({
+                                message: "try refresh token"
+                            }),
+                            responseInit
+                        );
+                        Object.defineProperty(response, "url", { value: BASE_URL + "/" });
+                        return Promise.resolve(response);
+                    } else {
+                        // let blob = new Blob();
+                        let responseInit = {
+                            status: 200
+                        };
+
+                        let response = new Response(
+                            JSON.stringify({
+                                success: true
+                            }),
+                            responseInit
+                        );
+                        Object.defineProperty(response, "url", { value: BASE_URL + "/" });
+                        return Promise.resolve(response);
+                    }
+                } else if (url === BASE_URL + "/auth/session/refresh") {
+                    if (firstPost) {
+                        firstPost = false;
+
+                        // let blob = new Blob();
+                        let responseInit = {
+                            status: 401
+                        };
+
+                        let response = new Response(
+                            JSON.stringify({
+                                message: "try refresh token"
+                            }),
+                            responseInit
+                        );
+                        Object.defineProperty(response, "url", { value: BASE_URL + "/auth/session/refresh" });
+                        return Promise.resolve(response);
+                    } else {
+                        // let blob = new Blob();
+                        let responseInit = {
+                            status: 500
+                        };
+
+                        let response = new Response(
+                            JSON.stringify({
+                                message: "test"
+                            }),
+                            responseInit
+                        );
+                        Object.defineProperty(response, "url", { value: BASE_URL + "/auth/session/refresh" });
+                        return Promise.resolve(response);
+                    }
+                }
+
+                return originalFetch(url, config);
+            });
+
+            await startST();
+            AuthHttpRequest.init({
+                apiDomain: BASE_URL
+            });
+
+            let userId = "testing-supertokens-react-native";
+
+            // send api request to login
+            let loginResponse = await global.fetch(`${BASE_URL}/login`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+
+            let response = await fetch(`${BASE_URL}/`, { method: "GET" });
+            assertEqual(response.url, `${BASE_URL}/auth/session/refresh`);
+            assertEqual(response.status, 500);
+            const data = await response.json();
+            assertEqual(data.message, "test");
+            done();
+        } catch (err) {
+            done(err);
+        }
     });
 });
