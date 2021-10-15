@@ -1,5 +1,4 @@
 import { InputType, RecipeInterface } from "./types";
-import "react-native-url-polyfill/auto";
 export default class AuthHttpRequest {
     private static axiosInterceptorQueue;
     static init(options: InputType): void;

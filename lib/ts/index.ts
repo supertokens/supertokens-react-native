@@ -15,7 +15,6 @@
 
 import AuthHttpRequestFetch from "./fetch";
 import { InputType, RecipeInterface } from "./types";
-import "react-native-url-polyfill/auto";
 
 export default class AuthHttpRequest {
     private static axiosInterceptorQueue: (() => void)[] = [];
