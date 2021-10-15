@@ -32,10 +32,10 @@
   "peerDependencies": {
     "axios": "*",
     "react-native": ">=0.61.5 <1.0.x",
-    "@react-native-async-storage/async-storage": ">=1.12.1 <2.0.x"
+    "@react-native-async-storage/async-storage": ">=1.13.0 <2.0.x"
   },
   "devDependencies": {
-    "@react-native-async-storage/async-storage": "^1.12.1",
+    "@react-native-async-storage/async-storage": "^1.13.0",
     "@types/base-64": "^1.0.0",
     "@types/react-native": "0.62.0",
     "axios": "*",
