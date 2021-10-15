@@ -62,6 +62,12 @@ describe("Fetch AuthHttpRequest class tests", function() {
         assert(a === b);
     }
 
+    function assertNotEqual(a, b) {
+        if (a === b) {
+            throw new Error("assert failed");
+        }
+    }
+
     beforeAll(async function() {
         spawn("./test/startServer", [
             process.env.INSTALL_PATH,
@@ -1397,6 +1403,149 @@ describe("Fetch AuthHttpRequest class tests", function() {
             assertEqual(response.status, 500);
             const data = await response.json();
             assertEqual(data.message, "test");
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    it("no refresh call after 401 response that removes session", async function(done) {
+        try {
+            jest.setTimeout(10000);
+            let originalFetch = global.fetch;
+
+            // We mock specific URLs here, for other URLs we make an actual network call
+            let refreshCalled = 0;
+
+            global.fetch = jest.fn((url, config) => {
+                if (url === BASE_URL + "/") {
+                    let responseInit = {
+                        status: 401,
+                        headers: {
+                            "id-refresh-token": "remove",
+                            "Set-Cookie": [
+                                "sIdRefreshToken=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax",
+                                "sAccessToken=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax",
+                                "sRefreshToken=; Path=/auth/session/refresh; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax"
+                            ]
+                        }
+                    };
+
+                    let response = new Response(
+                        JSON.stringify({
+                            message: "test"
+                        }),
+                        responseInit
+                    );
+                    Object.defineProperty(response, "url", { value: BASE_URL + "/" });
+                    return Promise.resolve(response);
+                } else if (url === BASE_URL + "/auth/session/refresh") {
+                    let responseInit = {
+                        status: 401
+                    };
+
+                    let response = new Response(
+                        JSON.stringify({
+                            message: "nope"
+                        }),
+                        responseInit
+                    );
+                    Object.defineProperty(response, "url", { value: BASE_URL + "/auth/session/refresh" });
+                    return Promise.resolve(response);
+                }
+
+                return originalFetch(url, config);
+            });
+
+            await startST(100, true, "0.002");
+            AuthHttpRequest.init({
+                apiDomain: BASE_URL
+            });
+
+            let userId = "testing-supertokens-react-native";
+
+            // send api request to login
+            let loginResponse = await global.fetch(`${BASE_URL}/login`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+
+            const resp = await global.fetch(`${BASE_URL}/`, {
+                method: "GET",
+                headers: { "Cache-Control": "no-cache, private" }
+            });
+
+            assertNotEqual(resp, undefined);
+            assertEqual(resp.status, 401);
+            assertEqual(resp.url, `${BASE_URL}/`);
+            const data = await resp.json();
+            assertNotEqual(data, undefined);
+            assertEqual(data.message, "test");
+
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    it("original endpoint responding with 500 should not call refresh without cookies", async function(done) {
+        try {
+            jest.setTimeout(10000);
+            let originalFetch = global.fetch;
+
+            // We mock specific URLs here, for other URLs we make an actual network call
+            let refreshCalled = 0;
+
+            global.fetch = jest.fn((url, config) => {
+                if (url === BASE_URL + "/") {
+                    let responseInit = {
+                        status: 500
+                    };
+
+                    let response = new Response(
+                        JSON.stringify({
+                            message: "test"
+                        }),
+                        responseInit
+                    );
+                    Object.defineProperty(response, "url", { value: BASE_URL + "/" });
+                    return Promise.resolve(response);
+                } else if (url === BASE_URL + "/auth/session/refresh") {
+                    ++refreshCalled;
+                    let responseInit = {
+                        status: 500
+                    };
+
+                    let response = new Response(
+                        JSON.stringify({
+                            message: "nope"
+                        }),
+                        responseInit
+                    );
+                    Object.defineProperty(response, "url", { value: BASE_URL + "/auth/session/refresh" });
+                    return Promise.resolve(response);
+                }
+
+                return originalFetch(url, config);
+            });
+
+            await startST(100, true, "0.002");
+            AuthHttpRequest.init({
+                apiDomain: BASE_URL
+            });
+
+            let response = await global.fetch(`${BASE_URL}/`, { method: "GET" });
+            assertEqual(response.url, `${BASE_URL}/`);
+            assertEqual(response.status, 500);
+            const data = await response.json();
+            assertEqual(data.message, "test");
+
+            assert.equal(refreshCalled, 1);
+
             done();
         } catch (err) {
             done(err);
