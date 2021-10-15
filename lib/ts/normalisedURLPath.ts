@@ -13,6 +13,8 @@
  * under the License.
  */
 
+import { getURLDataFromString } from "./utils";
+
 export default class NormalisedURLPath {
     private value: string;
 
@@ -39,8 +41,9 @@ function normaliseURLPathOrThrowError(input: string): string {
         if (!input.startsWith("http://") && !input.startsWith("https://")) {
             throw new Error("converting to proper URL");
         }
-        const urlObj: URL = new URL(input);
-        input = urlObj.pathname;
+        // getURLDataFromString first tries to convert the string to a URL to ensure that it is a valid url string
+        let urlInfo: { pathname: string } = getURLDataFromString(input);
+        input = urlInfo.pathname;
 
         if (input.charAt(input.length - 1) === "/") {
             return input.substr(0, input.length - 1);
@@ -82,13 +85,13 @@ function domainGiven(input: string): boolean {
     }
 
     try {
-        const url = new URL(input);
-        return url.hostname.indexOf(".") !== -1;
+        let urlInfo: { hostname: string } = getURLDataFromString(input);
+        return urlInfo.hostname.indexOf(".") !== -1;
     } catch (e) {}
 
     try {
-        const url = new URL("http://" + input);
-        return url.hostname.indexOf(".") !== -1;
+        let urlInfo: { hostname: string } = getURLDataFromString("http://" + input);
+        return urlInfo.hostname.indexOf(".") !== -1;
     } catch (e) {}
 
     return false;
