@@ -31,8 +31,8 @@ export function normalisCookieDomainOrThrowError(cookieDomain: string): string {
         }
 
         try {
-            let urlData: { hostname: string } = getURLDataFromString(cookieDomain);
-            cookieDomain = urlData.hostname;
+            let urlObj = new URL(cookieDomain);
+            cookieDomain = urlObj.hostname;
 
             // remove leading dot
             if (cookieDomain.startsWith(".")) {
@@ -134,13 +134,13 @@ export function shouldDoInterceptionBasedOnUrl(
         ); // ...and ensure strings of whitespace fail
     }
     toCheckUrl = normaliseURLDomainOrThrowError(toCheckUrl);
-    let urlInfo: { hostname: string; port: string } = getURLDataFromString(toCheckUrl);
-    let domain = urlInfo.hostname;
+    let urlObj = new URL(toCheckUrl);
+    let domain = urlObj.hostname;
     if (cookieDomain === undefined) {
-        domain = urlInfo.port === "" ? domain : domain + ":" + urlInfo.port;
+        domain = urlObj.port === "" ? domain : domain + ":" + urlObj.port;
         apiDomain = normaliseURLDomainOrThrowError(apiDomain);
-        let apiURLInfo: { port: string; hostname: string } = getURLDataFromString(apiDomain);
-        return domain === (apiURLInfo.port === "" ? apiURLInfo.hostname : apiURLInfo.hostname + ":" + apiURLInfo.port);
+        let apiUrlObj = new URL(apiDomain);
+        return domain === (apiUrlObj.port === "" ? apiUrlObj.hostname : apiUrlObj.hostname + ":" + apiUrlObj.port);
     } else {
         let normalisedCookieDomain = normalisCookieDomainOrThrowError(cookieDomain);
         if (cookieDomain.split(":").length > 1) {
@@ -148,7 +148,7 @@ export function shouldDoInterceptionBasedOnUrl(
             let portStr = cookieDomain.split(":")[cookieDomain.split(":").length - 1];
             if (isNumeric(portStr)) {
                 normalisedCookieDomain += ":" + portStr;
-                domain = urlInfo.port === "" ? domain : domain + ":" + urlInfo.port;
+                domain = urlObj.port === "" ? domain : domain + ":" + urlObj.port;
             }
         }
         if (cookieDomain.startsWith(".")) {
@@ -157,46 +157,4 @@ export function shouldDoInterceptionBasedOnUrl(
             return domain === normalisedCookieDomain;
         }
     }
-}
-
-export function getURLDataFromString(
-    urlString: string
-): {
-    hostname: string;
-    host: string;
-    port: string;
-    protocol: string;
-    pathname: string;
-} {
-    // We convert to a URL to see if the string is valid
-    new URL(urlString);
-
-    let split = urlString.split("//");
-    let protocol = split[0];
-    let hostAndPath = split[1];
-    let host = hostAndPath.split("/")[0];
-
-    let hostname = host;
-    let port = "";
-    // The domain includes a port
-    if (host.includes(":")) {
-        let splitHost = host.split(":");
-        hostname = splitHost[0];
-        port = splitHost[1];
-    }
-
-    let origin = protocol + "//" + host;
-    let pathname = urlString.split(origin)[1];
-
-    if (pathname === "") {
-        pathname = "/";
-    }
-
-    return {
-        host,
-        hostname,
-        port,
-        protocol,
-        pathname
-    };
 }

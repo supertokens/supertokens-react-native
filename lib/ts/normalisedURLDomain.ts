@@ -13,7 +13,7 @@
  * under the License.
  */
 
-import { getURLDataFromString, isAnIpAddress } from "./utils";
+import { isAnIpAddress } from "./utils";
 
 export default class NormalisedURLDomain {
     private value: string;
@@ -33,17 +33,15 @@ function normaliseURLDomainOrThrowError(input: string, ignoreProtocol = false): 
         if (!input.startsWith("http://") && !input.startsWith("https://")) {
             throw new Error("converting to proper URL");
         }
-
-        // getURLDataFromString first tries to convert the string to a URL to ensure that it is a valid url string
-        let urlInfo: { hostname: string; protocol: string; host: string } = getURLDataFromString(input);
+        const urlObj: URL = new URL(input);
         if (ignoreProtocol) {
-            if (urlInfo.hostname.startsWith("localhost") || isAnIpAddress(urlInfo.hostname)) {
-                input = "http://" + urlInfo.host;
+            if (urlObj.hostname.startsWith("localhost") || isAnIpAddress(urlObj.hostname)) {
+                input = "http://" + urlObj.host;
             } else {
-                input = "https://" + urlInfo.host;
+                input = "https://" + urlObj.host;
             }
         } else {
-            input = urlInfo.protocol + "//" + urlInfo.host;
+            input = urlObj.protocol + "//" + urlObj.host;
         }
         return input;
         // eslint-disable-next-line no-empty
