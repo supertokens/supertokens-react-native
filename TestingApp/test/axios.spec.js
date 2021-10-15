@@ -19,7 +19,7 @@ import AntiCsrfToken from "supertokens-react-native/lib/build/antiCsrf";
 import IdRefreshToken from "supertokens-react-native/lib/build/idRefreshToken";
 import FrontToken from "supertokens-react-native/lib/build/frontToken";
 import AuthHttpRequestFetch from "supertokens-react-native/lib/build/fetch";
-import AuthHttpRequestAxios from "supertokens-react-native/axios";
+import AuthHttpRequestAxios from "supertokens-react-native/lib/build/axios";
 import AuthHttpRequest from "supertokens-react-native";
 import { interceptorFunctionRequestFulfilled, responseInterceptor } from "supertokens-react-native/lib/build/axios";
 import assert from "assert";

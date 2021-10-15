@@ -177,9 +177,7 @@ export function getURLDataFromString(
     let host = hostAndPath.split("/")[0];
 
     // If the url has no path but has query params
-    if (host.includes("?")) {
-        host = host.split("?")[0];
-    }
+    host = host.split("?")[0];
 
     let hostname = host;
     let port = "";
@@ -192,6 +190,9 @@ export function getURLDataFromString(
 
     let origin = protocol + "//" + host;
     let pathname = urlString.split(origin)[1];
+
+    // If the url has a path and query params
+    pathname = pathname.split("?")[0];
 
     if (pathname === "") {
         pathname = "/";
