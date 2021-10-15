@@ -176,6 +176,11 @@ export function getURLDataFromString(
     let hostAndPath = split[1];
     let host = hostAndPath.split("/")[0];
 
+    // If the url has no path but has query params
+    if (host.includes("?")) {
+        host = host.split("?")[0];
+    }
+
     let hostname = host;
     let port = "";
     // The domain includes a port
