@@ -14,6 +14,7 @@
  */
 
 import { isAnIpAddress } from "./utils";
+import { URL } from "react-native-url-polyfill";
 
 export default class NormalisedURLDomain {
     private value: string;
@@ -33,7 +34,9 @@ function normaliseURLDomainOrThrowError(input: string, ignoreProtocol = false): 
         if (!input.startsWith("http://") && !input.startsWith("https://")) {
             throw new Error("converting to proper URL");
         }
-        const urlObj: URL = new URL(input);
+
+        // @ts-ignore (Typescript complains that URL does not expect a parameter in constructor even though it does for react-native-url-polyfill)
+        const urlObj: any = new URL(input);
         if (ignoreProtocol) {
             if (urlObj.hostname.startsWith("localhost") || isAnIpAddress(urlObj.hostname)) {
                 input = "http://" + urlObj.host;
@@ -65,6 +68,7 @@ function normaliseURLDomainOrThrowError(input: string, ignoreProtocol = false): 
         input = "https://" + input;
         // at this point, it should be a valid URL. So we test that before doing a recursive call
         try {
+            // @ts-ignore (Typescript complains that URL does not expect a parameter in constructor even though it does for react-native-url-polyfill)
             new URL(input);
             return normaliseURLDomainOrThrowError(input, true);
 

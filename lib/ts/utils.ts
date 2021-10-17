@@ -1,3 +1,4 @@
+import { URL } from "react-native-url-polyfill";
 import NormalisedURLDomain from "./normalisedURLDomain";
 import NormalisedURLPath from "./normalisedURLPath";
 import { InputType, NormalisedInputType, EventHandler, RecipeInterface } from "./types";
@@ -31,7 +32,8 @@ export function normalisCookieDomainOrThrowError(cookieDomain: string): string {
         }
 
         try {
-            let urlObj = new URL(cookieDomain);
+            // @ts-ignore (Typescript complains that URL does not expect a parameter in constructor even though it does for react-native-url-polyfill)
+            let urlObj: any = new URL(cookieDomain);
             cookieDomain = urlObj.hostname;
 
             // remove leading dot
@@ -134,12 +136,14 @@ export function shouldDoInterceptionBasedOnUrl(
         ); // ...and ensure strings of whitespace fail
     }
     toCheckUrl = normaliseURLDomainOrThrowError(toCheckUrl);
-    let urlObj = new URL(toCheckUrl);
+    // @ts-ignore (Typescript complains that URL does not expect a parameter in constructor even though it does for react-native-url-polyfill)
+    let urlObj: any = new URL(toCheckUrl);
     let domain = urlObj.hostname;
     if (cookieDomain === undefined) {
         domain = urlObj.port === "" ? domain : domain + ":" + urlObj.port;
         apiDomain = normaliseURLDomainOrThrowError(apiDomain);
-        let apiUrlObj = new URL(apiDomain);
+        // @ts-ignore (Typescript complains that URL does not expect a parameter in constructor even though it does for react-native-url-polyfill)
+        let apiUrlObj: any = new URL(apiDomain);
         return domain === (apiUrlObj.port === "" ? apiUrlObj.hostname : apiUrlObj.hostname + ":" + apiUrlObj.port);
     } else {
         let normalisedCookieDomain = normalisCookieDomainOrThrowError(cookieDomain);

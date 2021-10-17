@@ -12,6 +12,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+import { URL } from "react-native-url-polyfill";
 
 export default class NormalisedURLPath {
     private value: string;
@@ -39,7 +40,8 @@ function normaliseURLPathOrThrowError(input: string): string {
         if (!input.startsWith("http://") && !input.startsWith("https://")) {
             throw new Error("converting to proper URL");
         }
-        const urlObj: URL = new URL(input);
+        // @ts-ignore (Typescript complains that URL does not expect a parameter in constructor even though it does for react-native-url-polyfill)
+        const urlObj: any = new URL(input);
         input = urlObj.pathname;
 
         if (input.charAt(input.length - 1) === "/") {
@@ -68,6 +70,7 @@ function normaliseURLPathOrThrowError(input: string): string {
     // at this point, we should be able to convert it into a fake URL and recursively call this function.
     try {
         // test that we can convert this to prevent an infinite loop
+        // @ts-ignore (Typescript complains that URL does not expect a parameter in constructor even though it does for react-native-url-polyfill)
         new URL("http://example.com" + input);
         return normaliseURLPathOrThrowError("http://example.com" + input);
     } catch (err) {
@@ -82,12 +85,14 @@ function domainGiven(input: string): boolean {
     }
 
     try {
-        const url = new URL(input);
+        // @ts-ignore (Typescript complains that URL does not expect a parameter in constructor even though it does for react-native-url-polyfill)
+        const url: any = new URL(input);
         return url.hostname.indexOf(".") !== -1;
     } catch (e) {}
 
     try {
-        const url = new URL("http://" + input);
+        // @ts-ignore (Typescript complains that URL does not expect a parameter in constructor even though it does for react-native-url-polyfill)
+        const url: any = new URL("http://" + input);
         return url.hostname.indexOf(".") !== -1;
     } catch (e) {}
 
