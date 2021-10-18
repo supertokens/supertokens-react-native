@@ -18,10 +18,13 @@ import MockInteractionManager from "./interactionManager";
 
 jest.mock("react-native", () => {
     return {
-        InteractionManager: new MockInteractionManager()
+        InteractionManager: new MockInteractionManager(),
+        Platform: {},
+        NativeModules: {}
     };
 });
 
-jest.mock("@react-native-async-storage/async-storage", () => {
-    return new MockStorage({});
-});
+// React native async storage eposes a mocked version to use (Refer to the "../__mocks__/" folder )
+// jest.mock("@react-native-async-storage/async-storage", () => {
+//     return new MockStorage({});
+// });

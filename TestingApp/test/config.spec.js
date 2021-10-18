@@ -23,6 +23,8 @@ import {
     normaliseURLDomainOrThrowError,
     shouldDoInterceptionBasedOnUrl
 } from "supertokens-react-native/lib/build/utils";
+// jest does not call setupFiles properly with the new react-native init, so doing it this way instead
+import "./setup";
 
 process.env.TEST_MODE = "testing";
 

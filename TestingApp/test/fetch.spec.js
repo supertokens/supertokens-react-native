@@ -31,6 +31,8 @@ import {
 import { spawn } from "child_process";
 import { ProcessState, PROCESS_STATE } from "supertokens-react-native/lib/build/processState";
 import "isomorphic-fetch";
+// jest does not call setupFiles properly with the new react-native init, so doing it this way instead
+import "./setup";
 
 // TODO NEMI: This should just use base url from utils
 const BASE_URL = "http://localhost:8080";

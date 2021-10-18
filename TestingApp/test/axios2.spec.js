@@ -35,6 +35,8 @@ import {
 } from "./utils";
 
 import { spawn } from "child_process";
+// jest does not call setupFiles properly with the new react-native init, so doing it this way instead
+import "./setup";
 
 process.env.TEST_MODE = "testing";
 
