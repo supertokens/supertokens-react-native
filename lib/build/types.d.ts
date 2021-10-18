@@ -50,14 +50,14 @@ export declare type PreAPIHookFunction = (context: {
     url: string;
     requestInit: RequestInit;
 }>;
-export declare type RecipeInterface = {
+export interface RecipeInterface {
     addFetchInterceptorsAndReturnModifiedFetch: (originalFetch: any, config: NormalisedInputType) => typeof fetch;
     addAxiosInterceptors: (axiosInstance: any, config: NormalisedInputType) => void;
     getUserId: (config: NormalisedInputType) => Promise<string>;
     getJWTPayloadSecurely: (config: NormalisedInputType) => Promise<any>;
     doesSessionExist: (config: NormalisedInputType) => Promise<boolean>;
     signOut: (config: NormalisedInputType) => Promise<void>;
-};
+}
 export declare type IdRefreshTokenType = {
     status: "NOT_EXISTS" | "MAY_EXIST";
 } | {

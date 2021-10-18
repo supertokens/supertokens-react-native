@@ -9,7 +9,8 @@
     "pretty": "cd lib && npx prettier --write --config .prettierrc \"ts/**/*.ts\" \"build/**/*.js\" \"../TestingApp/test/**/*.js\"",
     "build-pretty": "npm run build && npm run pretty",
     "pretty-check": "cd lib && npx prettier --check --config .prettierrc \"ts/**/*.ts\" \"build/**/*.js\" \"../TestingApp/test/**/*.js\"",
-    "set-up-hooks": "cp hooks/pre-commit.sh .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit"
+    "set-up-hooks": "cp hooks/pre-commit.sh .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit",
+    "build-docs": "rm -rf ./docs && npx typedoc --out ./docs --tsconfig ./lib/tsconfig.json ./lib/ts/index.ts"
   },
   "repository": {
     "type": "git",
@@ -40,7 +41,8 @@
     "@types/react-native": "0.62.0",
     "axios": "*",
     "prettier": "1.18.2",
-    "typescript": "3.5.2"
+    "typescript": "3.8.3",
+    "typedoc": "^0.22.5"
   },
   "dependencies": {
     "base-64": "^1.0.0",

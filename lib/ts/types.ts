@@ -62,7 +62,7 @@ export type PreAPIHookFunction = (context: {
     url: string;
 }) => Promise<{ url: string; requestInit: RequestInit }>;
 
-export type RecipeInterface = {
+export interface RecipeInterface {
     addFetchInterceptorsAndReturnModifiedFetch: (originalFetch: any, config: NormalisedInputType) => typeof fetch;
 
     addAxiosInterceptors: (axiosInstance: any, config: NormalisedInputType) => void;
@@ -74,7 +74,7 @@ export type RecipeInterface = {
     doesSessionExist: (config: NormalisedInputType) => Promise<boolean>;
 
     signOut: (config: NormalisedInputType) => Promise<void>;
-};
+}
 
 export type IdRefreshTokenType =
     | {

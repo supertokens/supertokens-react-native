@@ -18,3 +18,5 @@ frontendDriverInterfaceSupported.json
 /ios
 /otherInfo.txt
 /test
+/docs
+.prettierignore
