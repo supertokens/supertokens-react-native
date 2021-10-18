@@ -224,6 +224,7 @@ const BASE_URL = "http://192.168.1.100:8080/"
    componentDidMount() {
      SuperTokens.init({
        apiDomain: `${BASE_URL}`,
+       sessionExpiredStatusCode: 440,
      })
      this.checkLogin();
    }
