@@ -13,58 +13,124 @@
  * under the License.
  */
 
-import AsyncStorage from "@react-native-community/async-storage";
-
-// TODO: if native is linked, do not use in memory values - always make a call to native
-// This is because there is a chance that native side has changed the anti-csrf token, and here, we are still using the older one.
-// Or is this OK?
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import AuthHttpRequest from "./fetch";
 
 const TOKEN_KEY = "supertokens-rn-anticsrf-key";
+const ANTI_CSRF_NAME = "sAntiCsrf";
 
 export default class AntiCSRF {
-    private static antiCSRF: string | undefined;
-    private static idRefreshToken: string | undefined;
+    private static tokenInfo:
+        | undefined
+        | {
+              antiCsrf: string;
+              associatedIdRefreshToken: string;
+          };
+
+    private constructor() {}
+
+    private static async getAntiCSRFToken(): Promise<string | null> {
+        if (!(await AuthHttpRequest.recipeImpl.doesSessionExist(AuthHttpRequest.config))) {
+            return null;
+        }
+
+        async function getAntiCSRFFromStorage(): Promise<string | null> {
+            let fromStorage = await AsyncStorage.getItem(TOKEN_KEY);
+
+            if (fromStorage !== null) {
+                let value = "; " + fromStorage;
+                let parts = value.split("; " + ANTI_CSRF_NAME + "=");
+
+                let last = parts.pop();
+                if (last !== undefined) {
+                    let splitForExpiry = fromStorage.split(";");
+                    let expiry = Date.parse(splitForExpiry[1].split("=")[1]);
+                    let currentTime = Date.now();
+
+                    if (expiry < currentTime) {
+                        await AntiCSRF.removeToken();
+                        return null;
+                    }
+
+                    let temp = last.split(";").shift();
+                    if (temp === undefined) {
+                        return null;
+                    }
+                    return temp;
+                }
+            }
+
+            return null;
+        }
+
+        let fromStorage = await getAntiCSRFFromStorage();
+        return fromStorage;
+    }
 
     static async getToken(associatedIdRefreshToken: string | undefined): Promise<string | undefined> {
         if (associatedIdRefreshToken === undefined) {
-            AntiCSRF.antiCSRF = undefined;
-            AntiCSRF.idRefreshToken = undefined;
+            AntiCSRF.tokenInfo = undefined;
             return undefined;
         }
 
-        if (AntiCSRF.antiCSRF === undefined || AntiCSRF.idRefreshToken === undefined) {
-            // TODO: read from storage in native.
-            let k = await AsyncStorage.getItem(TOKEN_KEY);
-            let antiCSRFToken = k === null ? undefined : k;
-            if (antiCSRFToken === undefined) {
+        if (AntiCSRF.tokenInfo === undefined) {
+            let antiCsrf = await this.getAntiCSRFToken();
+
+            if (antiCsrf === null) {
                 return undefined;
             }
-            AntiCSRF.antiCSRF = antiCSRFToken;
-            AntiCSRF.idRefreshToken = associatedIdRefreshToken;
-        } else if (AntiCSRF.idRefreshToken !== undefined && AntiCSRF.idRefreshToken !== associatedIdRefreshToken) {
-            AntiCSRF.idRefreshToken = undefined;
-            AntiCSRF.antiCSRF = undefined;
-            return AntiCSRF.getToken(associatedIdRefreshToken);
+
+            AntiCSRF.tokenInfo = {
+                antiCsrf,
+                associatedIdRefreshToken
+            };
+        } else if (AntiCSRF.tokenInfo.associatedIdRefreshToken !== associatedIdRefreshToken) {
+            // csrf token has changed.
+            AntiCSRF.tokenInfo = undefined;
+            return await AntiCSRF.getToken(associatedIdRefreshToken);
         }
-        return AntiCSRF.antiCSRF;
+        return AntiCSRF.tokenInfo.antiCsrf;
     }
 
-    static async setToken(antiCSRFToken: string, associatedIdRefreshToken: string | undefined = undefined) {
+    // give antiCSRFToken as undefined to remove it.
+    private static async setAntiCSRF(antiCSRFToken: string | undefined) {
+        async function setAntiCSRFToStorage(antiCSRFToken: string | undefined, domain: string) {
+            let expires: string | undefined = "Thu, 01 Jan 1970 00:00:01 GMT";
+            let cookieVal = "";
+            if (antiCSRFToken !== undefined) {
+                cookieVal = antiCSRFToken;
+                expires = undefined; // set cookie without expiry
+            }
+
+            let valueToSet = undefined;
+
+            if (expires !== undefined) {
+                valueToSet = `${ANTI_CSRF_NAME}=${cookieVal};expires=${expires};domain=${domain};path=/;samesite=lax`;
+            } else {
+                valueToSet = `${ANTI_CSRF_NAME}=${cookieVal};domain=${domain};expires=Fri, 31 Dec 9999 23:59:59 GMT;path=/;samesite=lax`;
+            }
+
+            await AsyncStorage.setItem(TOKEN_KEY, valueToSet);
+        }
+
+        await setAntiCSRFToStorage(antiCSRFToken, "");
+    }
+
+    static async setItem(associatedIdRefreshToken: string | undefined, antiCsrf: string) {
         if (associatedIdRefreshToken === undefined) {
-            AntiCSRF.antiCSRF = undefined;
-            AntiCSRF.idRefreshToken = undefined;
+            AntiCSRF.tokenInfo = undefined;
             return;
         }
-        // TODO: set anti-csrf in native side.
-        await AsyncStorage.setItem(TOKEN_KEY, antiCSRFToken);
-        AntiCSRF.antiCSRF = antiCSRFToken;
-        AntiCSRF.idRefreshToken = associatedIdRefreshToken;
+
+        await this.setAntiCSRF(antiCsrf);
+        AntiCSRF.tokenInfo = {
+            antiCsrf,
+            associatedIdRefreshToken
+        };
     }
 
     static async removeToken() {
-        // TODO: remove from native side.
+        AntiCSRF.tokenInfo = undefined;
         await AsyncStorage.removeItem(TOKEN_KEY);
-        AntiCSRF.idRefreshToken = undefined;
-        AntiCSRF.antiCSRF = undefined;
     }
 }

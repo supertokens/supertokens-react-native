@@ -13,7 +13,10 @@ addReleaseTag
 frontendDriverInterfaceSupported.json
 .github/
 .babelrc
-/Example
+/TestingApp
 /android
 /ios
 /otherInfo.txt
+/test
+/docs
+.prettierignore

@@ -2,7 +2,6 @@
 /ios/Pods
 /ios/Podflie.lock
 /node_modules
-package-lock.json
 .DS_Store
 /.history
 .vscode
@@ -20,6 +19,7 @@ releasePassword
 node_modules/
 npm-debug.log
 yarn-error.log
+yarn.lock
   
 
 # Xcode

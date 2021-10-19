@@ -1,6 +1,7 @@
+import { IdRefreshTokenType } from "./types";
 export default class IdRefreshToken {
     private static idRefreshInMemory;
-    static getToken(): Promise<string | undefined>;
-    static setToken(newIdRefreshToken: string): Promise<void>;
+    static getIdRefreshToken(tryRefresh: boolean): Promise<IdRefreshTokenType>;
+    static setIdRefreshToken(newIdRefreshToken: string | "remove", statusCode: number): Promise<void>;
     static removeToken(): Promise<void>;
 }

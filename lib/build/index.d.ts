@@ -1,37 +1,19 @@
-/**
- * @description returns true if retry, else false is session has expired completely.
- */
-export declare function handleUnauthorised(refreshAPI: string | undefined, preRequestIdToken: string | undefined, refreshAPICustomHeaders: any, sessionExpiredStatusCode: number): Promise<boolean>;
-export declare function getDomainFromUrl(url: string): string;
-/**
- * @class AuthHttpRequest
- * @description wrapper for common http methods.
- */
+import { InputType, RecipeInterface } from "./types";
 export default class AuthHttpRequest {
-    private static refreshTokenUrl;
-    private static sessionExpiredStatusCode;
-    private static initCalled;
-    static originalFetch: any;
-    private static apiDomain;
-    private static viaInterceptor;
-    private static refreshAPICustomHeaders;
-    static init(options: {
-        refreshTokenUrl: string;
-        viaInterceptor?: boolean | null;
-        refreshAPICustomHeaders?: any;
-        sessionExpiredStatusCode?: number;
-    }): void;
-    /**
-     * @description sends the actual http request and returns a response if successful/
-     * If not successful due to session expiry reasons, it
-     * attempts to call the refresh token API and if that is successful, calls this API again.
-     * @throws Error
-     */
-    private static doRequest;
-    static get: (url: RequestInfo, config?: RequestInit | undefined) => Promise<Response>;
-    static post: (url: RequestInfo, config?: RequestInit | undefined) => Promise<Response>;
-    static delete: (url: RequestInfo, config?: RequestInit | undefined) => Promise<Response>;
-    static put: (url: RequestInfo, config?: RequestInit | undefined) => Promise<Response>;
-    static fetch: (url: RequestInfo, config?: RequestInit | undefined) => Promise<Response>;
+    private static axiosInterceptorQueue;
+    static init(options: InputType): void;
+    static getUserId(): Promise<string>;
+    static getJWTPayloadSecurely(): Promise<any>;
+    static attemptRefreshingSession: () => Promise<boolean>;
     static doesSessionExist: () => Promise<boolean>;
+    static addAxiosInterceptors: (axiosInstance: any) => void;
+    static signOut: () => Promise<void>;
 }
+export declare let init: typeof AuthHttpRequest.init;
+export declare let getUserId: typeof AuthHttpRequest.getUserId;
+export declare let getJWTPayloadSecurely: typeof AuthHttpRequest.getJWTPayloadSecurely;
+export declare let attemptRefreshingSession: () => Promise<boolean>;
+export declare let doesSessionExist: () => Promise<boolean>;
+export declare let addAxiosInterceptors: (axiosInstance: any) => void;
+export declare let signOut: () => Promise<void>;
+export { RecipeInterface, InputType };

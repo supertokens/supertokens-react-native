@@ -1,7 +1,9 @@
 export default class AntiCSRF {
-    private static antiCSRF;
-    private static idRefreshToken;
+    private static tokenInfo;
+    private constructor();
+    private static getAntiCSRFToken;
     static getToken(associatedIdRefreshToken: string | undefined): Promise<string | undefined>;
-    static setToken(antiCSRFToken: string, associatedIdRefreshToken?: string | undefined): Promise<void>;
+    private static setAntiCSRF;
+    static setItem(associatedIdRefreshToken: string | undefined, antiCsrf: string): Promise<void>;
     static removeToken(): Promise<void>;
 }

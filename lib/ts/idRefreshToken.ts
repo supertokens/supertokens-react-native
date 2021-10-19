@@ -13,52 +13,150 @@
  * under the License.
  */
 
-import AsyncStorage from "@react-native-community/async-storage";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import AuthHttpRequest, { onUnauthorisedResponse } from "./fetch";
+import { IdRefreshTokenType } from "./types";
 
-// TODO: if native is linked, do not use in memory values - always make a call to native.
-// This is because there is a chance that native side has changed the id refresh token, and here, we are still using the older one.
-// Or is this OK?
 const ID_KEY = "supertokens-rn-idrefreshtoken-key";
+const ID_REFRESH_TOKEN_NAME = "sIRTFrontend";
 
 export default class IdRefreshToken {
     private static idRefreshInMemory: string | undefined;
 
-    static async getToken(): Promise<string | undefined> {
-        if (IdRefreshToken.idRefreshInMemory === undefined) {
-            // TODO: native support
-            let k = await AsyncStorage.getItem(ID_KEY);
-            IdRefreshToken.idRefreshInMemory = k === null ? undefined : k;
+    // if tryRefresh is true & this token doesn't exist, we try and refresh the session
+    // else we return undefined.
+    static async getIdRefreshToken(tryRefresh: boolean): Promise<IdRefreshTokenType> {
+        async function getIdRefreshFromStorage() {
+            if (IdRefreshToken.idRefreshInMemory === undefined) {
+                let k = await AsyncStorage.getItem(ID_KEY);
+                IdRefreshToken.idRefreshInMemory = k === null ? undefined : k;
+            }
+
+            let tokenInMemory = IdRefreshToken.idRefreshInMemory;
+
+            if (tokenInMemory !== undefined) {
+                let value = "; " + tokenInMemory;
+                let parts = value.split("; " + ID_REFRESH_TOKEN_NAME + "=");
+
+                let last = parts.pop();
+                if (last === "remove") {
+                    // it means no session exists. This is different from
+                    // it being undefined since in that case a session may or may not exist.
+                    return "remove";
+                }
+                if (last !== undefined) {
+                    // If a token does exist but is expired, just returning the value would indicate that a session exists
+                    // when we do not know that for sure. So we check for expiry first
+                    let splitForExpiry = tokenInMemory.split(";");
+                    let expiry = Date.parse(splitForExpiry[1].split("=")[1]);
+                    let currentTime = Date.now();
+
+                    if (expiry < currentTime) {
+                        await IdRefreshToken.removeToken();
+                        // We return undefined here because the token has expired and we dont know if the user is logged out
+                        // so a session may exist
+                        return undefined;
+                    }
+
+                    return last.split(";").shift();
+                }
+            }
+
+            return undefined;
         }
-        if (IdRefreshToken.idRefreshInMemory !== undefined) {
-            let splitted = IdRefreshToken.idRefreshInMemory.split(";");
-            let expiry = Number(splitted[1]);
-            let currentTime = Date.now();
-            if (expiry < currentTime) {
-                await IdRefreshToken.removeToken();
+
+        let token = await getIdRefreshFromStorage();
+
+        if (token === "remove") {
+            return {
+                status: "NOT_EXISTS"
+            };
+        }
+
+        if (token === undefined) {
+            let response: IdRefreshTokenType = {
+                status: "MAY_EXIST"
+            };
+
+            if (tryRefresh) {
+                // either session doesn't exist, or the
+                // cookies have expired (privacy feature that caps lifetime of cookies to 7 days)
+                const res = await onUnauthorisedResponse(response);
+                if (res.result !== "RETRY") {
+                    // in case the backend is not working, we treat it as the session not existing...
+                    return {
+                        status: "NOT_EXISTS"
+                    };
+                }
+                return await this.getIdRefreshToken(tryRefresh);
+            } else {
+                return response;
             }
         }
-        return IdRefreshToken.idRefreshInMemory;
+
+        return {
+            status: "EXISTS",
+            token
+        };
     }
 
-    static async setToken(newIdRefreshToken: string) {
-        if (newIdRefreshToken === "remove") {
-            await IdRefreshToken.removeToken();
-            return;
+    static async setIdRefreshToken(newIdRefreshToken: string | "remove", statusCode: number) {
+        async function setIdToStorage(idRefreshToken: string, domain: string) {
+            // if the value of the token is "remove", it means
+            // the session is being removed. So we set it to "remove" in the
+            // cookie. This way, when we query for this token, we will return
+            // undefined (see getIdRefreshToken), and not refresh the session
+            // unnecessarily.
+
+            let expires = "Fri, 31 Dec 9999 23:59:59 GMT";
+            let cookieVal = "remove";
+            if (idRefreshToken !== "remove") {
+                let splitted = idRefreshToken.split(";");
+                cookieVal = splitted[0];
+
+                // we must always respect this expiry and not set it to infinite
+                // cause this ties into the session's lifetime. If we set this
+                // to infinite, then a session may not exist, and this will exist,
+                // then for example, if we check a session exists, and this says yes,
+                // then if we getJWTPayload, that will attempt a session refresh which will fail.
+                // Another reason to respect this is that if we don't, then signOut will
+                // call the API which will return 200 (no 401 cause the API thinks no session exists),
+                // in which case, we will not end up firing the SIGN_OUT on handle event.
+                expires = new Date(Number(splitted[1])).toUTCString();
+            }
+
+            let valueToSet = `${ID_REFRESH_TOKEN_NAME}=${cookieVal};expires=${expires};domain=${domain};path=/;samesite=lax`;
+            await AsyncStorage.setItem(ID_KEY, valueToSet);
+            IdRefreshToken.idRefreshInMemory = valueToSet;
         }
-        let splitted = newIdRefreshToken.split(";");
-        let expiry = Number(splitted[1]);
-        let currentTime = Date.now();
-        if (expiry < currentTime) {
-            await IdRefreshToken.removeToken();
-        } else {
-            // TODO: set in native side when that support is there
-            await AsyncStorage.setItem(ID_KEY, newIdRefreshToken);
-            IdRefreshToken.idRefreshInMemory = newIdRefreshToken;
+
+        const { status } = await this.getIdRefreshToken(false);
+        await setIdToStorage(newIdRefreshToken, "");
+
+        if (newIdRefreshToken === "remove" && status === "EXISTS") {
+            // we check for wasLoggedIn cause we don't want to fire an event
+            // unnecessarily on first app load or if the user tried
+            // to query an API that returned 401 while the user was not logged in...
+            if (statusCode === AuthHttpRequest.config.sessionExpiredStatusCode) {
+                AuthHttpRequest.config.onHandleEvent({
+                    action: "UNAUTHORISED",
+                    sessionExpiredOrRevoked: true
+                });
+            } else {
+                AuthHttpRequest.config.onHandleEvent({
+                    action: "SIGN_OUT"
+                });
+            }
+        }
+
+        if (newIdRefreshToken !== "remove" && status === "NOT_EXISTS") {
+            AuthHttpRequest.config.onHandleEvent({
+                action: "SESSION_CREATED"
+            });
         }
     }
 
     static async removeToken() {
-        // TODO: set in native
         await AsyncStorage.removeItem(ID_KEY);
         IdRefreshToken.idRefreshInMemory = undefined;
     }

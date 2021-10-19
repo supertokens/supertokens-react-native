@@ -1,15 +1,16 @@
 {
   "name": "supertokens-react-native",
-  "version": "1.2.1",
+  "version": "2.0.0",
   "description": "React Native SDK for SuperTokens",
   "main": "index.js",
   "scripts": {
     "build-check": "cd lib && npx tsc -p tsconfig.json --skipLibCheck --noEmit",
-    "build": "cd lib && npx tsc -p tsconfig.json --skipLibCheck && cd ../",
-    "pretty": "cd lib && npx prettier --write --config .prettierrc \"ts/**/*.ts\" \"build/**/*.js\" \"../Example/test/**/*.js\"",
+    "build": "cd lib && npx tsc -p tsconfig.json --skipLibCheck && cd ../ && cd test/playground && npx tsc -p tsconfig.json",
+    "pretty": "cd lib && npx prettier --write --config .prettierrc \"ts/**/*.ts\" \"build/**/*.js\" \"../TestingApp/test/**/*.js\"",
     "build-pretty": "npm run build && npm run pretty",
-    "pretty-check": "cd lib && npx prettier --check --config .prettierrc \"ts/**/*.ts\" \"build/**/*.js\" \"../Example/test/**/*.js\"",
-    "set-up-hooks": "cp hooks/pre-commit.sh .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit"
+    "pretty-check": "cd lib && npx prettier --check --config .prettierrc \"ts/**/*.ts\" \"build/**/*.js\" \"../TestingApp/test/**/*.js\"",
+    "set-up-hooks": "cp hooks/pre-commit.sh .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit",
+    "build-docs": "rm -rf ./docs && npx typedoc --out ./docs --tsconfig ./lib/tsconfig.json ./lib/ts/index.ts"
   },
   "repository": {
     "type": "git",
@@ -31,15 +32,20 @@
   "homepage": "https://github.com/supertokens/supertokens-react-native#readme",
   "peerDependencies": {
     "axios": "*",
-    "react-native": ">=0.61.5 <1.0.x"
+    "react-native": ">=0.61.5 <1.0.x",
+    "@react-native-async-storage/async-storage": ">=1.13.0 <2.0.x"
   },
   "devDependencies": {
+    "@react-native-async-storage/async-storage": "^1.13.0",
+    "@types/base-64": "^1.0.0",
     "@types/react-native": "0.62.0",
     "axios": "*",
     "prettier": "1.18.2",
-    "typescript": "3.5.2"
+    "typescript": "3.8.3",
+    "typedoc": "^0.22.5"
   },
   "dependencies": {
-    "@react-native-community/async-storage": "^1.12.0"
+    "base-64": "^1.0.0",
+    "react-native-url-polyfill": "^1.3.0"
   }
 }

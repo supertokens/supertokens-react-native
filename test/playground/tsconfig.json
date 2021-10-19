@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "target": "esnext",
+        "strictNullChecks": true,
+        "module": "commonJS",
+        "moduleResolution": "Node",
+        "skipLibCheck": true,
+        "noFallthroughCasesInSwitch": true,
+        "lib": ["ES2017"],
+        "noEmit": true,
+        "strict": true,
+        "jsx": "react-native",
+        "esModuleInterop": true,
+        "isolatedModules": true,
+        "allowJs": true,
+        "allowSyntheticDefaultImports": true,
+    },
+    "include": ["./**/*"],
+    "exclude": ["build"],
+    "compileOnSave": true
+}

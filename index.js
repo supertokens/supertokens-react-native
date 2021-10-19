@@ -13,5 +13,5 @@
  * under the License. 
 */
 
-import SuperTokensSession from "./lib/build/index.js";
-export default SuperTokensSession;
+import SuperTokens from "./lib/build/index.js";
+export default SuperTokens;
