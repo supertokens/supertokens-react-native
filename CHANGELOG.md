@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2021-10-22
+### Breaking changes
+- `getJWTPayloadSecurely` has been renamed to `getAccessTokenPayloadSecurely` to be more accurate to the functionality
+
 ## [2.0.0] - 2021-10-14
 This is a major update to the SDK and contains several breaking changes, please go through the list mentioned below and the documentation to understand how to upgrade to version `2.0.0`
 ### Added

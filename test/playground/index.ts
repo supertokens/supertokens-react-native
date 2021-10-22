@@ -2,7 +2,7 @@ import SuperTokens, {
     addAxiosInterceptors,
     doesSessionExist,
     getUserId,
-    getJWTPayloadSecurely,
+    getAccessTokenPayloadSecurely,
     attemptRefreshingSession,
     signOut,
     init,
@@ -34,16 +34,16 @@ getUserId().then(id => {
     console.log(err);
 });
 
-SuperTokens.getJWTPayloadSecurely().then(payload => {
+SuperTokens.getAccessTokenPayloadSecurely().then(payload => {
     console.log(payload);
 }).catch(err => {
     console.log(err);
-});
-getJWTPayloadSecurely().then(payload => {
+})
+getAccessTokenPayloadSecurely().then(payload => {
     console.log(payload);
 }).catch(err => {
     console.log(err);
-});
+})
 
 SuperTokens.attemptRefreshingSession().then(retry => {
     console.log(retry);
