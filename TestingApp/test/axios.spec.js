@@ -531,14 +531,14 @@ describe("Axios AuthHttpRequest class tests", function() {
         });
         assertEqual(userId, loginResponse.data);
 
-        let data = await AuthHttpRequest.getJWTPayloadSecurely();
+        let data = await AuthHttpRequest.getAccessTokenPayloadSecurely();
         assertEqual(Object.keys(data).length, 0);
 
         // update jwt data
         let testResponse1 = await axiosInstance.post(`${BASE_URL}/update-jwt`, { key: "data" });
         assertEqual(testResponse1.data.key, "data");
 
-        data = await AuthHttpRequest.getJWTPayloadSecurely();
+        data = await AuthHttpRequest.getAccessTokenPayloadSecurely();
         assertEqual(data.key, "data");
 
         // get jwt data
@@ -550,7 +550,7 @@ describe("Axios AuthHttpRequest class tests", function() {
         assertEqual(testResponse3.data.key1, "data1");
         assertEqual(testResponse3.data.key, undefined);
 
-        data = await AuthHttpRequest.getJWTPayloadSecurely();
+        data = await AuthHttpRequest.getAccessTokenPayloadSecurely();
         assertEqual(data.key1, "data1");
         assertEqual(data.key, undefined);
 
