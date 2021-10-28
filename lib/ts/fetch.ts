@@ -18,7 +18,7 @@ import { supported_fdi } from "./version";
 import AntiCSRF from "./antiCsrf";
 import IdRefreshToken from "./idRefreshToken";
 import getLock from "./locking";
-import { IdRefreshTokenType, InputType, NormalisedInputType } from "./types";
+import { IdRefreshTokenType, InputType, NormalisedInputType, RecipeInterface } from "./types";
 import { shouldDoInterceptionBasedOnUrl, validateAndNormaliseInputOrThrowError } from "./utils";
 import FrontToken from "./frontToken";
 import RecipeImplementation from "./recipeImplementation";
@@ -35,7 +35,7 @@ export default class AuthHttpRequest {
     static initCalled = false;
     static rid: string;
     static env: any;
-    static recipeImpl: RecipeImplementation;
+    static recipeImpl: RecipeInterface;
     static config: NormalisedInputType;
 
     static init(options: InputType) {
@@ -53,7 +53,7 @@ export default class AuthHttpRequest {
             // even if the init function is called more than once (maybe across JS scripts),
             // things will not get created multiple times.
             AuthHttpRequest.env.__supertokensOriginalFetch = AuthHttpRequest.env.fetch.bind(AuthHttpRequest.env);
-            AuthHttpRequest.env.__supertokensSessionRecipe = config.override.functions(new RecipeImplementation());
+            AuthHttpRequest.env.__supertokensSessionRecipe = config.override.functions(RecipeImplementation());
             AuthHttpRequest.env.fetch = AuthHttpRequest.env.__supertokensSessionRecipe.addFetchInterceptorsAndReturnModifiedFetch(
                 AuthHttpRequest.env.__supertokensOriginalFetch,
                 config

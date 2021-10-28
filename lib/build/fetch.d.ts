@@ -1,5 +1,4 @@
-import { IdRefreshTokenType, InputType, NormalisedInputType } from "./types";
-import RecipeImplementation from "./recipeImplementation";
+import { IdRefreshTokenType, InputType, NormalisedInputType, RecipeInterface } from "./types";
 /**
  * @class AuthHttpRequest
  * @description wrapper for common http methods.
@@ -10,7 +9,7 @@ export default class AuthHttpRequest {
     static initCalled: boolean;
     static rid: string;
     static env: any;
-    static recipeImpl: RecipeImplementation;
+    static recipeImpl: RecipeInterface;
     static config: NormalisedInputType;
     static init(options: InputType): void;
     /**
