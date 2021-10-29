@@ -1,0 +1,62 @@
+![SuperTokens banner](https://raw.githubusercontent.com/supertokens/supertokens-logo/master/images/Artboard%20%E2%80%93%2027%402x.png)
+
+# SuperTokens ThirdPartyEmailPassword Demo app
+
+This demo app demonstrates the following use cases:
+
+-   Social Login / Sign up
+-   Logout
+
+## Project setup
+
+Use `npm` to install the project dependencies:
+
+```bash
+npm install
+```
+
+#### iOS only
+
+Install dependencies using cocoapods
+
+```bash
+cd iOS
+pod install
+cd ..
+```
+
+## Run the demo app
+
+### Start the server
+```bash
+node server/index.js
+```
+
+The server starts on port 3001
+
+If you would like to modify the API server (http://localhost:3001) URL:
+
+-   Change the `apiPort` or `apiDomain` values in `server/index.js`
+-   Change the `apiPort` or `apiDomain` values in `App.js`
+
+### Run the app
+```bash
+# iOS
+npx react-native run-ios
+
+# Android
+npx react-native run-android
+```
+
+## Project structure & Parameters
+
+-   The frontend code can be found in `App.js`.
+-   The backend API is in the `server/index.js` file.
+
+## Author
+
+Created with :heart: by the folks at SuperTokens.io.
+
+## License
+
+This project is licensed under the Apache 2.0 license.

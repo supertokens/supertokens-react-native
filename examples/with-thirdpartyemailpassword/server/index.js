@@ -7,7 +7,8 @@ let axios = require("axios");
 let qs = require("querystring");
 let customSignInUpPostForThirdParty = require("./customSignInUpPostForThirdParty");
 
-
+const apiDomain = "http://localhost"
+const apiPort = 3001;
 
 supertokens.init({
     framework: "express",
@@ -19,7 +20,7 @@ supertokens.init({
     appInfo: {
         // learn more about this on https://supertokens.io/docs/thirdpartyemailpassword/appinfo
         appName: "Demo App",
-        apiDomain: "http://localhost:3001",
+        apiDomain: apiDomain + ":" + apiPort,
         websiteDomain: "http://localhost:3000",
     },
     recipeList: [
@@ -65,10 +66,6 @@ app.use(cors({
 app.use(middleware());
 app.use(express.json());
 
-app.get("/test", async (req, res) => {
-    res.status(200).json({ success: true });
-});
-
 // ...your API routes
 
 let { errorHandler } = require("supertokens-node/framework/express");
@@ -77,4 +74,4 @@ let { errorHandler } = require("supertokens-node/framework/express");
 // Add this AFTER all your routes
 app.use(errorHandler())
 
-app.listen(3001, () => { });
+app.listen(apiPort, () => { });

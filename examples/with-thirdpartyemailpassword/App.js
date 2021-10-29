@@ -18,8 +18,11 @@ import { authorize } from 'react-native-app-auth';
 import axios from 'axios';
 import SuperTokens from "supertokens-react-native";
 
+const apiPort = 3001;
 // TODO: Replace this with your own IP
-const BASE_URL = "http://192.168.1.101:3001"
+// NOTE: We use IP (and not 10.0.2.2) here because of iOS
+const apiDomain = "http://192.168.1.101";
+const BASE_URL = apiDomain + ":" + apiPort
 
 SuperTokens.init({
   apiDomain: `${BASE_URL}`,
@@ -32,7 +35,6 @@ const USER_STATE_LOGGED_OUT = "logged_out";
 
 const App = () => {
   const [userState, setUserState] = useState(USER_STATE_LOGGED_OUT);
-  const [userInfo, setUserInfo] = useState({});
 
   const signOut = async () => {
     await SuperTokens.signOut()
@@ -52,9 +54,7 @@ const App = () => {
             justifyContent: "center",
           }}>
 
-          <Text style={{ marginBottom: 8 }}>Logged in Succesfully</Text>
-          <Text style={{ marginBottom: 8 }}>New User: {`${userInfo.isNewuser}`}</Text>
-          <Text style={{ marginBottom: 32 }}>Email: {userInfo.userEmail}</Text>
+          <Text style={{ marginBottom: 32 }}>Logged in Succesfully</Text>
           <Button
             title="Sign out"
             onPress={signOut} />
@@ -89,11 +89,7 @@ const App = () => {
     });
 
     if (response.data.status === "OK") {
-      let isNewuser = response.data.createdNewUser;
-      let userEmail = response.data.user.email;
-
       setUserState(USER_STATE_LOGGED_IN);
-      setUserInfo({ ...userInfo, isNewuser, userEmail });
     }
   }
 
@@ -130,11 +126,7 @@ const App = () => {
 
 
     if (response.data.status === "OK") {
-      let isNewuser = response.data.createdNewUser;
-      let userEmail = response.data.user.email;
-
       setUserState(USER_STATE_LOGGED_IN);
-      setUserInfo({ ...userInfo, isNewuser, userEmail });
     }
   }
 
