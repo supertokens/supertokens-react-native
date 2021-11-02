@@ -3,12 +3,9 @@ let supertokens = require("supertokens-node");
 let Session = require("supertokens-node/recipe/session");
 let ThirdPartyEmailPassword = require("supertokens-node/recipe/thirdpartyemailpassword");
 let { Google, Github } = ThirdPartyEmailPassword;
-let axios = require("axios");
-let qs = require("querystring");
-let customSignInUpPostForThirdParty = require("./customSignInUpPostForThirdParty");
 
-const apiDomain = "http://localhost"
 const apiPort = 3001;
+const apiDomain = "http://localhost:" + apiPort
 
 supertokens.init({
     framework: "express",
@@ -20,7 +17,7 @@ supertokens.init({
     appInfo: {
         // learn more about this on https://supertokens.io/docs/thirdpartyemailpassword/appinfo
         appName: "Demo App",
-        apiDomain: apiDomain + ":" + apiPort,
+        apiDomain: apiDomain,
         websiteDomain: "http://localhost:3000",
     },
     recipeList: [
@@ -33,18 +30,16 @@ supertokens.init({
                 Github({
                     clientId: "8a9152860ce869b64c44",
                     clientSecret: "00e841f10f288363cd3786b1b1f538f05cfdbda2",
-                })
-            ],
-            override: {
-                apis: (originalImplementation) => {
-                    return {
-                        ...originalImplementation,
-                        thirdPartySignInUpPOST: async function (input) {
-                            return customSignInUpPostForThirdParty(input, originalImplementation);
-                        },
+                }),
+                ThirdPartyEmailPassword.Apple({
+                    clientId: "4398792-io.supertokens.example.service",
+                    clientSecret: {
+                        keyId: "7M48Y4RYDL",
+                        privateKey: "-----BEGIN PRIVATE KEY-----\nMIGTAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBHkwdwIBAQQgu8gXs+XYkqXD6Ala9Sf/iJXzhbwcoG5dMh1OonpdJUmgCgYIKoZIzj0DAQehRANCAASfrvlFbFCYqn3I2zeknYXLwtH30JuOKestDbSfZYxZNMqhF/OzdZFTV0zc5u5s3eN+oCWbnvl0hM+9IW0UlkdA\n-----END PRIVATE KEY-----",
+                        teamId: "YWQCXGJRJL"
                     }
-                }
-            }
+                }),
+            ],
         }),
         Session.init() // initializes session features
     ]
@@ -73,5 +68,9 @@ let { errorHandler } = require("supertokens-node/framework/express");
 
 // Add this AFTER all your routes
 app.use(errorHandler())
+
+app.use((err, req, res, next) => {
+    // Handle error
+});
 
 app.listen(apiPort, () => { });

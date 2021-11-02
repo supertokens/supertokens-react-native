@@ -12,142 +12,50 @@ import {
   Button,
   SafeAreaView,
   View,
-  Text,
 } from 'react-native';
-import { authorize } from 'react-native-app-auth';
-import axios from 'axios';
 import SuperTokens from "supertokens-react-native";
+import loginWithGoogle from './google';
+import { getAppleButton } from './apple';
+import loginWithGithub from './github';
+import SuccessView from './success-view';
 
-const apiPort = 3001;
 // TODO: Replace this with your own IP
-// NOTE: We use IP (and not 10.0.2.2) here because of iOS
-const apiDomain = "http://192.168.1.101";
-const BASE_URL = apiDomain + ":" + apiPort
+// NOTE: We use our IP (and not 10.0.2.2) here because of iOS
+export const BASE_URL = "http://192.168.1.100:3001"
 
+// Initialise SuperTokens
 SuperTokens.init({
   apiDomain: `${BASE_URL}`,
 });
 
-SuperTokens.addAxiosInterceptors(axios);
-
-const USER_STATE_LOGGED_IN = "logged_in";
-const USER_STATE_LOGGED_OUT = "logged_out";
-
 const App = () => {
-  const [userState, setUserState] = useState(USER_STATE_LOGGED_OUT);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const signOut = async () => {
     await SuperTokens.signOut()
-    setUserState(USER_STATE_LOGGED_OUT);
-  }
-
-  const getSignedInScreen = () => {
-    return (
-      <SafeAreaView
-        style={{
-          flex: 1,
-        }}>
-        <View
-          style={{
-            flex: 1,
-            alignItems: "center",
-            justifyContent: "center",
-          }}>
-
-          <Text style={{ marginBottom: 32 }}>Logged in Succesfully</Text>
-          <Button
-            title="Sign out"
-            onPress={signOut} />
-
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  const loginWithGoogle = async () => {
-    const config = {
-      issuer: 'https://accounts.google.com',
-      clientId: '1060725074195-c7mgk8p0h27c4428prfuo3lg7ould5o7.apps.googleusercontent.com',
-      redirectUrl: 'com.demoapp:/oauthredirect',
-      scopes: ["https://www.googleapis.com/auth/userinfo.email"]
-    };
-
-    let authState = await authorize(config);
-
-    authState.access_token = authState.accessToken;
-    delete authState.accessToken;
-
-    let response = await axios.post(`${BASE_URL}/auth/signinup`, {
-      redirectURI: "com.demoapp:/oauthredirect",
-      thirdPartyId: "google",
-      code: "DOESNT MATTER",
-      authCodeResponse: authState,
-    }, {
-      headers: {
-        rid: "thirdpartyemailpassword"
-      }
-    });
-
-    if (response.data.status === "OK") {
-      setUserState(USER_STATE_LOGGED_IN);
-    }
-  }
-
-  const loginWithGithub = async () => {
-    const clientId = "8a9152860ce869b64c44";
-    const config = {
-      redirectUrl: 'com.demoapp://oauthredirect',
-      clientId: clientId,
-      scopes: ["read:user", "user:email"],
-      additionalHeaders: { 'Accept': 'application/json' },
-      serviceConfiguration: {
-        authorizationEndpoint: 'https://github.com/login/oauth/authorize',
-        tokenEndpoint: 'https://github.com/login/oauth/access_token',
-        revocationEndpoint:
-          'https://github.com/settings/connections/applications/' + clientId
-      },
-      skipCodeExchange: true,
-    };
-
-    let authState = await authorize(config);
-
-    authState.access_token = authState.accessToken;
-    delete authState.accessToken;
-
-    let response = await axios.post(`${BASE_URL}/auth/signinup`, {
-      redirectURI: "com.demoapp://oauthredirect",
-      thirdPartyId: "github",
-      code: authState.authorizationCode,
-    }, {
-      headers: {
-        rid: "thirdpartyemailpassword"
-      }
-    });
-
-
-    if (response.data.status === "OK") {
-      setUserState(USER_STATE_LOGGED_IN);
-    }
+    setIsLoggedIn(false);
   }
 
   useEffect(() => {
+    const checkForSession = async () => {
+      if (await SuperTokens.doesSessionExist()) {
+        setIsLoggedIn(true);
+      }
+    }
+
     checkForSession();
   }, []);
 
-  const checkForSession = async () => {
-    if (await SuperTokens.doesSessionExist()) {
-      setUserState(USER_STATE_LOGGED_IN);
-    }
-  }
 
-  if (userState === USER_STATE_LOGGED_IN) {
-    return getSignedInScreen();
+  if (isLoggedIn) {
+    return (<SuccessView signOut={signOut} />);
   }
 
   return (
     <SafeAreaView
       style={{
         flex: 1,
+        backgroundColor: "white",
       }}>
       <View
         style={{
@@ -155,9 +63,19 @@ const App = () => {
           justifyContent: "center",
           flex: 1,
         }}>
+
+        {getAppleButton(setIsLoggedIn)}
+
+        <View style={{
+          height: 32,
+        }} />
+
         <Button
           title={"Login with Google"}
-          onPress={loginWithGoogle} />
+          onPress={async () => {
+            await loginWithGoogle();
+            setIsLoggedIn(true);
+          }} />
 
         <View style={{
           height: 32,
@@ -165,9 +83,10 @@ const App = () => {
 
         <Button
           title={"Login with Github"}
-          onPress={loginWithGithub} />
-
-
+          onPress={async () => {
+            await loginWithGithub();
+            setIsLoggedIn(true);
+          }} />
       </View>
     </SafeAreaView>
   );
