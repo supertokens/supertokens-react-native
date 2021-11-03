@@ -57,6 +57,9 @@ npx react-native run-android
 ## Project structure & Parameters
 
 -   The frontend code can be found in `App.js`.
+-   Code for Google auth can be found in `google.js`
+-   Code for Github auth can be found in `github.js`
+-   Code for Sign in with Apple can be found in `apple.js`
 -   The backend API is in the `server/index.js` file.
 
 ## Author

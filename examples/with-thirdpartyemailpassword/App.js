@@ -21,11 +21,11 @@ import SuccessView from './success-view';
 
 // TODO: Replace this with your own IP
 // NOTE: We use our IP (and not 10.0.2.2) here because of iOS
-export const BASE_URL = "http://192.168.1.100:3001"
+export const API_DOMAIN = "http://192.168.1.100:3001"
 
 // Initialise SuperTokens
 SuperTokens.init({
-  apiDomain: `${BASE_URL}`,
+  apiDomain: `${API_DOMAIN}`,
 });
 
 const App = () => {
@@ -37,6 +37,9 @@ const App = () => {
   }
 
   useEffect(() => {
+    /*
+      When the app loads we check if the user is already logged in using SuperTokens.doesSessionExist().
+    */
     const checkForSession = async () => {
       if (await SuperTokens.doesSessionExist()) {
         setIsLoggedIn(true);

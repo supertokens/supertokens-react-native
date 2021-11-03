@@ -1,6 +1,6 @@
 import { authorize } from 'react-native-app-auth';
 import SuperTokens from "supertokens-react-native";
-import { BASE_URL } from "./App";
+import { API_DOMAIN } from "./App";
 
 import axios from 'axios';
 
@@ -8,7 +8,25 @@ import axios from 'axios';
 SuperTokens.addAxiosInterceptors(axios);
 
 /*
-    We use react-native-app-auth to login with Google and then use the response to sign in with SuperTokens
+    We use react-native-app-auth to login with Google and then use the response to sign in with SuperTokens.
+    When we use authorize to communicate with Google, their servers respond with something similar to:
+    {
+        "accessToken": "<access_token>",
+        "accessTokenExpirationDate": "2021-11-03T13:27:37Z",
+        "authorizeAdditionalParameters": {...},
+        "idToken": "<id_token>",
+        "refreshToken": "<refresh_token",
+        "scopes": [
+            "email",
+            "https://www.googleapis.com/auth/userinfo.email",
+            "openid"
+        ],
+        "tokenAdditionalParameters": {},
+        "tokenType": "Bearer"
+    }
+
+    We send this object to our backend /signinup API which will use the access_token to get the user's information
+    and log the user into SuperTokens.
 */
 const loginWithGoogle = async () => {
     // Full configuration options here: https://github.com/FormidableLabs/react-native-app-auth#config
@@ -20,25 +38,22 @@ const loginWithGoogle = async () => {
     };
 
     // This will authenticate with Google and give us the access token to use with SuperTokens
-    let authState = await authorize(config);
+    let authResult = await authorize(config);
 
     // react-native-app-auth returns `accessToken` instead of `access_token`, we change this to follow the RFC.
-    authState.access_token = authState.accessToken;
-    delete authState.accessToken;
+    authResult.access_token = authResult.accessToken;
+    delete authResult.accessToken;
 
     /*
-      We use the access_token returned by the Google servers to sign in the user and create a session using SuperTokens.
-      Note that this route should already exist if your backend uses the SuperTokens SDK and has not changed the base path
-      for APIs. 
+      We use the object returned by the Google servers to sign in the user and create a session using SuperTokens.
      */
-    await axios.post(`${BASE_URL}/auth/signinup`, {
+    await axios.post(`${API_DOMAIN}/auth/signinup`, {
         redirectURI: "com.demoapp:/oauthredirect",
         thirdPartyId: "google",
-        code: "", // For this flow we rely on authCodeResponse to authenticate the user, so we pass an empty string for code
-        authCodeResponse: authState,
+        authCodeResponse: authResult,
     }, {
         headers: {
-            rid: "thirdpartyemailpassword", // This is a temporary workaround, https://github.com/supertokens/supertokens-node/issues/202
+            rid: "thirdpartyemailpassword",
         }
     });
 }

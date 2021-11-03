@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { appleAuth, appleAuthAndroid } from '@invertase/react-native-apple-authentication';
 import SuperTokens from "supertokens-react-native";
-import { BASE_URL } from "./App";
+import { API_DOMAIN } from "./App";
 import axios from 'axios';
 
 // Adds request and response interceptors to the axios instance (Not required if using fetch)
@@ -25,11 +25,10 @@ const loginWithApple = async () => {
     let authCode;
 
     /*
-      For iOS your app's bundle identifier is always used as the client id. When configuring Sign in with Apple on the
-      Apple developer dashboard make sure to enable sign in with apple for your App ID to make sure this works on iOS correctly. (If this step is skipped or wrong values are configured, when signing in you should see an error for "Sign up not completed". This error message usually means that the bundle identifier for your app does not match the one
-      configured on the dashboard)
-
-      For Android (and other platforms), you need to create a Service ID on the Apple dashboard and use that as your client_id
+      For iOS your app's bundle identifier is always used as the client id. When configuring Sign in with Apple on the 
+      Apple developer dashboard make sure to enable sign in with apple for your App ID to make sure this works on iOS correctly. 
+      (If this step is skipped or wrong values are configured, when signing in you should see an error for "Sign up not completed". 
+      This error message usually means that the bundle identifier for your app does not match the one configured on the dashboard)
     */
     if (Platform.OS === "ios") {
         let appleAuthRequestResponse = await appleAuth.performRequest({
@@ -42,12 +41,10 @@ const loginWithApple = async () => {
 
         /*
           We use the code returned by the Apple servers to sign in the user and create a session using SuperTokens.
-          Note that this route should already exist if your backend uses the SuperTokens SDK and has not changed the base path
-          for APIs. 
 
-          NOTE: For iOS the client_id should always match your app's bundle identifier (while for Android, Web and other platforms you need to use a service ID). To achieve this in a convenient way we pass our bundle identifier when calling our signinup route.
+          NOTE: For iOS the client_id should always match your app's bundle identifier.
         */
-        await axios.post(`${BASE_URL}/auth/signinup`, {
+        await axios.post(`${API_DOMAIN}/auth/signinup`, {
             redirectURI: "com.demoapp:/oauthredirect",
             thirdPartyId: "apple",
             code: authCode,
@@ -59,6 +56,9 @@ const loginWithApple = async () => {
         });
     } else {
         // Read more about this configuration here: https://github.com/invertase/react-native-apple-authentication
+        /*
+            For Android we create a Service ID on the Apple dashboard and then use that as the client ID when trying to sign in
+        */
         appleAuthAndroid.configure({
             clientId: 'io.supertokens.example.service',
             redirectUri: 'https://supertokens.io/dev/oauth/redirect-to-app',
@@ -72,10 +72,8 @@ const loginWithApple = async () => {
 
         /*
           We use the code returned by the Apple servers to sign in the user and create a session using SuperTokens.
-          Note that this route should already exist if your backend uses the SuperTokens SDK and has not changed the base path
-          for APIs. 
         */
-        await axios.post(`${BASE_URL}/auth/signinup`, {
+        await axios.post(`${API_DOMAIN}/auth/signinup`, {
             redirectURI: "https://supertokens.io/dev/oauth/redirect-to-app",
             thirdPartyId: "apple",
             code: authCode,
