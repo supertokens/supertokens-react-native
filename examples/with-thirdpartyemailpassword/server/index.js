@@ -32,7 +32,16 @@ supertokens.init({
                     clientSecret: "00e841f10f288363cd3786b1b1f538f05cfdbda2",
                 }),
                 ThirdPartyEmailPassword.Apple({
+                    isDefault: true,
                     clientId: "4398792-io.supertokens.example.service",
+                    clientSecret: {
+                        keyId: "7M48Y4RYDL",
+                        privateKey: "-----BEGIN PRIVATE KEY-----\nMIGTAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBHkwdwIBAQQgu8gXs+XYkqXD6Ala9Sf/iJXzhbwcoG5dMh1OonpdJUmgCgYIKoZIzj0DAQehRANCAASfrvlFbFCYqn3I2zeknYXLwtH30JuOKestDbSfZYxZNMqhF/OzdZFTV0zc5u5s3eN+oCWbnvl0hM+9IW0UlkdA\n-----END PRIVATE KEY-----",
+                        teamId: "YWQCXGJRJL"
+                    }
+                }),
+                ThirdPartyEmailPassword.Apple({
+                    clientId: "4398792-io.supertokens.example",
                     clientSecret: {
                         keyId: "7M48Y4RYDL",
                         privateKey: "-----BEGIN PRIVATE KEY-----\nMIGTAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBHkwdwIBAQQgu8gXs+XYkqXD6Ala9Sf/iJXzhbwcoG5dMh1OonpdJUmgCgYIKoZIzj0DAQehRANCAASfrvlFbFCYqn3I2zeknYXLwtH30JuOKestDbSfZYxZNMqhF/OzdZFTV0zc5u5s3eN+oCWbnvl0hM+9IW0UlkdA\n-----END PRIVATE KEY-----",

@@ -51,7 +51,7 @@ const loginWithApple = async () => {
             redirectURI: "com.demoapp:/oauthredirect",
             thirdPartyId: "apple",
             code: authCode,
-            clientId: "io.supertokens.example",
+            clientId: "4398792-io.supertokens.example",
         }, {
             headers: {
                 rid: "thirdpartyemailpassword", // This is a temporary workaround, https://github.com/supertokens/supertokens-node/issues/202
