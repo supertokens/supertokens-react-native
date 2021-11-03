@@ -29,7 +29,7 @@ cd ..
 When making network calls to the server (explained in the next step) the demo app uses an IP address and not localhost (to avoid issues in iOS). 
 
 - open `App.js`
-- change the value of `BASE_URL` to match your machines local IP address
+- change the value of `API_DOMAIN` to match your machines local IP address
 
 ## Run the demo app
 
@@ -43,7 +43,7 @@ The server starts on port 3001
 If you would like to modify the API server (http://localhost:3001) URL:
 
 -   Change the `apiDomain` and `apiPort` values in `server/index.js`
--   Change the `BASE_URL` value in `App.js`
+-   Change the `API_DOMAIN` value in `App.js`
 
 ### Run the app
 ```bash
