@@ -47,15 +47,20 @@ const loginWithGoogle = async () => {
     /*
       We use the object returned by the Google servers to sign in the user and create a session using SuperTokens.
      */
-    await axios.post(`${API_DOMAIN}/auth/signinup`, {
+    let signInUpResponse = await axios.post(`${API_DOMAIN}/auth/signinup`, {
         redirectURI: "com.demoapp:/oauthredirect",
         thirdPartyId: "google",
         authCodeResponse: authResult,
+        clientId: "1060725074195-c7mgk8p0h27c4428prfuo3lg7ould5o7.apps.googleusercontent.com"
     }, {
         headers: {
             rid: "thirdpartyemailpassword",
         }
     });
+
+    if (signInUpResponse.data.status !== "OK") {
+        throw new Error("Google login failed")
+    }
 }
 
 export default loginWithGoogle;

@@ -46,15 +46,20 @@ const loginWithGithub = async () => {
     /*
       We use the authorizationCode returned by the Github servers to sign in the user and create a session using SuperTokens.
      */
-    await axios.post(`${API_DOMAIN}/auth/signinup`, {
+    let signInUpResponse = await axios.post(`${API_DOMAIN}/auth/signinup`, {
         redirectURI: "com.demoapp://oauthredirect",
         thirdPartyId: "github",
         code: authResult.authorizationCode,
+        clientId: "8a9152860ce869b64c44",
     }, {
         headers: {
             rid: "thirdpartyemailpassword",
         }
     });
+
+    if (signInUpResponse.data.status !== "OK") {
+        throw new Error("Github login failed")
+    }
 }
 
 export default loginWithGithub;

@@ -44,7 +44,7 @@ const loginWithApple = async () => {
 
           NOTE: For iOS the client_id should always match your app's bundle identifier.
         */
-        await axios.post(`${API_DOMAIN}/auth/signinup`, {
+        let signInUpResponse = await axios.post(`${API_DOMAIN}/auth/signinup`, {
             redirectURI: "com.demoapp:/oauthredirect",
             thirdPartyId: "apple",
             code: authCode,
@@ -54,6 +54,10 @@ const loginWithApple = async () => {
                 rid: "thirdpartyemailpassword", // This is a temporary workaround, https://github.com/supertokens/supertokens-node/issues/202
             }
         });
+
+        if (signInUpResponse.data.status !== "OK") {
+            throw new Error("Apple login failed")
+        }
     } else {
         // Read more about this configuration here: https://github.com/invertase/react-native-apple-authentication
         /*
@@ -73,7 +77,7 @@ const loginWithApple = async () => {
         /*
           We use the code returned by the Apple servers to sign in the user and create a session using SuperTokens.
         */
-        await axios.post(`${API_DOMAIN}/auth/signinup`, {
+        let signInUpResponse = await axios.post(`${API_DOMAIN}/auth/signinup`, {
             redirectURI: "https://supertokens.io/dev/oauth/redirect-to-app",
             thirdPartyId: "apple",
             code: authCode,
@@ -82,6 +86,10 @@ const loginWithApple = async () => {
                 rid: "thirdpartyemailpassword", // This is a temporary workaround, https://github.com/supertokens/supertokens-node/issues/202
             }
         });
+
+        if (signInUpResponse.data.status !== "OK") {
+            throw new Error("Apple login failed")
+        }
     }
 }
 
