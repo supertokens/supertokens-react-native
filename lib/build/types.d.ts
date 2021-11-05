@@ -1,3 +1,4 @@
+import OverrideableBuilder from "supertokens-js-override";
 export declare type Event = {
     action: "SIGN_OUT" | "REFRESH_SESSION" | "SESSION_CREATED";
 } | {
@@ -21,7 +22,7 @@ export declare type InputType = {
     }>;
     onHandleEvent?: EventHandler;
     override?: {
-        functions?: (originalImplementation: RecipeInterface) => RecipeInterface;
+        functions?: (originalImplementation: RecipeInterface, builder?: OverrideableBuilder<RecipeInterface>) => RecipeInterface;
     };
 };
 export declare type NormalisedInputType = {
@@ -40,7 +41,7 @@ export declare type NormalisedInputType = {
     }>;
     onHandleEvent: EventHandler;
     override: {
-        functions: (originalImplementation: RecipeInterface) => RecipeInterface;
+        functions: (originalImplementation: RecipeInterface, builder?: OverrideableBuilder<RecipeInterface>) => RecipeInterface;
     };
 };
 export declare type PreAPIHookFunction = (context: {
@@ -50,14 +51,14 @@ export declare type PreAPIHookFunction = (context: {
     url: string;
     requestInit: RequestInit;
 }>;
-export interface RecipeInterface {
+export declare type RecipeInterface = {
     addFetchInterceptorsAndReturnModifiedFetch: (originalFetch: any, config: NormalisedInputType) => typeof fetch;
     addAxiosInterceptors: (axiosInstance: any, config: NormalisedInputType) => void;
     getUserId: (config: NormalisedInputType) => Promise<string>;
     getAccessTokenPayloadSecurely: (config: NormalisedInputType) => Promise<any>;
     doesSessionExist: (config: NormalisedInputType) => Promise<boolean>;
     signOut: (config: NormalisedInputType) => Promise<void>;
-}
+};
 export declare type IdRefreshTokenType = {
     status: "NOT_EXISTS" | "MAY_EXIST";
 } | {
