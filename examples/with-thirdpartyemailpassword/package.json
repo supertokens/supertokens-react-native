@@ -27,7 +27,7 @@
     "metro-react-native-babel-preset": "^0.66.2",
     "react-native-app-auth": "^6.4.0",
     "react-test-renderer": "17.0.2",
-    "supertokens-node": "git+https://github.com/supertokens/supertokens-node.git#apple-fix",
+    "supertokens-node": "git+https://github.com/supertokens/supertokens-node.git#8.1",
     "supertokens-react-native": "^3.0.1"
   },
   "jest": {
