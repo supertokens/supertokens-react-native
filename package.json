@@ -46,6 +46,7 @@
   },
   "dependencies": {
     "base-64": "^1.0.0",
-    "react-native-url-polyfill": "^1.3.0"
+    "react-native-url-polyfill": "^1.3.0",
+    "supertokens-js-override": "git+https://github.com/supertokens/supertokens-js-override.git#v0.0.2"
   }
 }
