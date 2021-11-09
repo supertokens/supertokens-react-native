@@ -1,12 +1,9 @@
-import React from 'react';
-import {
-    Button,
-    Platform,
-} from 'react-native';
-import { appleAuth, appleAuthAndroid } from '@invertase/react-native-apple-authentication';
+import React from "react";
+import { Button, Platform } from "react-native";
+import { appleAuth, appleAuthAndroid } from "@invertase/react-native-apple-authentication";
 import SuperTokens from "supertokens-react-native";
 import { API_DOMAIN } from "./App";
-import axios from 'axios';
+import axios from "axios";
 
 // Adds request and response interceptors to the axios instance (Not required if using fetch)
 SuperTokens.addAxiosInterceptors(axios);
@@ -33,8 +30,7 @@ const loginWithApple = async () => {
     if (Platform.OS === "ios") {
         let appleAuthRequestResponse = await appleAuth.performRequest({
             requestedOperation: appleAuth.Operation.LOGIN,
-            requestedScopes: [appleAuth.Scope.EMAIL],
-
+            requestedScopes: [appleAuth.Scope.EMAIL]
         });
 
         authCode = appleAuthRequestResponse.authorizationCode;
@@ -44,19 +40,23 @@ const loginWithApple = async () => {
 
           NOTE: For iOS the client_id should always match your app's bundle identifier.
         */
-        let signInUpResponse = await axios.post(`${API_DOMAIN}/auth/signinup`, {
-            redirectURI: "com.demoapp:/oauthredirect",
-            thirdPartyId: "apple",
-            code: authCode,
-            clientId: "4398792-io.supertokens.example",
-        }, {
-            headers: {
-                rid: "thirdpartyemailpassword", // This is a temporary workaround, https://github.com/supertokens/supertokens-node/issues/202
+        let signInUpResponse = await axios.post(
+            `${API_DOMAIN}/auth/signinup`,
+            {
+                redirectURI: "com.demoapp:/oauthredirect",
+                thirdPartyId: "apple",
+                code: authCode,
+                clientId: "4398792-io.supertokens.example"
+            },
+            {
+                headers: {
+                    rid: "thirdpartyemailpassword" // This is a temporary workaround, https://github.com/supertokens/supertokens-node/issues/202
+                }
             }
-        });
+        );
 
         if (signInUpResponse.data.status !== "OK") {
-            throw new Error("Apple login failed")
+            throw new Error("Apple login failed");
         }
     } else {
         // Read more about this configuration here: https://github.com/invertase/react-native-apple-authentication
@@ -64,10 +64,10 @@ const loginWithApple = async () => {
             For Android we create a Service ID on the Apple dashboard and then use that as the client ID when trying to sign in
         */
         appleAuthAndroid.configure({
-            clientId: 'io.supertokens.example.service',
-            redirectUri: 'https://supertokens.io/dev/oauth/redirect-to-app',
+            clientId: "io.supertokens.example.service",
+            redirectUri: "https://supertokens.io/dev/oauth/redirect-to-app",
             responseType: appleAuthAndroid.ResponseType.CODE,
-            scope: appleAuthAndroid.Scope.EMAIL,
+            scope: appleAuthAndroid.Scope.EMAIL
         });
 
         let authResponse = await appleAuthAndroid.signIn();
@@ -77,35 +77,42 @@ const loginWithApple = async () => {
         /*
           We use the code returned by the Apple servers to sign in the user and create a session using SuperTokens.
         */
-        let signInUpResponse = await axios.post(`${API_DOMAIN}/auth/signinup`, {
-            redirectURI: "https://supertokens.io/dev/oauth/redirect-to-app",
-            thirdPartyId: "apple",
-            code: authCode,
-        }, {
-            headers: {
-                rid: "thirdpartyemailpassword", // This is a temporary workaround, https://github.com/supertokens/supertokens-node/issues/202
+        let signInUpResponse = await axios.post(
+            `${API_DOMAIN}/auth/signinup`,
+            {
+                redirectURI: "https://supertokens.io/dev/oauth/redirect-to-app",
+                thirdPartyId: "apple",
+                code: authCode
+            },
+            {
+                headers: {
+                    rid: "thirdpartyemailpassword" // This is a temporary workaround, https://github.com/supertokens/supertokens-node/issues/202
+                }
             }
-        });
+        );
 
         if (signInUpResponse.data.status !== "OK") {
-            throw new Error("Apple login failed")
+            throw new Error("Apple login failed");
         }
     }
-}
+};
 
-export const getAppleButton = (setIsLoggedIn) => {
+export const getAppleButton = setIsLoggedIn => {
     /* 
       For Android, Apple sign in requires API level 19 and above. 
       You can use appleAuthAndroid.isSupported to check if the device supports Apple sign in
     */
     if (Platform.OS === "ios" || appleAuthAndroid.isSupported) {
-        return <Button
-            title={"Login with Apple"}
-            onPress={async () => {
-                await loginWithApple();
-                setIsLoggedIn(true);
-            }} />
+        return (
+            <Button
+                title={"Login with Apple"}
+                onPress={async () => {
+                    await loginWithApple();
+                    setIsLoggedIn(true);
+                }}
+            />
+        );
     } else {
         return null;
     }
-}
+};

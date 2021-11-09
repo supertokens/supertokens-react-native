@@ -1,8 +1,8 @@
-import { authorize } from 'react-native-app-auth';
+import { authorize } from "react-native-app-auth";
 import SuperTokens from "supertokens-react-native";
 import { API_DOMAIN } from "./App";
 
-import axios from 'axios';
+import axios from "axios";
 
 // Adds request and response interceptors to the axios instance (Not required if using fetch)
 SuperTokens.addAxiosInterceptors(axios);
@@ -31,9 +31,9 @@ SuperTokens.addAxiosInterceptors(axios);
 const loginWithGoogle = async () => {
     // Full configuration options here: https://github.com/FormidableLabs/react-native-app-auth#config
     const config = {
-        issuer: 'https://accounts.google.com',
-        clientId: '1060725074195-c7mgk8p0h27c4428prfuo3lg7ould5o7.apps.googleusercontent.com',
-        redirectUrl: 'com.demoapp:/oauthredirect',
+        issuer: "https://accounts.google.com",
+        clientId: "1060725074195-c7mgk8p0h27c4428prfuo3lg7ould5o7.apps.googleusercontent.com",
+        redirectUrl: "com.demoapp:/oauthredirect",
         scopes: ["https://www.googleapis.com/auth/userinfo.email"]
     };
 
@@ -47,20 +47,24 @@ const loginWithGoogle = async () => {
     /*
       We use the object returned by the Google servers to sign in the user and create a session using SuperTokens.
      */
-    let signInUpResponse = await axios.post(`${API_DOMAIN}/auth/signinup`, {
-        redirectURI: "com.demoapp:/oauthredirect",
-        thirdPartyId: "google",
-        authCodeResponse: authResult,
-        clientId: "1060725074195-c7mgk8p0h27c4428prfuo3lg7ould5o7.apps.googleusercontent.com"
-    }, {
-        headers: {
-            rid: "thirdpartyemailpassword",
+    let signInUpResponse = await axios.post(
+        `${API_DOMAIN}/auth/signinup`,
+        {
+            redirectURI: "com.demoapp:/oauthredirect",
+            thirdPartyId: "google",
+            authCodeResponse: authResult,
+            clientId: "1060725074195-c7mgk8p0h27c4428prfuo3lg7ould5o7.apps.googleusercontent.com"
+        },
+        {
+            headers: {
+                rid: "thirdpartyemailpassword"
+            }
         }
-    });
+    );
 
     if (signInUpResponse.data.status !== "OK") {
-        throw new Error("Google login failed")
+        throw new Error("Google login failed");
     }
-}
+};
 
 export default loginWithGoogle;

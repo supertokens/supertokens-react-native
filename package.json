@@ -6,9 +6,9 @@
   "scripts": {
     "build-check": "cd lib && npx tsc -p tsconfig.json --skipLibCheck --noEmit",
     "build": "cd lib && npx tsc -p tsconfig.json --skipLibCheck && cd ../ && cd test/playground && npx tsc -p tsconfig.json",
-    "pretty": "cd lib && npx prettier --write --config .prettierrc \"ts/**/*.ts\" \"build/**/*.js\" \"../TestingApp/test/**/*.js\"",
+    "pretty": "npx prettier --write --config .prettierrc \"lib/ts/**/*.ts\" \"lib/build/**/*.js\" \"TestingApp/test/**/*.js\" \"examples/**/*.js\"",
     "build-pretty": "npm run build && npm run pretty",
-    "pretty-check": "cd lib && npx prettier --check --config .prettierrc \"ts/**/*.ts\" \"build/**/*.js\" \"../TestingApp/test/**/*.js\"",
+    "pretty-check": "npx prettier --check --config .prettierrc \"lib/ts/**/*.ts\" \"lib/build/**/*.js\" \"TestingApp/test/**/*.js\" \"examples/**/*.js\"",
     "set-up-hooks": "cp hooks/pre-commit.sh .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit",
     "build-docs": "rm -rf ./docs && npx typedoc --out ./docs --tsconfig ./lib/tsconfig.json ./lib/ts/index.ts"
   },
