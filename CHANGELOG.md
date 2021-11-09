@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - FDI 1.10 support (just changing the frontendDriverInterfaceSupported.json)
+- Adding bundle size checking as GitHub action and CI step
 
 ## [3.0.1] - 2021-10-28
 
