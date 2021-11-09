@@ -20,3 +20,4 @@ frontendDriverInterfaceSupported.json
 /test
 /docs
 .prettierignore
+/examples

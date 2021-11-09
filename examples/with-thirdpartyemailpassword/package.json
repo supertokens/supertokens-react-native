@@ -1,0 +1,36 @@
+{
+  "name": "demoapp",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "android": "react-native run-android",
+    "ios": "react-native run-ios",
+    "start": "react-native start",
+    "test": "jest",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@invertase/react-native-apple-authentication": "^2.1.5",
+    "react": "17.0.2",
+    "react-native": "0.66.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.12.9",
+    "@babel/runtime": "^7.12.5",
+    "@react-native-async-storage/async-storage": "^1.15.9",
+    "@react-native-community/eslint-config": "^2.0.0",
+    "babel-jest": "^26.6.3",
+    "cors": "^2.8.5",
+    "eslint": "7.14.0",
+    "express": "^4.17.1",
+    "jest": "^26.6.3",
+    "metro-react-native-babel-preset": "^0.66.2",
+    "react-native-app-auth": "^6.4.0",
+    "react-test-renderer": "17.0.2",
+    "supertokens-node": "git+https://github.com/supertokens/supertokens-node.git#8.1",
+    "supertokens-react-native": "^3.0.1"
+  },
+  "jest": {
+    "preset": "react-native"
+  }
+}
