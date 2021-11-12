@@ -44,6 +44,9 @@ const loginWithGoogle = async () => {
     authResult.access_token = authResult.accessToken;
     delete authResult.accessToken;
 
+    authResult.id_token = authResult.idToken;
+    delete authResult.idToken;
+
     /*
       We use the object returned by the Google servers to sign in the user and create a session using SuperTokens.
      */
