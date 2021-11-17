@@ -23,6 +23,7 @@ jobs:
       - run: npm i -d
       - run: (cd .circleci/ && ./doTests.sh)
       - run: npm run size
+      - run: npm run check-circular-dependencies
       - slack/status
   update-docs:
     docker:
