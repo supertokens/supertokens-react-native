@@ -1,9 +1,10 @@
 {
   "name": "supertokens-react-native",
-  "version": "3.0.5",
+  "version": "3.0.6",
   "description": "React Native SDK for SuperTokens",
   "main": "index.js",
   "scripts": {
+    "check-circular-dependencies": "npx madge --circular --extensions js ./lib/build/",
     "build-check": "cd lib && npx tsc -p tsconfig.json --skipLibCheck --noEmit",
     "build": "cd lib && npx tsc -p tsconfig.json --skipLibCheck && cd ../ && cd test/playground && npx tsc -p tsconfig.json",
     "pretty": "npx prettier --write --config .prettierrc \"lib/ts/**/*.ts\" \"lib/build/**/*.js\" \"TestingApp/test/**/*.js\" \"examples/**/*.js\"",
