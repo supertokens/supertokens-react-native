@@ -82,15 +82,32 @@ while [ $i -lt $frontendDriverLength ]; do
     coreFree=$(echo $coreFree | jq .core | tr -d '"')
 
     someTestsRan=true
-    ./setupAndTestWithFreeCore.sh $coreFree $driverTag $version
-    if [[ $? -ne 0 ]]
-    then
-        echo "test failed... exiting!"
-        exit 1
-    fi
-    rm -rf ../../supertokens-root
-    rm -rf ../TestingApp/test/server/node_modules/supertokens-node
-    git checkout HEAD -- ../TestingApp/test/server/package.json
+    tries=1
+
+    while [ $tries -le 3 ]
+    do
+        tries=$(( $tries + 1 ))
+        ./setupAndTestWithFreeCore.sh $coreFree $driverTag $version
+
+        if [[ $? -ne 0 ]]
+        then
+            if [[ $tries -le 3 ]]
+            then
+                rm -rf ../../supertokens-root
+                rm -rf ../TestingApp/test/server/node_modules/supertokens-node
+                git checkout HEAD -- ../TestingApp/test/server/package.json
+                echo "test failed... retrying!"
+            else
+                echo "test failed... exiting!"
+                exit 1
+            fi
+        else
+            rm -rf ../../supertokens-root
+            rm -rf ../TestingApp/test/server/node_modules/supertokens-node
+            git checkout HEAD -- ../TestingApp/test/server/package.json
+            break
+        fi
+    done
 done
 
 if [[ $someTestsRan = "true" ]]
