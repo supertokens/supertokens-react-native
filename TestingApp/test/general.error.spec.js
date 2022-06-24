@@ -26,7 +26,7 @@ import AuthHttpRequest from "supertokens-react-native";
 import assert from "assert";
 import axios from "axios";
 const tough = require("tough-cookie");
-import { startST, BASE_URL_FOR_ST } from "./utils";
+import { startST, BASE_URL_FOR_ST, isGeneralErrorSupported } from "./utils";
 
 const BASE_URL = "http://localhost:8080";
 
@@ -80,6 +80,11 @@ describe("Test general errors when calling sign out", function() {
         });
 
         it("Test that getting GENERAL_ERROR from signout throws an error", async function(done) {
+            if (!(await isGeneralErrorSupported())) {
+                done();
+                return;
+            }
+
             try {
                 jest.setTimeout(10000);
                 await startST();
@@ -178,6 +183,10 @@ describe("Test general errors when calling sign out", function() {
         });
 
         it("Test that getting GENERAL_ERROR from signout throws an error", async function() {
+            if (!(await isGeneralErrorSupported())) {
+                return;
+            }
+
             let testPassed = false;
             await startST();
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
