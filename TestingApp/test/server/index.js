@@ -60,7 +60,17 @@ function getConfig(enableAntiCsrf) {
                     apis: oI => {
                         return {
                             ...oI,
-                            refreshPOST: undefined
+                            refreshPOST: undefined,
+                            signOutPOST: async (input) => {
+                                let body = await input.options.req.getJSONBody();
+                                if (body.generalError === true) {
+                                    return {
+                                        status: "GENERAL_ERROR",
+                                        message: "general error from signout API",
+                                    };
+                                }
+                                return oI.signOutPOST(input);
+                            },
                         };
                     }
                 }
