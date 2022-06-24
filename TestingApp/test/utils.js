@@ -99,3 +99,22 @@ export function coreTagEqualToOrAfter(targetTag) {
     }
     return true;
 }
+
+export async function getFeatureFlags() {
+    const response = await fetch(`${BASE_URL_FOR_ST}/test/featureFlags`);
+    if (response.status === 200) {
+        const { available } = await response.json();
+        return available;
+    } else {
+        return [];
+    }
+}
+
+export async function isGeneralErrorSupported() {
+    const features = await getFeatureFlags();
+    if (!features.includes("generalerror")) {
+        return false;
+    }
+
+    return true;
+}

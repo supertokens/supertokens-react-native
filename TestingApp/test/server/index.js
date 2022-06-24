@@ -21,13 +21,23 @@ let cookieParser = require("cookie-parser");
 let bodyParser = require("body-parser");
 let http = require("http");
 let cors = require("cors");
-let { startST, stopST, killAllST, setupST, cleanST, setKeyValueInConfig } = require("./utils");
+let { startST, stopST, killAllST, setupST, cleanST, setKeyValueInConfig, maxVersion } = require("./utils");
 // let { package_version } = require("../../../lib/build/version");
 let { middleware, errorHandler } = require("supertokens-node/framework/express");
 let { verifySession } = require("supertokens-node/recipe/session/framework/express");
+let { version: nodeSDKVersion } = require("supertokens-node/lib/build/version");
 let noOfTimesRefreshCalledDuringTest = 0;
 let noOfTimesGetSessionCalledDuringTest = 0;
 let noOfTimesRefreshAttemptedDuringTest = 0;
+
+let generalErrorSupported;
+
+if (maxVersion(nodeSDKVersion, "10.0.0") === nodeSDKVersion) {
+    // General error is only supported by 10.0.0 and above
+    generalErrorSupported = true;
+} else {
+    generalErrorSupported = false;
+}
 
 let urlencodedParser = bodyParser.urlencoded({ limit: "20mb", extended: true, parameterLimit: 20000 });
 let jsonParser = bodyParser.json({ limit: "20mb" });
@@ -60,7 +70,17 @@ function getConfig(enableAntiCsrf) {
                     apis: oI => {
                         return {
                             ...oI,
-                            refreshPOST: undefined
+                            refreshPOST: undefined,
+                            signOutPOST: async input => {
+                                let body = await input.options.req.getJSONBody();
+                                if (body.generalError === true) {
+                                    return {
+                                        status: "GENERAL_ERROR",
+                                        message: "general error from signout API"
+                                    };
+                                }
+                                return oI.signOutPOST(input);
+                            }
                         };
                     }
                 }
@@ -271,6 +291,18 @@ app.get("/testError", (req, res) => {
 
 app.get("/stop", async (req, res) => {
     process.exit();
+});
+
+app.get("/test/featureFlags", (req, res) => {
+    const available = [];
+
+    if (generalErrorSupported) {
+        available.push("generalerror");
+    }
+
+    res.send({
+        available
+    });
 });
 
 app.use("*", async (req, res, next) => {
