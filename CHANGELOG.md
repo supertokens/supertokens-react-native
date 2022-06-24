@@ -9,7 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [3.1.0] - 2022-03-24
 - Adds FDI 1.14 in FDI array support
 - Checks for GENERAL_ERROR status in signout API response and if it's there, we throw an error.
-- Exposes `"supertokens-react-native/utils/error"` to use `SuperTokensGeneralError`
 
 ## [3.0.7] - 2022-03-18
 
