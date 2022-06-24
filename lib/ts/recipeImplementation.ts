@@ -4,6 +4,7 @@ import FrontToken from "./frontToken";
 import { supported_fdi } from "./version";
 import IdRefreshToken from "./idRefreshToken";
 import { interceptorFunctionRequestFulfilled, responseErrorInterceptor, responseInterceptor } from "./axios";
+import { SuperTokensGeneralError } from "./error";
 
 export default function RecipeImplementation(): RecipeInterface {
     return {
@@ -99,6 +100,13 @@ export default function RecipeImplementation(): RecipeInterface {
 
             if (resp.status >= 300) {
                 throw resp;
+            }
+
+            let responseJson = await resp.clone().json();
+
+            if (responseJson.status === "GENERAL_ERROR") {
+                let message = responseJson.message === undefined ? "No Error Message Provided" : responseJson.message;
+                throw new SuperTokensGeneralError(message);
             }
 
             // we do not send an event here since it's triggered in setIdRefreshToken area.

@@ -8,6 +8,9 @@ import SuperTokens, {
     init,
 } from "../../";
 import axios from "axios";
+import { SuperTokensGeneralError } from "../../utils/error";
+
+SuperTokensGeneralError.isThisError(new Error())
 
 SuperTokens.addAxiosInterceptors(axios);
 addAxiosInterceptors(axios);
