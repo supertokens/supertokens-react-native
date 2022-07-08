@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+### Changes
+
+- Adds client id when initialising Google in the example app server
+
 ## [3.1.0] - 2022-03-24
 - Adds FDI 1.14 in FDI array support
 - Checks for GENERAL_ERROR status in signout API response and if it's there, we throw an error.
