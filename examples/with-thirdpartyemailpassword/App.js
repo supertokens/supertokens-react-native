@@ -17,7 +17,7 @@ import SuccessView from "./success-view";
 
 // TODO: Replace this with your own IP
 // NOTE: We use our IP (and not 10.0.2.2) here because of iOS
-export const API_DOMAIN = "http://192.168.29.17:3001";
+export const API_DOMAIN = "http://192.168.1.100:3001";
 
 // Initialise SuperTokens
 SuperTokens.init({
