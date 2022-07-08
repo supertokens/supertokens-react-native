@@ -30,11 +30,11 @@ supertokens.init({
                     For Google we use react-native-app-auth to fetch the access_token from Google servers directly
                     and then send that to the /auth/signinup API to fetch user information and create a session.
 
-                    Because of this flow, we do not need to provide the clientId and secret when initialising the Google
+                    Because of this flow, we do not need to provide the clientSecret when initialising the Google
                     third party provider
                 */
                 Google({
-                    clientId: "",
+                    clientId: "1060725074195-c7mgk8p0h27c4428prfuo3lg7ould5o7.apps.googleusercontent.com",
                     clientSecret: ""
                 }),
                 Github({
