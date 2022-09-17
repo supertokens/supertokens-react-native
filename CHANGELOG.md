@@ -6,9 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [3.2.0] - 2022-09-17
+
 ### Changes
 
 - Adds client id when initialising Google in the example app server
+- Adds compatibility with FDI 1.15
 
 ## [3.1.0] - 2022-03-24
 - Adds FDI 1.14 in FDI array support
