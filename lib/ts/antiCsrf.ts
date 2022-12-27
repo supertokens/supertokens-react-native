@@ -15,6 +15,7 @@
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import AuthHttpRequest from "./fetch";
+import { getLocalSessionState } from "./utils";
 
 const TOKEN_KEY = "supertokens-rn-anticsrf-key";
 const ANTI_CSRF_NAME = "sAntiCsrf";
@@ -30,7 +31,7 @@ export default class AntiCSRF {
     private constructor() {}
 
     private static async getAntiCSRFToken(): Promise<string | null> {
-        if (!(await AuthHttpRequest.recipeImpl.doesSessionExist(AuthHttpRequest.config))) {
+        if (!((await getLocalSessionState()).status === "EXISTS")) {
             return null;
         }
 
