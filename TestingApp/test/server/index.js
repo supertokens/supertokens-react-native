@@ -105,7 +105,7 @@ app.use(middleware());
 
 app.post("/login", async (req, res) => {
     let userId = req.body.userId;
-    let session = await Session.createNewSession(res, userId);
+    let session = await Session.createNewSession(req, res, userId);
     res.send(session.userId);
 });
 

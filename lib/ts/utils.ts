@@ -222,7 +222,7 @@ export function getStorageNameForToken(tokenType: TokenType) {
 }
 
 async function getFromStorage(name: string) {
-    const itemInStorage = await AsyncStorage.getItem(name);
+    const itemInStorage = await AsyncStorage.getItem(`st-storage-item-${name}`);
 
     if (itemInStorage === null) {
         return undefined;
