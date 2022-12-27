@@ -1,10 +1,10 @@
 import { RecipeInterface, NormalisedInputType } from "./types";
-import AuthHttpRequest from "./fetch";
+import AuthHttpRequest, { onUnauthorisedResponse } from "./fetch";
 import FrontToken from "./frontToken";
 import { supported_fdi } from "./version";
-import IdRefreshToken from "./idRefreshToken";
 import { interceptorFunctionRequestFulfilled, responseErrorInterceptor, responseInterceptor } from "./axios";
 import { SuperTokensGeneralError } from "./error";
+import { getLocalSessionState } from "./utils";
 
 export default function RecipeImplementation(): RecipeInterface {
     return {
@@ -68,7 +68,19 @@ export default function RecipeImplementation(): RecipeInterface {
         },
 
         doesSessionExist: async function(config: NormalisedInputType): Promise<boolean> {
-            return (await IdRefreshToken.getIdRefreshToken(true)).status === "EXISTS";
+            const tokenInfo = await FrontToken.getTokenInfo();
+
+            if (tokenInfo === undefined) {
+                return false;
+            }
+
+            if (tokenInfo.ate < Date.now()) {
+                const preRequestLocalSessionState = await getLocalSessionState();
+                const refresh = await onUnauthorisedResponse(preRequestLocalSessionState);
+                return refresh.result === "RETRY";
+            }
+
+            return true;
         },
 
         signOut: async function(config: NormalisedInputType): Promise<void> {

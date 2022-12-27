@@ -16,10 +16,18 @@
 import { PROCESS_STATE, ProcessState } from "./processState";
 import { supported_fdi } from "./version";
 import AntiCSRF from "./antiCsrf";
-import IdRefreshToken from "./idRefreshToken";
 import getLock from "./locking";
 import { IdRefreshTokenType, InputType, NormalisedInputType, RecipeInterface } from "./types";
-import { shouldDoInterceptionBasedOnUrl, validateAndNormaliseInputOrThrowError } from "./utils";
+import {
+    fireSessionUpdateEventsIfNecessary,
+    getLocalSessionState,
+    getTokenForHeaderAuth,
+    LocalSessionState,
+    saveTokensFromHeaders,
+    setAuthorizationHeaderIfRequired,
+    shouldDoInterceptionBasedOnUrl,
+    validateAndNormaliseInputOrThrowError
+} from "./utils";
 import FrontToken from "./frontToken";
 import RecipeImplementation from "./recipeImplementation";
 import OverrideableBuilder from "supertokens-js-override";
@@ -93,14 +101,14 @@ export default class AuthHttpRequest {
                     !shouldDoInterceptionBasedOnUrl(
                         url,
                         AuthHttpRequest.config.apiDomain,
-                        AuthHttpRequest.config.cookieDomain
+                        AuthHttpRequest.config.sessionTokenBackendDomain
                     )) ||
                 (url !== undefined &&
                 typeof url.url === "string" && // this is because url can be an object like {method: ..., url: ...}
                     !shouldDoInterceptionBasedOnUrl(
                         url.url,
                         AuthHttpRequest.config.apiDomain,
-                        AuthHttpRequest.config.cookieDomain
+                        AuthHttpRequest.config.sessionTokenBackendDomain
                     ));
         } catch (err) {
             // This is because in react native it is not possible to call fetch with only a path (Example fetch("/login"))
@@ -112,6 +120,22 @@ export default class AuthHttpRequest {
             return await httpCall(config);
         }
 
+        const originalHeaders = new Headers(
+            config !== undefined && config.headers !== undefined ? config.headers : url.headers
+        );
+
+        if (originalHeaders.has("Authorization")) {
+            const accessToken = await getTokenForHeaderAuth("access");
+
+            if (accessToken !== undefined && originalHeaders.get("Authorization") === `Bearer ${accessToken}`) {
+                // We are ignoring the Authorization header set by the user in this case, because it would cause issues
+                // If we do not ignore this, then this header would be used even if the request is being retried after a refresh, even though it contains an outdated access token.
+                // This causes an infinite refresh loop.
+
+                originalHeaders.delete("Authorization");
+            }
+        }
+
         ProcessState.getInstance().addState(PROCESS_STATE.CALLING_INTERCEPTION_REQUEST);
 
         try {
@@ -119,24 +143,18 @@ export default class AuthHttpRequest {
             while (true) {
                 // we read this here so that if there is a session expiry error, then we can compare this value (that caused the error) with the value after the request is sent.
                 // to avoid race conditions
-                const preRequestIdToken = await IdRefreshToken.getIdRefreshToken(true);
-                let configWithAntiCsrf: RequestInit | undefined = config;
+                const preRequestLocalSessionState = await getLocalSessionState();
+                const clonedHeaders = new Headers(originalHeaders);
 
-                if (preRequestIdToken.status === "EXISTS") {
-                    const antiCsrfToken = await AntiCSRF.getToken(preRequestIdToken.token);
+                let configWithAntiCsrf: RequestInit | undefined = {
+                    ...config,
+                    headers: clonedHeaders
+                };
+
+                if (preRequestLocalSessionState.status === "EXISTS") {
+                    const antiCsrfToken = await AntiCSRF.getToken(preRequestLocalSessionState.lastAccessTokenUpdate);
                     if (antiCsrfToken !== undefined) {
-                        configWithAntiCsrf = {
-                            ...configWithAntiCsrf,
-                            headers:
-                                configWithAntiCsrf === undefined
-                                    ? {
-                                          "anti-csrf": antiCsrfToken
-                                      }
-                                    : {
-                                          ...configWithAntiCsrf.headers,
-                                          "anti-csrf": antiCsrfToken
-                                      }
-                        };
+                        clonedHeaders.set("anti-csrf", antiCsrfToken);
                     }
                 }
 
@@ -154,45 +172,32 @@ export default class AuthHttpRequest {
                 }
 
                 // adding rid for anti-csrf protection: Anti-csrf via custom header
-                configWithAntiCsrf = {
-                    ...configWithAntiCsrf,
-                    headers:
-                        configWithAntiCsrf === undefined
-                            ? {
-                                  rid: "anti-csrf"
-                              }
-                            : {
-                                  rid: "anti-csrf",
-                                  ...configWithAntiCsrf.headers
-                              }
-                };
-
-                let response = await httpCall(configWithAntiCsrf);
-                const idRefreshToken = response.headers.get("id-refresh-token");
-
-                if (idRefreshToken) {
-                    await IdRefreshToken.setIdRefreshToken(idRefreshToken, response.status);
+                if (!clonedHeaders.has("rid")) {
+                    clonedHeaders.set("rid", "anti-csrf");
                 }
 
+                const transferMethod = AuthHttpRequest.config.tokenTransferMethod;
+                clonedHeaders.set("st-auth-mode", transferMethod);
+
+                await setAuthorizationHeaderIfRequired(clonedHeaders);
+
+                let response = await httpCall(configWithAntiCsrf);
+
+                await saveTokensFromHeaders(response);
+
+                fireSessionUpdateEventsIfNecessary(
+                    preRequestLocalSessionState.status === "EXISTS",
+                    response.status,
+                    response.headers.get("front-token")
+                );
+
                 if (response.status === AuthHttpRequest.config.sessionExpiredStatusCode) {
-                    let refreshResponse = await onUnauthorisedResponse(preRequestIdToken);
+                    let refreshResponse = await onUnauthorisedResponse(preRequestLocalSessionState);
                     if (refreshResponse.result !== "RETRY") {
                         returnObj = refreshResponse.error !== undefined ? refreshResponse.error : response;
                         break;
                     }
                 } else {
-                    const antiCsrfToken = response.headers.get("anti-csrf");
-                    if (antiCsrfToken) {
-                        const tok = await IdRefreshToken.getIdRefreshToken(true);
-                        if (tok.status === "EXISTS") {
-                            await AntiCSRF.setItem(tok.token, antiCsrfToken);
-                        }
-                    }
-
-                    const frontToken = response.headers.get("front-token");
-                    if (frontToken) {
-                        await FrontToken.setItem(frontToken);
-                    }
                     return response;
                 }
             }
@@ -202,8 +207,8 @@ export default class AuthHttpRequest {
         } finally {
             // If we get here we already tried refreshing so we should have the already id refresh token either in EXISTS or NOT_EXISTS, so no need to call the backend
             // or the backend is down and we don't need to call it.
-            const postRequestIdToken = await IdRefreshToken.getIdRefreshToken(false);
-            if (postRequestIdToken.status === "NOT_EXISTS") {
+            const postRequestLocalSessionState = await getLocalSessionState();
+            if (postRequestLocalSessionState.status === "NOT_EXISTS") {
                 await AntiCSRF.removeToken();
                 await FrontToken.removeToken();
             }
@@ -211,8 +216,12 @@ export default class AuthHttpRequest {
     };
 
     static attemptRefreshingSession = async (): Promise<boolean> => {
-        const preRequestIdToken = await IdRefreshToken.getIdRefreshToken(false);
-        const refreshResponse = await onUnauthorisedResponse(preRequestIdToken);
+        if (!AuthHttpRequest.initCalled) {
+            throw new Error("init function not called");
+        }
+
+        const preRequestLocalSessionState = await getLocalSessionState();
+        const refreshResponse = await onUnauthorisedResponse(preRequestLocalSessionState);
 
         if (refreshResponse.result === "API_ERROR") {
             throw refreshResponse.error;
@@ -225,14 +234,14 @@ export default class AuthHttpRequest {
 const LOCK_NAME = "REFRESH_TOKEN_USE";
 
 export async function onUnauthorisedResponse(
-    preRequestIdToken: IdRefreshTokenType
+    preRequestLocalSessionState: LocalSessionState
 ): Promise<{ result: "SESSION_EXPIRED"; error?: any } | { result: "API_ERROR"; error: any } | { result: "RETRY" }> {
     let lock = getLock();
     await lock.lock(LOCK_NAME);
     try {
-        let postLockID = await IdRefreshToken.getIdRefreshToken(false);
+        let postLockLocalSessionState = await getLocalSessionState();
 
-        if (postLockID.status === "NOT_EXISTS") {
+        if (postLockLocalSessionState.status === "NOT_EXISTS") {
             // if it comes here, it means a request was made thinking
             // that the session exists, but it doesn't actually exist.
             AuthHttpRequest.config.onHandleEvent({
@@ -243,32 +252,31 @@ export async function onUnauthorisedResponse(
         }
 
         if (
-            postLockID.status !== preRequestIdToken.status ||
-            (postLockID.status === "EXISTS" &&
-                preRequestIdToken.status === "EXISTS" &&
-                postLockID.token !== preRequestIdToken.token)
+            postLockLocalSessionState.status !== preRequestLocalSessionState.status ||
+            (postLockLocalSessionState.status === "EXISTS" &&
+                preRequestLocalSessionState.status === "EXISTS" &&
+                postLockLocalSessionState.lastAccessTokenUpdate !== preRequestLocalSessionState.lastAccessTokenUpdate)
         ) {
             // means that some other process has already called this API and succeeded. so we need to call it again
             return { result: "RETRY" };
         }
 
-        let headers: any = {};
+        let headers = new Headers();
 
-        if (preRequestIdToken.status === "EXISTS") {
-            const antiCsrfToken = await AntiCSRF.getToken(preRequestIdToken.token);
+        if (preRequestLocalSessionState.status === "EXISTS") {
+            const antiCsrfToken = await AntiCSRF.getToken(preRequestLocalSessionState.lastAccessTokenUpdate);
             if (antiCsrfToken !== undefined) {
-                headers = {
-                    ...headers,
-                    "anti-csrf": antiCsrfToken
-                };
+                headers.set("anti-csrf", antiCsrfToken);
             }
         }
 
-        headers = {
-            rid: AuthHttpRequest.rid, // adding for anti-csrf protection (via custom header)
-            ...headers,
-            "fdi-version": supported_fdi.join(",")
-        };
+        headers.set("rid", AuthHttpRequest.rid);
+        headers.set("fdi-version", supported_fdi.join(","));
+
+        const transferMethod = AuthHttpRequest.config.tokenTransferMethod;
+        headers.set("st-auth-mode", transferMethod);
+
+        await setAuthorizationHeaderIfRequired(headers, true);
 
         let preAPIResult = await AuthHttpRequest.config.preAPIHook({
             action: "REFRESH_SESSION",
@@ -285,25 +293,29 @@ export async function onUnauthorisedResponse(
             preAPIResult.requestInit
         );
 
-        let removeIdRefreshToken = true;
-        const idRefreshToken = response.headers.get("id-refresh-token");
-        if (idRefreshToken) {
-            await IdRefreshToken.setIdRefreshToken(idRefreshToken, response.status);
-            removeIdRefreshToken = false;
+        await saveTokensFromHeaders(response);
+
+        const isUnauthorised = response.status === AuthHttpRequest.config.sessionExpiredStatusCode;
+
+        // There is a case where the FE thinks the session is valid, but backend doesn't get the tokens.
+        // In this event, session expired error will be thrown and the frontend should remove this token
+        if (isUnauthorised && response.headers.get("front-token") === null) {
+            FrontToken.setItem("remove");
         }
 
-        if (response.status === AuthHttpRequest.config.sessionExpiredStatusCode) {
-            // there is a case where frontend still has id refresh token, but backend doesn't get it. In this event, session expired error will be thrown and the frontend should remove this token
-            if (removeIdRefreshToken) {
-                await IdRefreshToken.setIdRefreshToken("remove", response.status);
-            }
-        }
+        fireSessionUpdateEventsIfNecessary(
+            preRequestLocalSessionState.status === "EXISTS",
+            response.status,
+            isUnauthorised && response.headers.get("front-token") === null
+                ? "remove"
+                : response.headers.get("front-token")
+        );
 
         if (response.status >= 300) {
             throw response;
         }
 
-        if ((await IdRefreshToken.getIdRefreshToken(false)).status === "NOT_EXISTS") {
+        if ((await getLocalSessionState()).status === "NOT_EXISTS") {
             // The execution should never come here.. but just in case.
             // removed by server. So we logout
 
@@ -314,39 +326,26 @@ export async function onUnauthorisedResponse(
             return { result: "SESSION_EXPIRED" };
         }
 
-        const antiCsrfToken = response.headers.get("anti-csrf");
-        if (antiCsrfToken) {
-            const tok = await IdRefreshToken.getIdRefreshToken(true);
-            if (tok.status === "EXISTS") {
-                await AntiCSRF.setItem(tok.token, antiCsrfToken);
-            }
-        }
-
-        const frontToken = response.headers.get("front-token");
-        if (frontToken) {
-            await FrontToken.setItem(frontToken);
-        }
-
         AuthHttpRequest.config.onHandleEvent({
             action: "REFRESH_SESSION"
         });
         return { result: "RETRY" };
     } catch (error) {
-        if ((await IdRefreshToken.getIdRefreshToken(false)).status === "NOT_EXISTS") {
+        if ((await getLocalSessionState()).status === "NOT_EXISTS") {
             // removed by server.
 
             // we do not send "UNAUTHORISED" event here because
             // this is a result of the refresh API returning a session expiry, which
             // means that the frontend did not know for sure that the session existed
             // in the first place.
-            return { result: "SESSION_EXPIRED" };
+            return { result: "SESSION_EXPIRED", error };
         }
 
         return { result: "API_ERROR", error };
     } finally {
         lock.unlock(LOCK_NAME);
 
-        if ((await IdRefreshToken.getIdRefreshToken(false)).status === "NOT_EXISTS") {
+        if ((await getLocalSessionState()).status === "NOT_EXISTS") {
             await AntiCSRF.removeToken();
             await FrontToken.removeToken();
         }

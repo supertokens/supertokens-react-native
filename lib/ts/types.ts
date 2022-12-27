@@ -31,7 +31,8 @@ export type InputType = {
     apiBasePath?: string;
     sessionExpiredStatusCode?: number;
     autoAddCredentials?: boolean;
-    cookieDomain?: string;
+    tokenTransferMethod?: "cookie" | "header";
+    sessionTokenBackendDomain?: string;
     preAPIHook?: (context: {
         action: "SIGN_OUT" | "REFRESH_SESSION";
         requestInit: RequestInit;
@@ -51,7 +52,8 @@ export type NormalisedInputType = {
     apiBasePath: string;
     sessionExpiredStatusCode: number;
     autoAddCredentials: boolean;
-    cookieDomain: string | undefined;
+    tokenTransferMethod: string;
+    sessionTokenBackendDomain: string | undefined;
     preAPIHook: (context: {
         action: "SIGN_OUT" | "REFRESH_SESSION";
         requestInit: RequestInit;
@@ -93,3 +95,5 @@ export type IdRefreshTokenType =
           status: "EXISTS";
           token: string;
       };
+
+export type TokenType = "access" | "refresh";
