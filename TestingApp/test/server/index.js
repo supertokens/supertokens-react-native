@@ -59,6 +59,7 @@ function getConfig(enableAntiCsrf) {
         },
         recipeList: [
             Session.init({
+                getTokenTransferMethod: process.env.TRANSFER_METHOD ? () => process.env.TRANSFER_METHOD : undefined,
                 errorHandlers: {
                     onUnauthorised: (err, req, res) => {
                         res.setStatusCode(401);

@@ -15,7 +15,6 @@
 import axios from "axios";
 const tough = require("tough-cookie");
 import AntiCsrfToken from "supertokens-react-native/lib/build/antiCsrf";
-import IdRefreshToken from "supertokens-react-native/lib/build/idRefreshToken";
 import FrontToken from "supertokens-react-native/lib/build/frontToken";
 import AuthHttpRequestFetch from "supertokens-react-native/lib/build/fetch";
 import AuthHttpRequest from "supertokens-react-native";
@@ -33,6 +32,7 @@ import { ProcessState, PROCESS_STATE } from "supertokens-react-native/lib/build/
 import "isomorphic-fetch";
 // jest does not call setupFiles properly with the new react-native init, so doing it this way instead
 import "./setup";
+import { getLocalSessionState } from "supertokens-react-native/lib/build/utils";
 
 // TODO NEMI: This should just use base url from utils
 const BASE_URL = "http://localhost:8080";
@@ -90,7 +90,6 @@ describe("Fetch AuthHttpRequest class tests", function() {
         AuthHttpRequestFetch.initCalled = false;
         ProcessState.getInstance().reset();
         // reset all tokens
-        await IdRefreshToken.removeToken();
         await AntiCsrfToken.removeToken();
         await FrontToken.removeToken();
 
@@ -1087,7 +1086,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             // check refresh API was called once
             assertEqual(await getNumberOfTimesRefreshAttempted(), 1);
             assertEqual(await getNumberOfTimesRefreshCalled(), 0);
-            assertEqual((await IdRefreshToken.getIdRefreshToken(false)).status, "NOT_EXISTS");
+            assertEqual((await getLocalSessionState()).status, "NOT_EXISTS");
 
             // call sessionDoesExist
             assertEqual(await AuthHttpRequest.doesSessionExist(), false);
@@ -1095,7 +1094,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             // check refresh API not called
             assertEqual(await getNumberOfTimesRefreshAttempted(), 1);
             assertEqual(await getNumberOfTimesRefreshCalled(), 0);
-            assertEqual((await IdRefreshToken.getIdRefreshToken(false)).status, "NOT_EXISTS");
+            assertEqual((await getLocalSessionState()).status, "NOT_EXISTS");
 
             await global.fetch(`${BASE_URL}/login`, {
                 method: "post",
@@ -1111,7 +1110,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             // check refresh API not called
             assertEqual(await getNumberOfTimesRefreshAttempted(), 1);
             assertEqual(await getNumberOfTimesRefreshCalled(), 0);
-            assertEqual((await IdRefreshToken.getIdRefreshToken(false)).status, "EXISTS");
+            assertEqual((await getLocalSessionState()).status, "EXISTS");
 
             done();
         } catch (err) {
@@ -1146,10 +1145,9 @@ describe("Fetch AuthHttpRequest class tests", function() {
             // check refresh API not called
             assertEqual(await getNumberOfTimesRefreshAttempted(), 1); // it's one here since it gets called during login..
             assertEqual(await getNumberOfTimesRefreshCalled(), 0);
-            assertEqual((await IdRefreshToken.getIdRefreshToken(false)).status, "EXISTS");
+            assertEqual((await getLocalSessionState()).status, "EXISTS");
 
             // delete all tokens
-            await IdRefreshToken.removeToken();
             await AntiCsrfToken.removeToken();
             await FrontToken.removeToken();
 
@@ -1194,10 +1192,9 @@ describe("Fetch AuthHttpRequest class tests", function() {
         // check refresh API not called
         assertEqual(await getNumberOfTimesRefreshAttempted(), 1); // it's one here since it gets called during login..
         assertEqual(await getNumberOfTimesRefreshCalled(), 0);
-        assertEqual((await IdRefreshToken.getIdRefreshToken(false)).status, "EXISTS");
+        assertEqual((await getLocalSessionState()).status, "EXISTS");
 
         // delete all tokens
-        await IdRefreshToken.removeToken();
         await AntiCsrfToken.removeToken();
         await FrontToken.removeToken();
 
@@ -1291,7 +1288,6 @@ describe("Fetch AuthHttpRequest class tests", function() {
         assertEqual(await loginResponse.text(), userId);
 
         // delete all tokens
-        await IdRefreshToken.removeToken();
         await AntiCsrfToken.removeToken();
         await FrontToken.removeToken();
 
@@ -1426,10 +1422,10 @@ describe("Fetch AuthHttpRequest class tests", function() {
                         headers: {
                             "id-refresh-token": "remove",
                             "Set-Cookie": [
-                                "sIdRefreshToken=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax",
                                 "sAccessToken=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax",
                                 "sRefreshToken=; Path=/auth/session/refresh; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax"
-                            ]
+                            ],
+                            "front-token": "remove"
                         }
                     };
 
