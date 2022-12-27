@@ -339,10 +339,10 @@ describe("Config tests", function() {
         {
             AuthHttpRequest.init({
                 apiDomain: "example.com",
-                cookieDomain: "a.b.example.com"
+                sessionTokenBackendDomain: "a.b.example.com"
             });
             assert(AuthHttpRequestFetch.refreshTokenUrl === "https://example.com/auth/session/refresh");
-            assert(AuthHttpRequestFetch.config.cookieDomain === "a.b.example.com");
+            assert(AuthHttpRequestFetch.config.sessionTokenBackendDomain === "a.b.example.com");
         }
     });
 });
