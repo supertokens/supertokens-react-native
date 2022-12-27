@@ -5,6 +5,8 @@ export declare function normaliseURLPathOrThrowError(input: string): string;
 export declare function normalisCookieDomainOrThrowError(cookieDomain: string): string;
 export declare function validateAndNormaliseInputOrThrowError(options: InputType): NormalisedInputType;
 export declare function shouldDoInterceptionBasedOnUrl(toCheckUrl: string, apiDomain: string, sessionTokenBackendDomain: string | undefined): boolean;
+export declare function setToken(tokenType: TokenType, value: string): Promise<void>;
+export declare function storeInStorage(name: string, value: string, expiry: number): Promise<void>;
 /**
  * Last access token update is used to record the last time the access token had changed.
  * This is used to synchronise parallel calls to the refresh API to prevent multiple calls
@@ -25,7 +27,4 @@ export declare type LocalSessionState = {
  * but a session may still exist
  */
 export declare function getLocalSessionState(): Promise<LocalSessionState>;
-export declare function setAuthorizationHeaderIfRequired(clonedHeaders: Headers, addRefreshToken?: boolean): Promise<void>;
-export declare function setToken(tokenType: TokenType, value: string): Promise<void>;
-export declare function saveTokensFromHeaders(response: Response): Promise<void>;
 export declare function fireSessionUpdateEventsIfNecessary(wasLoggedIn: boolean, status: number, frontTokenHeaderFromResponse: string | null | undefined): void;

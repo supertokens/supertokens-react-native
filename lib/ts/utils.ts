@@ -174,7 +174,14 @@ export function shouldDoInterceptionBasedOnUrl(
     }
 }
 
-async function storeInStorage(name: string, value: string, expiry: number) {
+export function setToken(tokenType: TokenType, value: string) {
+    const name = getStorageNameForToken(tokenType);
+
+    // We save the tokens with a 100-year expiration time
+    return storeInStorage(name, value, Date.now() + 3153600000);
+}
+
+export async function storeInStorage(name: string, value: string, expiry: number) {
     let expires = "Fri, 31 Dec 9999 23:59:59 GMT";
     if (expiry !== Number.MAX_SAFE_INTEGER) {
         // We should respect the storage expirations set by the backend, even though tokens will also be checked elsewhere.
@@ -253,57 +260,6 @@ export async function getLocalSessionState(): Promise<LocalSessionState> {
         return { status: "EXISTS", lastAccessTokenUpdate: lastAccessTokenUpdate };
     } else {
         return { status: "NOT_EXISTS" };
-    }
-}
-
-export async function setAuthorizationHeaderIfRequired(clonedHeaders: Headers, addRefreshToken: boolean = false) {
-    // We set the Authorization header even if the tokenTransferMethod preference set in the config is cookies
-    // since the active session may be using cookies. By default, we want to allow users to continue these sessions.
-    // The new session preference should be applied at the start of the next session, if the backend allows it.
-
-    const accessToken = await getTokenForHeaderAuth("access");
-    const refreshToken = await getTokenForHeaderAuth("refresh");
-
-    // We don't add the refresh token because that's only required by the refresh call which is done with fetch
-    // Still, we only add the Authorization header if both are present, because we are planning to add an option to expose the
-    // access token to the frontend while using cookie based auth - so that users can get the access token to use
-    if (accessToken !== undefined && refreshToken !== undefined) {
-        // the Headers class normalizes header names so we don't have to worry about casing
-        if (clonedHeaders.has("Authorization")) {
-        } else {
-            clonedHeaders.set("Authorization", `Bearer ${addRefreshToken ? refreshToken : accessToken}`);
-        }
-    }
-}
-
-export function setToken(tokenType: TokenType, value: string) {
-    const name = getStorageNameForToken(tokenType);
-
-    // We save the tokens with a 100-year expiration time
-    return storeInStorage(name, value, Date.now() + 3153600000);
-}
-
-export async function saveTokensFromHeaders(response: Response) {
-    const refreshToken = response.headers.get("st-refresh-token");
-    if (refreshToken) {
-        await setToken("refresh", refreshToken);
-    }
-
-    const accessToken = response.headers.get("st-access-token");
-    if (accessToken) {
-        await setToken("access", accessToken);
-    }
-
-    const frontToken = response.headers.get("front-token");
-    if (frontToken) {
-        await FrontToken.setItem(frontToken);
-    }
-    const antiCsrfToken = response.headers.get("anti-csrf");
-    if (antiCsrfToken) {
-        const tok = await getLocalSessionState();
-        if (tok.status === "EXISTS") {
-            await AntiCSRF.setItem(tok.lastAccessTokenUpdate, antiCsrfToken);
-        }
     }
 }
 
