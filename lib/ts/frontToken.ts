@@ -43,7 +43,7 @@ export default class FrontToken {
     }
 
     static async getFrontToken(): Promise<string | null> {
-        if (!(await AuthHttpRequest.recipeImpl.doesSessionExist(AuthHttpRequest.config))) {
+        if (!((await getLocalSessionState()).status === "EXISTS")) {
             return null;
         }
 
