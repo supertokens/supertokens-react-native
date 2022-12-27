@@ -1,4 +1,4 @@
-import { AsyncStorage } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { URL } from "react-native-url-polyfill";
 import AntiCSRF from "./antiCsrf";
 import AuthHttpRequest from "./fetch";
