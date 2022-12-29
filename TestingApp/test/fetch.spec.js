@@ -32,7 +32,7 @@ import { ProcessState, PROCESS_STATE } from "supertokens-react-native/lib/build/
 import "isomorphic-fetch";
 // jest does not call setupFiles properly with the new react-native init, so doing it this way instead
 import "./setup";
-import { getLocalSessionState } from "supertokens-react-native/lib/build/utils";
+import { getLocalSessionState, getTokenForHeaderAuth, setToken } from "supertokens-react-native/lib/build/utils";
 
 // TODO NEMI: This should just use base url from utils
 const BASE_URL = "http://localhost:8080";
@@ -1090,7 +1090,6 @@ describe("Fetch AuthHttpRequest class tests", function() {
             assertEqual(await AuthHttpRequest.doesSessionExist(), false);
 
             // check refresh API was called once
-            assertEqual(await getNumberOfTimesRefreshAttempted(), 1);
             assertEqual(await getNumberOfTimesRefreshCalled(), 0);
             assertEqual((await getLocalSessionState()).status, "NOT_EXISTS");
 
@@ -1098,7 +1097,6 @@ describe("Fetch AuthHttpRequest class tests", function() {
             assertEqual(await AuthHttpRequest.doesSessionExist(), false);
 
             // check refresh API not called
-            assertEqual(await getNumberOfTimesRefreshAttempted(), 1);
             assertEqual(await getNumberOfTimesRefreshCalled(), 0);
             assertEqual((await getLocalSessionState()).status, "NOT_EXISTS");
 
@@ -1114,7 +1112,6 @@ describe("Fetch AuthHttpRequest class tests", function() {
             // call sessionDoesExist
             assertEqual(await AuthHttpRequest.doesSessionExist(), true);
             // check refresh API not called
-            assertEqual(await getNumberOfTimesRefreshAttempted(), 1);
             assertEqual(await getNumberOfTimesRefreshCalled(), 0);
             assertEqual((await getLocalSessionState()).status, "EXISTS");
 
@@ -1122,97 +1119,6 @@ describe("Fetch AuthHttpRequest class tests", function() {
         } catch (err) {
             done(err);
         }
-    });
-
-    it("fetch check clearing all frontend set cookies still works (without anti-csrf)", async function(done) {
-        try {
-            jest.setTimeout(10000);
-            await startST(3, false);
-            AuthHttpRequest.init({
-                apiDomain: BASE_URL
-            });
-
-            let userId = "testing-supertokens-react-native";
-
-            // send api request to login
-            let loginResponse = await global.fetch(`${BASE_URL}/login`, {
-                method: "post",
-                headers: {
-                    Accept: "application/json",
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ userId })
-            });
-
-            assertEqual(await loginResponse.text(), userId);
-
-            // call sessionDoesExist
-            assertEqual(await AuthHttpRequest.doesSessionExist(), true);
-            // check refresh API not called
-            assertEqual(await getNumberOfTimesRefreshAttempted(), 1); // it's one here since it gets called during login..
-            assertEqual(await getNumberOfTimesRefreshCalled(), 0);
-            assertEqual((await getLocalSessionState()).status, "EXISTS");
-
-            // delete all tokens
-            await AntiCsrfToken.removeToken();
-            await FrontToken.removeToken();
-
-            // call sessionDoesExist (returns true) + call to refresh
-            assertEqual(await AuthHttpRequest.doesSessionExist(), true);
-            assertEqual(await getNumberOfTimesRefreshAttempted(), 2);
-            assertEqual(await getNumberOfTimesRefreshCalled(), 1);
-
-            // call sessionDoesExist (returns true) + no call to refresh
-            assertEqual(await AuthHttpRequest.doesSessionExist(), true);
-            assertEqual(await getNumberOfTimesRefreshAttempted(), 2);
-            assertEqual(await getNumberOfTimesRefreshCalled(), 1);
-
-            done();
-        } catch (err) {
-            done(err);
-        }
-    });
-
-    it("fetch check clearing all frontend set cookies logs our user (with anti-csrf)", async function() {
-        await startST();
-        AuthHttpRequest.init({
-            apiDomain: BASE_URL
-        });
-
-        let userId = "testing-supertokens-react-native";
-
-        // send api request to login
-        let loginResponse = await global.fetch(`${BASE_URL}/login`, {
-            method: "post",
-            headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ userId })
-        });
-
-        assertEqual(await loginResponse.text(), userId);
-
-        // call sessionDoesExist
-        assertEqual(await AuthHttpRequest.doesSessionExist(), true);
-        // check refresh API not called
-        assertEqual(await getNumberOfTimesRefreshAttempted(), 1); // it's one here since it gets called during login..
-        assertEqual(await getNumberOfTimesRefreshCalled(), 0);
-        assertEqual((await getLocalSessionState()).status, "EXISTS");
-
-        // delete all tokens
-        await AntiCsrfToken.removeToken();
-        await FrontToken.removeToken();
-
-        // call sessionDoesExist (returns false) + call to refresh
-        assertEqual(await AuthHttpRequest.doesSessionExist(), false);
-        assertEqual(await getNumberOfTimesRefreshAttempted(), 2);
-        assertEqual(await getNumberOfTimesRefreshCalled(), 0);
-
-        // call sessionDoesExist (returns false) + no call to refresh
-        assertEqual(await AuthHttpRequest.doesSessionExist(), false);
-        assertEqual(await getNumberOfTimesRefreshAttempted(), 2);
-        assertEqual(await getNumberOfTimesRefreshCalled(), 0);
     });
 
     it("test that unauthorised event is not fired on app launch", async function() {
@@ -1267,49 +1173,6 @@ describe("Fetch AuthHttpRequest class tests", function() {
         assert(parsedEvent.sessionExpiredOrRevoked === false);
     });
 
-    it("test that after login, and clearing all tokens, if we query a protected route, it fires unauthorised event", async function() {
-        await startST();
-
-        let events = [];
-
-        AuthHttpRequest.init({
-            apiDomain: BASE_URL,
-            onHandleEvent: event => {
-                events.push(`ST_${event.action}:${JSON.stringify(event)}`);
-            }
-        });
-
-        let userId = "testing-supertokens-react-native";
-
-        // send api request to login
-        let loginResponse = await global.fetch(`${BASE_URL}/login`, {
-            method: "post",
-            headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ userId })
-        });
-
-        assertEqual(await loginResponse.text(), userId);
-
-        // delete all tokens
-        await AntiCsrfToken.removeToken();
-        await FrontToken.removeToken();
-
-        let response = await global.fetch(`${BASE_URL}/`);
-        assertEqual(response.status, 401);
-
-        assert(events.length === 2);
-        assert(events[0].startsWith("ST_SESSION_CREATED"));
-
-        const eventName = "ST_UNAUTHORISED";
-        assert(events[1].startsWith(eventName));
-
-        const parsedEvent = JSON.parse(events[1].substr(eventName.length + 1));
-        assert(parsedEvent.sessionExpiredOrRevoked === false);
-    });
-
     it("Testing jest mocking", async function(done) {
         try {
             jest.setTimeout(10000);
@@ -1351,35 +1214,18 @@ describe("Fetch AuthHttpRequest class tests", function() {
                         return Promise.resolve(response);
                     }
                 } else if (url === BASE_URL + "/auth/session/refresh") {
-                    if (firstPost) {
-                        firstPost = false;
+                    let responseInit = {
+                        status: 500
+                    };
 
-                        let responseInit = {
-                            status: 401
-                        };
-
-                        let response = new Response(
-                            JSON.stringify({
-                                message: "try refresh token"
-                            }),
-                            responseInit
-                        );
-                        Object.defineProperty(response, "url", { value: BASE_URL + "/auth/session/refresh" });
-                        return Promise.resolve(response);
-                    } else {
-                        let responseInit = {
-                            status: 500
-                        };
-
-                        let response = new Response(
-                            JSON.stringify({
-                                message: "test"
-                            }),
-                            responseInit
-                        );
-                        Object.defineProperty(response, "url", { value: BASE_URL + "/auth/session/refresh" });
-                        return Promise.resolve(response);
-                    }
+                    let response = new Response(
+                        JSON.stringify({
+                            message: "test"
+                        }),
+                        responseInit
+                    );
+                    Object.defineProperty(response, "url", { value: BASE_URL + "/auth/session/refresh" });
+                    return Promise.resolve(response);
                 }
 
                 return originalFetch(url, config);
@@ -1548,7 +1394,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             const data = await response.json();
             assertEqual(data.message, "test");
 
-            assert.equal(refreshCalled, 1);
+            assert.equal(refreshCalled, 0);
 
             done();
         } catch (err) {
