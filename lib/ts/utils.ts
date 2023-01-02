@@ -228,7 +228,17 @@ async function getFromStorage(name: string) {
         return undefined;
     }
 
-    return itemInStorage.split(";").shift();
+    const parts = itemInStorage.split(name + "=");
+
+    if (parts.length >= 2) {
+        let last = parts.pop();
+
+        if (last !== undefined) {
+            return last.split(";").shift();
+        }
+    }
+
+    return undefined;
 }
 
 export async function getTokenForHeaderAuth(tokenType: TokenType) {
