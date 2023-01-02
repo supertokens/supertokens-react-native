@@ -32,7 +32,7 @@ import { ProcessState, PROCESS_STATE } from "supertokens-react-native/lib/build/
 import "isomorphic-fetch";
 // jest does not call setupFiles properly with the new react-native init, so doing it this way instead
 import "./setup";
-import { getLocalSessionState, getTokenForHeaderAuth, setToken } from "supertokens-react-native/lib/build/utils";
+import { getLocalSessionState } from "supertokens-react-native/lib/build/utils";
 
 // TODO NEMI: This should just use base url from utils
 const BASE_URL = "http://localhost:8080";

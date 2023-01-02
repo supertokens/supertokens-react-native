@@ -20,7 +20,7 @@
     "@babel/core": "^7.12.9",
     "@babel/runtime": "^7.12.5",
     "@react-native-community/eslint-config": "^2.0.0",
-    "axios-cookiejar-support": "0.5.1",
+    "axios-cookiejar-support": "github:supertokens/axios-cookiejar-support#0.5.1",
     "babel-jest": "^26.6.3",
     "babel-preset-react-app": "7.0.0",
     "eslint": "7.14.0",

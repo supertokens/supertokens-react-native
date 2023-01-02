@@ -13,10 +13,10 @@
  * under the License.
  */
 let axios = require("axios");
-const axiosCookieJarSupport = require("axios-cookiejar-support").default;
+import axiosCookieJarSupport from "axios-cookiejar-support";
+// const axiosCookieJarSupport = require("axios-cookiejar-support").default;
 const tough = require("tough-cookie");
 import AntiCsrfToken from "supertokens-react-native/lib/build/antiCsrf";
-import IdRefreshToken from "supertokens-react-native/lib/build/idRefreshToken";
 import FrontToken from "supertokens-react-native/lib/build/frontToken";
 import AuthHttpRequestFetch from "supertokens-react-native/lib/build/fetch";
 import AuthHttpRequestAxios from "supertokens-react-native/lib/build/axios";
@@ -33,6 +33,7 @@ import {
 } from "./utils";
 import { spawn } from "child_process";
 import { ProcessState, PROCESS_STATE } from "supertokens-react-native/lib/build/processState";
+import { getLocalSessionState } from "supertokens-react-native/lib/build/utils";
 // jest does not call setupFiles properly with the new react-native init, so doing it this way instead
 import "./setup";
 
@@ -64,10 +65,16 @@ describe("Axios AuthHttpRequest class tests", function() {
     }
 
     beforeAll(async function() {
-        spawn("./test/startServer", [
+        let child = spawn("./test/startServer", [
             process.env.INSTALL_PATH,
             process.env.NODE_PORT === undefined ? 8080 : process.env.NODE_PORT
         ]);
+
+        // Uncomment this to print server logs
+        // child.stdout.setEncoding('utf8');
+        // child.stderr.setEncoding('utf8');
+        // child.stdout.on("data", data => console.log(data))
+        // child.stderr.on("data", data => console.log(data))
         await new Promise(r => setTimeout(r, 1000));
     });
 
@@ -83,7 +90,6 @@ describe("Axios AuthHttpRequest class tests", function() {
         AuthHttpRequestFetch.initCalled = false;
         ProcessState.getInstance().reset();
         // reset all tokens
-        await IdRefreshToken.removeToken();
         await AntiCsrfToken.removeToken();
         await FrontToken.removeToken();
 
@@ -101,6 +107,7 @@ describe("Axios AuthHttpRequest class tests", function() {
         let nodeFetch = require("node-fetch").default;
         const fetch = require("fetch-cookie")(nodeFetch, cookieJar);
         global.fetch = fetch;
+        global.Headers = nodeFetch.Headers;
         global.__supertokensOriginalFetch = undefined;
         global.__supertokensSessionRecipe = undefined;
     });
@@ -384,50 +391,6 @@ describe("Axios AuthHttpRequest class tests", function() {
 
         assert(events[0].startsWith(eventName));
         const parsedEvent = JSON.parse(events[0].substr(eventName.length + 1));
-        assert(parsedEvent.sessionExpiredOrRevoked === false);
-    });
-
-    it("test that after login, and clearing all tokens, if we query a protected route, it fires unauthorised event", async function() {
-        await startST();
-
-        AuthHttpRequest.addAxiosInterceptors(axiosInstance);
-        let events = [];
-
-        AuthHttpRequest.init({
-            apiDomain: BASE_URL,
-            onHandleEvent: event => {
-                events.push(`ST_${event.action}:${JSON.stringify(event)}`);
-            }
-        });
-
-        let userId = "testing-supertokens-react-native";
-
-        // send api request to login
-        let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
-            headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json"
-            }
-        });
-        assertEqual(userId, loginResponse.data);
-
-        // delete all tokens
-        await IdRefreshToken.removeToken();
-        await AntiCsrfToken.removeToken();
-        await FrontToken.removeToken();
-
-        try {
-            await axiosInstance({ url: `${BASE_URL}/`, method: "GET" });
-        } catch (err) {
-            assertEqual(err.response.status, 401);
-        }
-
-        assert(events.length === 2);
-        assert(events[0].startsWith("ST_SESSION_CREATED"));
-
-        const eventName = "ST_UNAUTHORISED";
-        assert(events[1].startsWith(eventName));
-        const parsedEvent = JSON.parse(events[1].substr(eventName.length + 1));
         assert(parsedEvent.sessionExpiredOrRevoked === false);
     });
 
@@ -1174,16 +1137,14 @@ describe("Axios AuthHttpRequest class tests", function() {
         assertEqual(await AuthHttpRequest.doesSessionExist(), false);
 
         // check refresh API was called once + document.cookie has removed
-        assertEqual(await getNumberOfTimesRefreshAttempted(), 1);
         assertEqual(await getNumberOfTimesRefreshCalled(), 0);
-        assertEqual((await IdRefreshToken.getIdRefreshToken(false)).status, "NOT_EXISTS");
+        assertEqual((await getLocalSessionState()).status, "NOT_EXISTS");
 
         // call sessionDoesExist
         assertEqual(await AuthHttpRequest.doesSessionExist(), false);
         // check refresh API not called
-        assertEqual(await getNumberOfTimesRefreshAttempted(), 1);
         assertEqual(await getNumberOfTimesRefreshCalled(), 0);
-        assertEqual((await IdRefreshToken.getIdRefreshToken(false)).status, "NOT_EXISTS");
+        assertEqual((await getLocalSessionState()).status, "NOT_EXISTS");
 
         let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
             headers: {
@@ -1196,91 +1157,9 @@ describe("Axios AuthHttpRequest class tests", function() {
 
         // call sessionDoesExist
         assertEqual(await AuthHttpRequest.doesSessionExist(), true);
-        // check refresh API not called
-        assertEqual(await getNumberOfTimesRefreshAttempted(), 1);
+        // // check refresh API not called
         assertEqual(await getNumberOfTimesRefreshCalled(), 0);
-        assertEqual((await IdRefreshToken.getIdRefreshToken(false)).status, "EXISTS");
-    });
-
-    it("check clearing all frontend set cookies still works (without anti-csrf)", async function() {
-        await startST(3, false);
-        AuthHttpRequest.addAxiosInterceptors(axiosInstance);
-        AuthHttpRequest.init({
-            apiDomain: BASE_URL
-        });
-
-        let userId = "testing-supertokens-react-native";
-
-        let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
-            headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json"
-            }
-        });
-        let userIdFromResponse = loginResponse.data;
-        assertEqual(userId, userIdFromResponse);
-
-        // call sessionDoesExist
-        assertEqual(await AuthHttpRequest.doesSessionExist(), true);
-        // check refresh API not called
-        assertEqual(await getNumberOfTimesRefreshAttempted(), 1); // it's one here since it gets called during login..
-        assertEqual(await getNumberOfTimesRefreshCalled(), 0);
-        assertEqual((await IdRefreshToken.getIdRefreshToken(false)).status, "EXISTS");
-
-        await IdRefreshToken.removeToken();
-        await AntiCsrfToken.removeToken();
-        await FrontToken.removeToken();
-
-        // call sessionDoesExist (returns true) + call to refresh
-        assertEqual(await AuthHttpRequest.doesSessionExist(), true);
-        assertEqual(await getNumberOfTimesRefreshAttempted(), 2);
-        assertEqual(await getNumberOfTimesRefreshCalled(), 1);
-
-        // call sessionDoesExist (returns true) + no call to refresh
-        assertEqual(await AuthHttpRequest.doesSessionExist(), true);
-        assertEqual(await getNumberOfTimesRefreshAttempted(), 2);
-        assertEqual(await getNumberOfTimesRefreshCalled(), 1);
-    });
-
-    it("check clearing all frontend set cookies logs our user (with anti-csrf)", async function() {
-        await startST();
-        AuthHttpRequest.addAxiosInterceptors(axiosInstance);
-        AuthHttpRequest.init({
-            apiDomain: BASE_URL
-        });
-
-        let userId = "testing-supertokens-react-native";
-
-        let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
-            headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json"
-            }
-        });
-        let userIdFromResponse = loginResponse.data;
-        assertEqual(userId, userIdFromResponse);
-
-        // call sessionDoesExist
-        assertEqual(await AuthHttpRequest.doesSessionExist(), true);
-        // check refresh API not called
-        assertEqual(await getNumberOfTimesRefreshAttempted(), 1); // it's one here since it gets called during login..
-        assertEqual(await getNumberOfTimesRefreshCalled(), 0);
-        assertEqual((await IdRefreshToken.getIdRefreshToken(false)).status, "EXISTS");
-
-        // clear all cookies
-        await IdRefreshToken.removeToken();
-        await AntiCsrfToken.removeToken();
-        await FrontToken.removeToken();
-
-        // call sessionDoesExist (returns false) + call to refresh
-        assertEqual(await AuthHttpRequest.doesSessionExist(), false);
-        assertEqual(await getNumberOfTimesRefreshAttempted(), 2);
-        assertEqual(await getNumberOfTimesRefreshCalled(), 0);
-
-        // call sessionDoesExist (returns false) + no call to refresh
-        assertEqual(await AuthHttpRequest.doesSessionExist(), false);
-        assertEqual(await getNumberOfTimesRefreshAttempted(), 2);
-        assertEqual(await getNumberOfTimesRefreshCalled(), 0);
+        assertEqual((await getLocalSessionState()).status, "EXISTS");
     });
 });
 
