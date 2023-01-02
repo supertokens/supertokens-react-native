@@ -402,22 +402,22 @@ export default class AuthHttpRequest {
 
 async function saveTokensFromHeaders(response: AxiosResponse) {
     const refreshToken = response.headers["st-refresh-token"];
-    if (refreshToken) {
+    if (refreshToken !== undefined && refreshToken !== null) {
         await setToken("refresh", refreshToken);
     }
 
     const accessToken = response.headers["st-access-token"];
-    if (accessToken) {
+    if (accessToken !== undefined && accessToken !== null) {
         await setToken("access", accessToken);
     }
 
     const frontToken = response.headers["front-token"];
-    if (frontToken) {
+    if (frontToken !== undefined && frontToken !== null) {
         await FrontToken.setItem(frontToken);
     }
 
     const antiCsrfToken = response.headers["anti-csrf"];
-    if (antiCsrfToken) {
+    if (antiCsrfToken !== undefined && antiCsrfToken !== null) {
         const tok = await getLocalSessionState();
         if (tok.status === "EXISTS") {
             await AntiCSRF.setItem(tok.lastAccessTokenUpdate, antiCsrfToken);

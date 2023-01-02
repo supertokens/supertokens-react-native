@@ -353,21 +353,21 @@ export async function onUnauthorisedResponse(
 
 async function saveTokensFromHeaders(response: Response) {
     const refreshToken = response.headers.get("st-refresh-token");
-    if (refreshToken) {
+    if (refreshToken !== undefined && refreshToken !== null) {
         await setToken("refresh", refreshToken);
     }
 
     const accessToken = response.headers.get("st-access-token");
-    if (accessToken) {
+    if (accessToken !== undefined && accessToken !== null) {
         await setToken("access", accessToken);
     }
 
     const frontToken = response.headers.get("front-token");
-    if (frontToken) {
+    if (frontToken !== undefined && frontToken !== null) {
         await FrontToken.setItem(frontToken);
     }
     const antiCsrfToken = response.headers.get("anti-csrf");
-    if (antiCsrfToken) {
+    if (antiCsrfToken !== undefined && antiCsrfToken !== null) {
         const tok = await getLocalSessionState();
         if (tok.status === "EXISTS") {
             await AntiCSRF.setItem(tok.lastAccessTokenUpdate, antiCsrfToken);
