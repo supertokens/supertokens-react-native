@@ -17,7 +17,6 @@ const axiosCookieJarSupport = require("axios-cookiejar-support").default;
 const tough = require("tough-cookie");
 
 import AntiCsrfToken from "supertokens-react-native/lib/build/antiCsrf";
-import IdRefreshToken from "supertokens-react-native/lib/build/idRefreshToken";
 import FrontToken from "supertokens-react-native/lib/build/frontToken";
 import AuthHttpRequestFetch from "supertokens-react-native/lib/build/fetch";
 import AuthHttpRequest from "supertokens-react-native";
@@ -80,7 +79,6 @@ describe("Axios AuthHttpRequest class tests", function() {
         AuthHttpRequestFetch.initCalled = false;
         ProcessState.getInstance().reset();
         // reset all tokens
-        await IdRefreshToken.removeToken();
         await AntiCsrfToken.removeToken();
         await FrontToken.removeToken();
 
@@ -98,6 +96,7 @@ describe("Axios AuthHttpRequest class tests", function() {
         let nodeFetch = require("node-fetch").default;
         const fetch = require("fetch-cookie")(nodeFetch, cookieJar);
         global.fetch = fetch;
+        global.Headers = nodeFetch.Headers;
         global.__supertokensOriginalFetch = undefined;
         global.__supertokensSessionRecipe = undefined;
     });
