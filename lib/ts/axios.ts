@@ -113,7 +113,7 @@ export async function interceptorFunctionRequestFulfilled(config: AxiosRequestCo
     const transferMethod = AuthHttpRequestFetch.config.tokenTransferMethod;
     configWithAntiCsrf.headers!["st-auth-mode"] = transferMethod;
 
-    const accessToken = getTokenForHeaderAuth("access");
+    const accessToken = await getTokenForHeaderAuth("access");
     if (accessToken !== undefined) {
         if (configWithAntiCsrf.headers!.authorization === `Bearer ${accessToken}`) {
             // We are ignoring the Authorization header set by the user in this case, because it would cause issues
@@ -122,6 +122,8 @@ export async function interceptorFunctionRequestFulfilled(config: AxiosRequestCo
             delete configWithAntiCsrf.headers!.authorization;
         }
     }
+
+    await setAuthorizationHeaderIfRequired(configWithAntiCsrf);
 
     return configWithAntiCsrf;
 }
