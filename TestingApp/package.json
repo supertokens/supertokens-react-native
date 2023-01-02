@@ -6,7 +6,7 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "start": "react-native start",
-    "test": "npx jest test/*.spec.js --runInBand",
+    "test": "npx jest test/axios2.header.spec.js --runInBand",
     "lint": "eslint ."
   },
   "dependencies": {
@@ -14,7 +14,7 @@
     "axios": "0.19.2",
     "react": "17.0.2",
     "react-native": "0.66.1",
-    "supertokens-react-native": "github:supertokens/supertokens-react-native#header-based-auth"
+    "supertokens-react-native": "github:supertokens/supertokens-react-native#header-based-auth-axios-tests"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",

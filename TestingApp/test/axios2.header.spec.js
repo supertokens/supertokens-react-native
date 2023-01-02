@@ -200,7 +200,6 @@ describe("Axios AuthHttpRequest class tests", function() {
             exception = ex;
         }
 
-        console.log(exception);
         assertNotEqual(exception, undefined);
         assertNotEqual(exception.response, undefined);
         assertEqual(exception.config.url, `${BASE_URL}/`);
