@@ -123,6 +123,8 @@ export async function interceptorFunctionRequestFulfilled(config: AxiosRequestCo
         }
     }
 
+    await setAuthorizationHeaderIfRequired(configWithAntiCsrf);
+
     return configWithAntiCsrf;
 }
 
@@ -364,6 +366,17 @@ export default class AuthHttpRequest {
                         );
 
                         if (err.response.status === AuthHttpRequestFetch.config.sessionExpiredStatusCode) {
+                            // Before calling refresh we need to delete the access token header from the config
+                            // If we dont, when retrying the request the config will already have a authorization
+                            // header and the new access token will not get added to the request resulting in a
+                            // refresh loop
+                            const accessToken = await getTokenForHeaderAuth("access");
+                            if (accessToken !== undefined) {
+                                if (config.headers!.authorization === `Bearer ${accessToken}`) {
+                                    delete config.headers!.authorization;
+                                }
+                            }
+
                             const refreshResult = await onUnauthorisedResponse(preRequestLocalSessionState);
                             if (refreshResult.result !== "RETRY") {
                                 // Returning refreshResult.error as an Axios Error if we attempted a refresh
