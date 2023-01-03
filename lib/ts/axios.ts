@@ -113,15 +113,7 @@ export async function interceptorFunctionRequestFulfilled(config: AxiosRequestCo
     const transferMethod = AuthHttpRequestFetch.config.tokenTransferMethod;
     configWithAntiCsrf.headers!["st-auth-mode"] = transferMethod;
 
-    const accessToken = await getTokenForHeaderAuth("access");
-    if (accessToken !== undefined) {
-        if (configWithAntiCsrf.headers!.authorization === `Bearer ${accessToken}`) {
-            // We are ignoring the Authorization header set by the user in this case, because it would cause issues
-            // If we do not ignore this, then this header would be used even if the request is being retried after a refresh, even though it contains an outdated access token.
-            // This causes an infinite refresh loop.
-            delete configWithAntiCsrf.headers!.authorization;
-        }
-    }
+    configWithAntiCsrf = await removeAuthHeaderIfMatchesLocalToken(configWithAntiCsrf);
 
     await setAuthorizationHeaderIfRequired(configWithAntiCsrf);
 
@@ -268,6 +260,7 @@ export default class AuthHttpRequest {
             return await httpCall(config);
         }
 
+        config = await removeAuthHeaderIfMatchesLocalToken(config);
         try {
             let returnObj = undefined;
             while (true) {
@@ -366,17 +359,6 @@ export default class AuthHttpRequest {
                         );
 
                         if (err.response.status === AuthHttpRequestFetch.config.sessionExpiredStatusCode) {
-                            // Before calling refresh we need to delete the access token header from the config
-                            // If we dont, when retrying the request the config will already have a authorization
-                            // header and the new access token will not get added to the request resulting in a
-                            // refresh loop
-                            const accessToken = await getTokenForHeaderAuth("access");
-                            if (accessToken !== undefined) {
-                                if (config.headers!.authorization === `Bearer ${accessToken}`) {
-                                    delete config.headers!.authorization;
-                                }
-                            }
-
                             const refreshResult = await onUnauthorisedResponse(preRequestLocalSessionState);
                             if (refreshResult.result !== "RETRY") {
                                 // Returning refreshResult.error as an Axios Error if we attempted a refresh
@@ -465,4 +447,22 @@ async function setAuthorizationHeaderIfRequired(requestConfig: AxiosRequestConfi
             };
         }
     }
+}
+
+async function removeAuthHeaderIfMatchesLocalToken(config: AxiosRequestConfig) {
+    const accessToken = await getTokenForHeaderAuth("access");
+    const authHeader = config.headers!.Authorization || config.headers!.authorization;
+
+    if (accessToken !== undefined) {
+        if (authHeader === `Bearer ${accessToken}`) {
+            // We are ignoring the Authorization header set by the user in this case, because it would cause issues
+            // If we do not ignore this, then this header would be used even if the request is being retried after a refresh, even though it contains an outdated access token.
+            // This causes an infinite refresh loop.
+            const res = { ...config, headers: { ...config.headers } };
+            delete res.headers.authorization;
+            delete res.headers.Authorization;
+            return res;
+        }
+    }
+    return config;
 }
