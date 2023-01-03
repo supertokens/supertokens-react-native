@@ -344,5 +344,22 @@ describe("Config tests", function() {
             assert(AuthHttpRequestFetch.refreshTokenUrl === "https://example.com/auth/session/refresh");
             assert(AuthHttpRequestFetch.config.sessionTokenBackendDomain === "a.b.example.com");
         }
+
+        {
+            AuthHttpRequest.init({
+                apiDomain: "example.com"
+            });
+
+            assert(AuthHttpRequestFetch.config.tokenTransferMethod === "cookie");
+        }
+
+        {
+            AuthHttpRequest.init({
+                apiDomain: "example.com",
+                tokenTransferMethod: "header"
+            });
+
+            assert(AuthHttpRequestFetch.config.tokenTransferMethod === "header");
+        }
     });
 });
