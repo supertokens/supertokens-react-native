@@ -120,7 +120,7 @@ export function validateAndNormaliseInputOrThrowError(options: InputType): Norma
         ...options.override
     };
 
-    let tokenTransferMethod = options.tokenTransferMethod !== undefined ? options.tokenTransferMethod : "cookie";
+    let tokenTransferMethod = options.tokenTransferMethod !== undefined ? options.tokenTransferMethod : "header";
 
     return {
         apiDomain,
