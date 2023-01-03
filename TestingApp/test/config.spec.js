@@ -350,16 +350,16 @@ describe("Config tests", function() {
                 apiDomain: "example.com"
             });
 
-            assert(AuthHttpRequestFetch.config.tokenTransferMethod === "cookie");
+            assert(AuthHttpRequestFetch.config.tokenTransferMethod === "header");
         }
 
         {
             AuthHttpRequest.init({
                 apiDomain: "example.com",
-                tokenTransferMethod: "header"
+                tokenTransferMethod: "cookie"
             });
 
-            assert(AuthHttpRequestFetch.config.tokenTransferMethod === "header");
+            assert(AuthHttpRequestFetch.config.tokenTransferMethod === "cookie");
         }
     });
 });

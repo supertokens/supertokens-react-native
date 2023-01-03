@@ -114,8 +114,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             await startST(100, true, "0.002");
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "header"
+                apiDomain: BASE_URL
             });
 
             let userId = "testing-supertokens-react-native";
@@ -165,8 +164,7 @@ describe("Axios AuthHttpRequest class tests", function() {
         await startST(100, true, "0.002");
         AuthHttpRequest.addAxiosInterceptors(axiosInstance);
         AuthHttpRequest.init({
-            apiDomain: BASE_URL,
-            tokenTransferMethod: "header"
+            apiDomain: BASE_URL
         });
 
         let userId = "testing-supertokens-react-native";
