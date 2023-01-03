@@ -123,8 +123,6 @@ export async function interceptorFunctionRequestFulfilled(config: AxiosRequestCo
         }
     }
 
-    await setAuthorizationHeaderIfRequired(configWithAntiCsrf);
-
     return configWithAntiCsrf;
 }
 
