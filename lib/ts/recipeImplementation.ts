@@ -121,7 +121,7 @@ export default function RecipeImplementation(): RecipeInterface {
                 throw new SuperTokensGeneralError(message);
             }
 
-            // we do not send an event here since it's triggered in setIdRefreshToken area.
+            // we do not send an event here since it's triggered in fireSessionUpdateEventsIfNecessary.
         }
     };
 }

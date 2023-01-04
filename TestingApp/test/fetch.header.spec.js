@@ -34,7 +34,6 @@ import "isomorphic-fetch";
 import "./setup";
 import { getLocalSessionState } from "supertokens-react-native/lib/build/utils";
 
-// TODO NEMI: This should just use base url from utils
 const BASE_URL = "http://localhost:8080";
 
 /* TODO: 

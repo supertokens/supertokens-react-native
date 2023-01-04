@@ -26,7 +26,7 @@ export function normaliseURLPathOrThrowError(input: string): string {
     return new NormalisedURLPath(input).getAsStringDangerous();
 }
 
-export function normalisCookieDomainOrThrowError(cookieDomain: string): string {
+export function normaliseCookieDomainOrThrowError(cookieDomain: string): string {
     function helper(cookieDomain: string): string {
         cookieDomain = cookieDomain.trim().toLowerCase();
 
@@ -94,7 +94,7 @@ export function validateAndNormaliseInputOrThrowError(options: InputType): Norma
 
     let sessionTokenBackendDomain: string | undefined = undefined;
     if (options.sessionTokenBackendDomain !== undefined) {
-        sessionTokenBackendDomain = normalisCookieDomainOrThrowError(options.sessionTokenBackendDomain);
+        sessionTokenBackendDomain = normaliseCookieDomainOrThrowError(options.sessionTokenBackendDomain);
     }
 
     let preAPIHook = async (context: {
@@ -157,19 +157,19 @@ export function shouldDoInterceptionBasedOnUrl(
         let apiUrlObj: any = new URL(apiDomain);
         return domain === (apiUrlObj.port === "" ? apiUrlObj.hostname : apiUrlObj.hostname + ":" + apiUrlObj.port);
     } else {
-        let normalisedsessiondomain = normalisCookieDomainOrThrowError(sessionTokenBackendDomain);
+        let normalisedSessionDomain = normaliseCookieDomainOrThrowError(sessionTokenBackendDomain);
         if (sessionTokenBackendDomain.split(":").length > 1) {
             // this means that a port may have been provided
             let portStr = sessionTokenBackendDomain.split(":")[sessionTokenBackendDomain.split(":").length - 1];
             if (isNumeric(portStr)) {
-                normalisedsessiondomain += ":" + portStr;
+                normalisedSessionDomain += ":" + portStr;
                 domain = urlObj.port === "" ? domain : domain + ":" + urlObj.port;
             }
         }
         if (sessionTokenBackendDomain.startsWith(".")) {
-            return ("." + domain).endsWith(normalisedsessiondomain);
+            return ("." + domain).endsWith(normalisedSessionDomain);
         } else {
-            return domain === normalisedsessiondomain;
+            return domain === normalisedSessionDomain;
         }
     }
 }
@@ -253,7 +253,7 @@ export type LocalSessionState =
       }
     | {
           status: "EXISTS";
-          // This is a number (timestamp) encoded as a string (we save it in cookies), but we never actually need to use it as number
+          // This is a number (timestamp) encoded as a string, but we never actually need to use it as number
           // We only use it for strict equal checks
           lastAccessTokenUpdate: string;
       };

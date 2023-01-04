@@ -178,7 +178,7 @@ export function responseInterceptor(axiosInstance: any) {
                 return response;
             }
         } finally {
-            if (!doNotDoInterception && !((await getLocalSessionState()).status === "EXISTS")) {
+            if (!doNotDoInterception && (await getLocalSessionState()).status !== "EXISTS") {
                 await AntiCSRF.removeToken();
                 await FrontToken.removeToken();
             }

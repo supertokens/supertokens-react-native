@@ -39,7 +39,6 @@ import "./setup";
 
 process.env.TEST_MODE = "testing";
 
-// TODO NEMI: This should probably just use the base url from utils
 const BASE_URL = "http://localhost:8080";
 let axiosInstance;
 /* TODO: 
@@ -1094,7 +1093,6 @@ describe("Axios AuthHttpRequest class tests", function() {
         }
     });
 
-    // TODO NEMI: Does this test actually have multiple interceptors?
     //- if multiple interceptors are there, they should all work*****
     it("test that if multiple interceptors are there, they should all work", async function(done) {
         try {

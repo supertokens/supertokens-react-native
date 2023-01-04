@@ -39,7 +39,6 @@ import "./setup";
 
 process.env.TEST_MODE = "testing";
 
-// TODO NEMI: This should use base url from utils
 const BASE_URL = "http://localhost:8080";
 
 let axiosInstance;

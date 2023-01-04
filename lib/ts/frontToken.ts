@@ -43,7 +43,7 @@ export default class FrontToken {
     }
 
     static async getFrontToken(): Promise<string | null> {
-        if (!((await getLocalSessionState()).status === "EXISTS")) {
+        if ((await getLocalSessionState()).status !== "EXISTS") {
             return null;
         }
 
