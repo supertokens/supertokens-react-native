@@ -14,7 +14,7 @@
     "axios": "0.19.2",
     "react": "17.0.2",
     "react-native": "0.66.1",
-    "supertokens-react-native": "github:supertokens/supertokens-react-native#header-based-auth-axios-tests"
+    "supertokens-react-native": "github:supertokens/supertokens-react-native#header-based-auth"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",
