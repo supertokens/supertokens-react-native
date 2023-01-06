@@ -59,10 +59,17 @@ describe("Axios AuthHttpRequest class tests", function() {
     }
 
     beforeAll(async function() {
-        spawn("./test/startServer", [
+        let child = spawn("./test/startServer", [
             process.env.INSTALL_PATH,
-            process.env.NODE_PORT === undefined ? 8080 : process.env.NODE_PORT
+            process.env.NODE_PORT === undefined ? 8080 : process.env.NODE_PORT,
+            "header"
         ]);
+
+        // Uncomment this to print server logs
+        child.stdout.setEncoding("utf8");
+        child.stderr.setEncoding("utf8");
+        child.stdout.on("data", data => console.log(data));
+        child.stderr.on("data", data => console.log(data));
         await new Promise(r => setTimeout(r, 1000));
     });
 
@@ -106,8 +113,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             await startST(100, true, "0.002");
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
 
             let userId = "testing-supertokens-react-native";
@@ -157,8 +163,7 @@ describe("Axios AuthHttpRequest class tests", function() {
         await startST(100, true, "0.002");
         AuthHttpRequest.addAxiosInterceptors(axiosInstance);
         AuthHttpRequest.init({
-            apiDomain: BASE_URL,
-            tokenTransferMethod: "cookie"
+            apiDomain: BASE_URL
         });
 
         let userId = "testing-supertokens-react-native";
@@ -178,7 +183,6 @@ describe("Axios AuthHttpRequest class tests", function() {
                 "Content-Type": "application/json"
             }
         });
-        assertEqual(await logoutResponse.data, "success");
 
         const refreshAttemptedBeforeApiCall = await getNumberOfTimesRefreshAttempted();
 

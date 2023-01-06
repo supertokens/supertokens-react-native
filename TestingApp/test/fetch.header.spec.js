@@ -72,7 +72,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
     beforeAll(async function() {
         let child = spawn("./test/startServer", [
             process.env.INSTALL_PATH,
-            process.env.NODE_PORT === undefined ? 8080 : process.env.NODE_PORT
+            process.env.NODE_PORT === undefined ? 8080 : process.env.NODE_PORT,
+            "header"
         ]);
 
         // Uncomment this to print server logs
@@ -140,8 +141,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
     it("testing with fetch api methods without config", async function() {
         AuthHttpRequest.init({
-            apiDomain: BASE_URL,
-            tokenTransferMethod: "cookie"
+            apiDomain: BASE_URL
         });
 
         let getResponse = await global.fetch(`${BASE_URL}/testing`, {
@@ -171,8 +171,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
     it("testing with fetch api methods with config", async function() {
         AuthHttpRequest.init({
-            apiDomain: BASE_URL,
-            tokenTransferMethod: "cookie"
+            apiDomain: BASE_URL
         });
 
         let testing = "testing";
@@ -219,8 +218,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
     it("testing with fetch api methods that doesn't exists", async function() {
         AuthHttpRequest.init({
-            apiDomain: BASE_URL,
-            tokenTransferMethod: "cookie"
+            apiDomain: BASE_URL
         });
 
         let getResponse = await global.fetch(`${BASE_URL}/fail`, {
@@ -260,8 +258,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             await startST(3);
 
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -303,8 +300,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             await startST(100, true, "0.002");
 
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
 
             let userId = "testing-supertokens-react-native";
@@ -348,8 +344,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             await startST(3);
 
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
 
             let userId = "testing-supertokens-react-native";
@@ -380,8 +375,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             await startST();
 
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
 
             let userId = "testing-supertokens-react-native";
@@ -415,8 +409,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             await startST(3);
 
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
 
             let userId = "testing-supertokens-react-native";
@@ -496,8 +489,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             await startST();
 
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -564,8 +556,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             await startST(5);
 
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -594,8 +585,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             await startST(5);
 
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -637,8 +627,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             await startST(5);
 
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -680,8 +669,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             await startST(5);
 
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -736,8 +724,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST(3, false);
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -784,8 +771,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST();
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
 
             let val = await global.fetch(`${BASE_URL}/testError`);
@@ -804,8 +790,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST();
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
 
             let val = await global.fetch(`${BASE_URL}/testError`);
@@ -824,12 +809,10 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST();
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -844,8 +827,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
             assertEqual(await loginResponse.text(), userId);
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
 
             let logoutResponse = await global.fetch(`${BASE_URL}/logout`, {
@@ -885,8 +867,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST(3);
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -925,8 +906,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST(5);
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -970,8 +950,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST(5);
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -1008,8 +987,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST(5);
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -1050,8 +1028,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST(5);
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -1104,8 +1081,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(10000);
             await startST();
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
 
             let userId = "testing-supertokens-website";
@@ -1152,7 +1128,6 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
         AuthHttpRequest.init({
             apiDomain: BASE_URL,
-            tokenTransferMethod: "cookie",
             onHandleEvent: event => {
                 events.push("ST_" + event.action);
             }
@@ -1182,7 +1157,6 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
         AuthHttpRequest.init({
             apiDomain: BASE_URL,
-            tokenTransferMethod: "cookie",
             onHandleEvent: event => {
                 events.push(`ST_${event.action}:${JSON.stringify(event)}`);
             }
@@ -1259,8 +1233,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
             await startST();
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
 
             let userId = "testing-supertokens-react-native";
@@ -1336,8 +1309,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
             await startST(100, true, "0.002");
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
 
             let userId = "testing-supertokens-react-native";
@@ -1413,8 +1385,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
             await startST(100, true, "0.002");
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
 
             let response = await global.fetch(`${BASE_URL}/`, { method: "GET" });

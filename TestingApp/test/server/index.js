@@ -59,6 +59,7 @@ function getConfig(enableAntiCsrf) {
         },
         recipeList: [
             Session.init({
+                getTokenTransferMethod: process.env.TRANSFER_METHOD ? () => process.env.TRANSFER_METHOD : undefined,
                 errorHandlers: {
                     onUnauthorised: (err, req, res) => {
                         res.setStatusCode(401);
@@ -104,7 +105,7 @@ app.use(middleware());
 
 app.post("/login", async (req, res) => {
     let userId = req.body.userId;
-    let session = await Session.createNewSession(res, userId);
+    let session = await Session.createNewSession(req, res, userId);
     res.send(session.userId);
 });
 

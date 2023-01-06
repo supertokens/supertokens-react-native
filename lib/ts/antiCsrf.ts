@@ -15,6 +15,7 @@
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import AuthHttpRequest from "./fetch";
+import { getLocalSessionState } from "./utils";
 
 const TOKEN_KEY = "supertokens-rn-anticsrf-key";
 const ANTI_CSRF_NAME = "sAntiCsrf";
@@ -24,13 +25,13 @@ export default class AntiCSRF {
         | undefined
         | {
               antiCsrf: string;
-              associatedIdRefreshToken: string;
+              associatedAccessTokenUpdate: string;
           };
 
     private constructor() {}
 
     private static async getAntiCSRFToken(): Promise<string | null> {
-        if (!(await AuthHttpRequest.recipeImpl.doesSessionExist(AuthHttpRequest.config))) {
+        if (!((await getLocalSessionState()).status === "EXISTS")) {
             return null;
         }
 
@@ -67,8 +68,8 @@ export default class AntiCSRF {
         return fromStorage;
     }
 
-    static async getToken(associatedIdRefreshToken: string | undefined): Promise<string | undefined> {
-        if (associatedIdRefreshToken === undefined) {
+    static async getToken(associatedAccessTokenUpdate: string | undefined): Promise<string | undefined> {
+        if (associatedAccessTokenUpdate === undefined) {
             AntiCSRF.tokenInfo = undefined;
             return undefined;
         }
@@ -82,12 +83,12 @@ export default class AntiCSRF {
 
             AntiCSRF.tokenInfo = {
                 antiCsrf,
-                associatedIdRefreshToken
+                associatedAccessTokenUpdate
             };
-        } else if (AntiCSRF.tokenInfo.associatedIdRefreshToken !== associatedIdRefreshToken) {
+        } else if (AntiCSRF.tokenInfo.associatedAccessTokenUpdate !== associatedAccessTokenUpdate) {
             // csrf token has changed.
             AntiCSRF.tokenInfo = undefined;
-            return await AntiCSRF.getToken(associatedIdRefreshToken);
+            return await AntiCSRF.getToken(associatedAccessTokenUpdate);
         }
         return AntiCSRF.tokenInfo.antiCsrf;
     }
@@ -116,8 +117,8 @@ export default class AntiCSRF {
         await setAntiCSRFToStorage(antiCSRFToken, "");
     }
 
-    static async setItem(associatedIdRefreshToken: string | undefined, antiCsrf: string) {
-        if (associatedIdRefreshToken === undefined) {
+    static async setItem(associatedAccessTokenUpdate: string | undefined, antiCsrf: string) {
+        if (associatedAccessTokenUpdate === undefined) {
             AntiCSRF.tokenInfo = undefined;
             return;
         }
@@ -125,7 +126,7 @@ export default class AntiCSRF {
         await this.setAntiCSRF(antiCsrf);
         AntiCSRF.tokenInfo = {
             antiCsrf,
-            associatedIdRefreshToken
+            associatedAccessTokenUpdate
         };
     }
 
