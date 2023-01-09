@@ -59,7 +59,7 @@ export default class FrontToken {
     private static async setFrontToken(frontToken: string | undefined) {
         async function setFrontTokenToStorage(frontToken: string | undefined) {
             if (frontToken === undefined) {
-                await FrontToken.removeToken();
+                await AsyncStorage.removeItem(FRONT_TOKEN_KEY);
             } else {
                 await AsyncStorage.setItem(FRONT_TOKEN_KEY, frontToken);
             }
