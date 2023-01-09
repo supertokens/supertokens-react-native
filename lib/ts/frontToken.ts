@@ -17,26 +17,7 @@ export default class FrontToken {
         let frontTokenFromStorage = await AsyncStorage.getItem(FRONT_TOKEN_KEY);
 
         if (frontTokenFromStorage !== null) {
-            let value = "; " + frontTokenFromStorage;
-            let parts = value.split("; " + FRONT_TOKEN_NAME + "=");
-
-            let last = parts.pop();
-            if (last !== undefined) {
-                let splitForExpiry = frontTokenFromStorage.split(";");
-                let expiry = Date.parse(splitForExpiry[1].split("=")[1]);
-                let currentTime = Date.now();
-
-                if (expiry < currentTime) {
-                    await FrontToken.removeToken();
-                    return null;
-                }
-
-                let temp = last.split(";").shift();
-                if (temp === undefined) {
-                    return null;
-                }
-                return temp;
-            }
+            return frontTokenFromStorage;
         }
 
         return null;
@@ -76,26 +57,15 @@ export default class FrontToken {
     }
 
     private static async setFrontToken(frontToken: string | undefined) {
-        async function setFrontTokenToStorage(frontToken: string | undefined, domain: string) {
-            let expires: string | undefined = "Thu, 01 Jan 1970 00:00:01 GMT";
-            let cookieVal = "";
-            if (frontToken !== undefined) {
-                cookieVal = frontToken;
-                expires = undefined; // set cookie without expiry
-            }
-
-            let valueToSet = undefined;
-
-            if (expires !== undefined) {
-                valueToSet = `${FRONT_TOKEN_NAME}=${cookieVal};expires=${expires};domain=${domain};path=/;samesite=lax`;
+        async function setFrontTokenToStorage(frontToken: string | undefined) {
+            if (frontToken === undefined) {
+                await FrontToken.removeToken();
             } else {
-                valueToSet = `${FRONT_TOKEN_NAME}=${cookieVal};domain=${domain};expires=Fri, 31 Dec 9999 23:59:59 GMT;path=/;samesite=lax`;
+                await AsyncStorage.setItem(FRONT_TOKEN_KEY, frontToken);
             }
-
-            await AsyncStorage.setItem(FRONT_TOKEN_KEY, valueToSet);
         }
 
-        await setFrontTokenToStorage(frontToken, "");
+        await setFrontTokenToStorage(frontToken);
     }
 
     static async removeToken() {

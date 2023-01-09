@@ -39,26 +39,7 @@ export default class AntiCSRF {
             let fromStorage = await AsyncStorage.getItem(TOKEN_KEY);
 
             if (fromStorage !== null) {
-                let value = "; " + fromStorage;
-                let parts = value.split("; " + ANTI_CSRF_NAME + "=");
-
-                let last = parts.pop();
-                if (last !== undefined) {
-                    let splitForExpiry = fromStorage.split(";");
-                    let expiry = Date.parse(splitForExpiry[1].split("=")[1]);
-                    let currentTime = Date.now();
-
-                    if (expiry < currentTime) {
-                        await AntiCSRF.removeToken();
-                        return null;
-                    }
-
-                    let temp = last.split(";").shift();
-                    if (temp === undefined) {
-                        return null;
-                    }
-                    return temp;
-                }
+                return fromStorage;
             }
 
             return null;
@@ -95,26 +76,15 @@ export default class AntiCSRF {
 
     // give antiCSRFToken as undefined to remove it.
     private static async setAntiCSRF(antiCSRFToken: string | undefined) {
-        async function setAntiCSRFToStorage(antiCSRFToken: string | undefined, domain: string) {
-            let expires: string | undefined = "Thu, 01 Jan 1970 00:00:01 GMT";
-            let cookieVal = "";
-            if (antiCSRFToken !== undefined) {
-                cookieVal = antiCSRFToken;
-                expires = undefined; // set cookie without expiry
-            }
-
-            let valueToSet = undefined;
-
-            if (expires !== undefined) {
-                valueToSet = `${ANTI_CSRF_NAME}=${cookieVal};expires=${expires};domain=${domain};path=/;samesite=lax`;
+        async function setAntiCSRFToStorage(antiCSRFToken: string | undefined) {
+            if (antiCSRFToken === undefined) {
+                await AntiCSRF.removeToken();
             } else {
-                valueToSet = `${ANTI_CSRF_NAME}=${cookieVal};domain=${domain};expires=Fri, 31 Dec 9999 23:59:59 GMT;path=/;samesite=lax`;
+                await AsyncStorage.setItem(TOKEN_KEY, antiCSRFToken);
             }
-
-            await AsyncStorage.setItem(TOKEN_KEY, valueToSet);
         }
 
-        await setAntiCSRFToStorage(antiCSRFToken, "");
+        await setAntiCSRFToStorage(antiCSRFToken);
     }
 
     static async setItem(associatedAccessTokenUpdate: string | undefined, antiCsrf: string) {

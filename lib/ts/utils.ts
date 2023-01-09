@@ -182,19 +182,11 @@ export function setToken(tokenType: TokenType, value: string) {
 }
 
 export async function storeInStorage(name: string, value: string, expiry: number) {
-    let expires = "Fri, 31 Dec 9999 23:59:59 GMT";
-    if (expiry !== Number.MAX_SAFE_INTEGER) {
-        // We should respect the storage expirations set by the backend, even though tokens will also be checked elsewhere.
-        // We check them locally in case of front-token, and on the backend enforces the validity period for access and refresh tokens.
-        expires = new Date(expiry).toUTCString();
+    if (value === "") {
+        return await AsyncStorage.removeItem(name);
     }
 
-    const domain = AuthHttpRequest.config.sessionTokenBackendDomain;
-
-    return await AsyncStorage.setItem(
-        `st-storage-item-${name}`,
-        `${name}=${value};expires=${expires};domain=${""};path=/;samesite=lax`
-    );
+    return await AsyncStorage.setItem(`st-storage-item-${name}`, value);
 }
 
 /**
@@ -228,17 +220,7 @@ async function getFromStorage(name: string) {
         return undefined;
     }
 
-    const parts = itemInStorage.split(name + "=");
-
-    if (parts.length >= 2) {
-        let last = parts.pop();
-
-        if (last !== undefined) {
-            return last.split(";").shift();
-        }
-    }
-
-    return undefined;
+    return itemInStorage;
 }
 
 export async function getTokenForHeaderAuth(tokenType: TokenType) {
