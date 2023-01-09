@@ -35,6 +35,7 @@ import "./setup";
 import { getLocalSessionState } from "supertokens-react-native/lib/build/utils";
 
 const BASE_URL = "http://localhost:8080";
+let cookieJar = new tough.CookieJar();
 
 /* TODO: 
     - User passed config should be sent as well
@@ -103,7 +104,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
         await instance.post(BASE_URL + "/beforeeach");
 
         let nodeFetch = require("node-fetch").default;
-        const fetch = require("fetch-cookie")(nodeFetch, new tough.CookieJar());
+        cookieJar = new tough.CookieJar();
+        const fetch = require("fetch-cookie")(nodeFetch, cookieJar);
         global.fetch = fetch;
         global.__supertokensOriginalFetch = undefined;
         global.__supertokensSessionRecipe = undefined;
@@ -1424,6 +1426,114 @@ describe("Fetch AuthHttpRequest class tests", function() {
             assertEqual(data.message, "test");
 
             assert.equal(refreshCalled, 0);
+
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    it("should work after refresh migrating old cookie based sessions", async function(done) {
+        try {
+            jest.setTimeout(10000);
+            await startST();
+
+            AuthHttpRequest.init({
+                apiDomain: BASE_URL,
+                tokenTransferMethod: "cookie"
+            });
+            let userId = "testing-supertokens-react-native";
+
+            let loginResponse = await global.fetch(`${BASE_URL}/login`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+
+            assert((await loginResponse.text()) === userId);
+
+            cookieJar.setCookieSync("sIdRefreshToken=asdf", `${BASE_URL}/`);
+
+            // This is to verify that the cookie is correctly set
+            let currentCookies = cookieJar.getCookiesSync(`${BASE_URL}/`);
+            let idRefreshInCookies = currentCookies.filter(i => i.key === "sIdRefreshToken");
+
+            assert(idRefreshInCookies.length !== 0);
+
+            //check that the number of times the refreshAPI was called is 0
+            assert((await getNumberOfTimesRefreshCalled()) === 0);
+
+            let getResponse = await global.fetch(`${BASE_URL}/`);
+
+            //check that the response to getSession was success
+            assert((await getResponse.text()) === userId);
+
+            //check that the number of time the refreshAPI was called is 1
+            assert((await getNumberOfTimesRefreshCalled()) === 1);
+
+            currentCookies = cookieJar.getCookiesSync(`${BASE_URL}/`);
+            idRefreshInCookies = currentCookies.filter(i => i.key === "sIdRefreshToken");
+
+            assert(idRefreshInCookies.length === 0);
+
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    it("should work after refresh migrating old cookie based sessions with expired access tokens", async function(done) {
+        try {
+            jest.setTimeout(10000);
+            await startST();
+
+            AuthHttpRequest.init({
+                apiDomain: BASE_URL,
+                tokenTransferMethod: "cookie"
+            });
+            let userId = "testing-supertokens-react-native";
+
+            let loginResponse = await global.fetch(`${BASE_URL}/login`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+
+            assert((await loginResponse.text()) === userId);
+
+            // This would work even without sIdRefreshToken since we don't actually check the body of the response, just call refresh on all 401s
+            cookieJar.setCookieSync("sIdRefreshToken=asdf", `${BASE_URL}/`);
+            cookieJar.setCookieSync(`sAccessToken=${""};Expires=0`, `${BASE_URL}/`);
+
+            // This is to verify that the cookie is correctly set
+            let currentCookies = cookieJar.getCookiesSync(`${BASE_URL}/`);
+            let idRefreshInCookies = currentCookies.filter(i => i.key === "sIdRefreshToken");
+            let accessTokenInCookies = currentCookies.filter(i => i.key === "sAccessToken");
+
+            assert(idRefreshInCookies.length !== 0);
+            assert(accessTokenInCookies.length !== 0);
+
+            //check that the number of times the refreshAPI was called is 0
+            assert((await getNumberOfTimesRefreshCalled()) === 0);
+
+            let getResponse = await global.fetch(`${BASE_URL}/`);
+
+            //check that the response to getSession was success
+            assert((await getResponse.text()) === userId);
+
+            //check that the number of time the refreshAPI was called is 1
+            assert((await getNumberOfTimesRefreshCalled()) === 1);
+
+            currentCookies = cookieJar.getCookiesSync(`${BASE_URL}/`);
+            idRefreshInCookies = currentCookies.filter(i => i.key === "sIdRefreshToken");
+
+            assert(idRefreshInCookies.length === 0);
 
             done();
         } catch (err) {

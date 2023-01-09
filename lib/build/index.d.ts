@@ -8,6 +8,7 @@ export default class AuthHttpRequest {
     static doesSessionExist: () => Promise<boolean>;
     static addAxiosInterceptors: (axiosInstance: any) => void;
     static signOut: () => Promise<void>;
+    static getAccessToken: () => Promise<string | undefined>;
 }
 export declare let init: typeof AuthHttpRequest.init;
 export declare let getUserId: typeof AuthHttpRequest.getUserId;
