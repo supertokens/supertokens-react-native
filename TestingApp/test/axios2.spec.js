@@ -40,6 +40,7 @@ import "./setup";
 process.env.TEST_MODE = "testing";
 
 const BASE_URL = "http://localhost:8080";
+let cookieJar = new tough.CookieJar();
 
 let axiosInstance;
 
@@ -85,7 +86,7 @@ describe("Axios AuthHttpRequest class tests", function() {
         await instance.post(BASE_URL_FOR_ST + "/beforeeach");
         await instance.post(BASE_URL + "/beforeeach");
 
-        let cookieJar = new tough.CookieJar();
+        cookieJar = new tough.CookieJar();
         axiosInstance = axios.create({
             withCredentials: true
         });
@@ -199,5 +200,101 @@ describe("Axios AuthHttpRequest class tests", function() {
         assertEqual(exception.response.status, 401);
 
         assertEqual(await getNumberOfTimesRefreshAttempted(), refreshAttemptedBeforeApiCall);
+    });
+
+    it("should work after refresh migrating old cookie based sessions", async function() {
+        await startST();
+        AuthHttpRequest.addAxiosInterceptors(axiosInstance);
+        AuthHttpRequest.init({
+            apiDomain: BASE_URL,
+            tokenTransferMethod: "cookie"
+        });
+
+        let userId = "testing-supertokens-react-native";
+
+        let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json"
+            }
+        });
+        let userIdFromResponse = loginResponse.data;
+        assertEqual(userId, userIdFromResponse);
+
+        cookieJar.setCookieSync("sIdRefreshToken=asdf", `${BASE_URL}/`);
+
+        // This is to verify that the cookie is correctly set
+        let currentCookies = cookieJar.getCookiesSync(`${BASE_URL}/`);
+        let idRefreshInCookies = currentCookies.filter(i => i.key === "sIdRefreshToken");
+
+        assert(idRefreshInCookies.length !== 0);
+
+        //check that the number of times the refreshAPI was called is 0
+        assert((await getNumberOfTimesRefreshCalled()) === 0);
+
+        let baseResponse = await axiosInstance({
+            url: `${BASE_URL}/`,
+            method: "GET",
+            headers: { "Cache-Control": "no-cache, private" }
+        });
+
+        assertEqual(baseResponse.data, userId);
+
+        //check that the number of time the refreshAPI was called is 1
+        assert((await getNumberOfTimesRefreshCalled()) === 1);
+
+        currentCookies = cookieJar.getCookiesSync(`${BASE_URL}/`);
+        idRefreshInCookies = currentCookies.filter(i => i.key === "sIdRefreshToken");
+
+        assert(idRefreshInCookies.length === 0);
+    });
+
+    it("should work after refresh migrating old cookie based sessions with expired access tokens", async function() {
+        await startST();
+        AuthHttpRequest.addAxiosInterceptors(axiosInstance);
+        AuthHttpRequest.init({
+            apiDomain: BASE_URL,
+            tokenTransferMethod: "cookie"
+        });
+
+        let userId = "testing-supertokens-react-native";
+
+        let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json"
+            }
+        });
+        let userIdFromResponse = loginResponse.data;
+        assertEqual(userId, userIdFromResponse);
+
+        cookieJar.setCookieSync("sIdRefreshToken=asdf", `${BASE_URL}/`);
+
+        // This is to verify that the cookie is correctly set
+        let currentCookies = cookieJar.getCookiesSync(`${BASE_URL}/`);
+        let idRefreshInCookies = currentCookies.filter(i => i.key === "sIdRefreshToken");
+        let accessTokenInCookies = currentCookies.filter(i => i.key === "sAccessToken");
+
+        assert(idRefreshInCookies.length !== 0);
+        assert(accessTokenInCookies.length !== 0);
+
+        //check that the number of times the refreshAPI was called is 0
+        assert((await getNumberOfTimesRefreshCalled()) === 0);
+
+        let baseResponse = await axiosInstance({
+            url: `${BASE_URL}/`,
+            method: "GET",
+            headers: { "Cache-Control": "no-cache, private" }
+        });
+
+        assertEqual(baseResponse.data, userId);
+
+        //check that the number of time the refreshAPI was called is 1
+        assert((await getNumberOfTimesRefreshCalled()) === 1);
+
+        currentCookies = cookieJar.getCookiesSync(`${BASE_URL}/`);
+        idRefreshInCookies = currentCookies.filter(i => i.key === "sIdRefreshToken");
+
+        assert(idRefreshInCookies.length === 0);
     });
 });
