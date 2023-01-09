@@ -182,11 +182,12 @@ export function setToken(tokenType: TokenType, value: string) {
 }
 
 export async function storeInStorage(name: string, value: string, expiry: number) {
+    const storageKey = `st-storage-item-${name}`;
     if (value === "") {
-        return await AsyncStorage.removeItem(name);
+        return await AsyncStorage.removeItem(storageKey);
     }
 
-    return await AsyncStorage.setItem(`st-storage-item-${name}`, value);
+    return await AsyncStorage.setItem(storageKey, value);
 }
 
 /**
