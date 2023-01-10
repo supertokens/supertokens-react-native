@@ -1725,4 +1725,50 @@ describe("Fetch AuthHttpRequest class tests", function() {
             done(err);
         }
     });
+
+    /**
+     * Create a session and store the access token. Call signOut to revoke the session and try calling
+     * an API with a manually added header. The API should work normally
+     */
+    it("Test that using old access token after signOut works fine", async function(done) {
+        try {
+            jest.setTimeout(15000);
+            await startST();
+            AuthHttpRequest.init({
+                apiDomain: BASE_URL
+            });
+
+            let userId = "testing-supertokens-react-native";
+
+            // send api request to login
+            let loginResponse = await global.fetch(`${BASE_URL}/login`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+
+            assertEqual(await loginResponse.text(), userId);
+
+            let accessToken = await AuthHttpRequest.getAccessToken();
+            assertNotEqual(accessToken, undefined);
+
+            await AuthHttpRequest.signOut();
+
+            let getSessionResponse = await global.fetch(`${BASE_URL}/`, {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`
+                }
+            });
+
+            assertEqual(getSessionResponse.status, 200);
+            assertEqual(await getSessionResponse.text(), userId);
+
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
 });

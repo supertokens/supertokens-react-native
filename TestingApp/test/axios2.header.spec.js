@@ -517,4 +517,48 @@ describe("Axios AuthHttpRequest class tests", function() {
             done(err);
         }
     });
+
+    /**
+     * Create a session and store the access token. Call signOut to revoke the session and try calling
+     * an API with a manually added header. The API should work normally
+     */
+    it("Test that using old access token after signOut works fine", async function(done) {
+        try {
+            jest.setTimeout(15000);
+            await startST();
+            AuthHttpRequest.addAxiosInterceptors(axiosInstance);
+            AuthHttpRequest.init({
+                apiDomain: BASE_URL
+            });
+
+            let userId = "testing-supertokens-react-native";
+
+            let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                }
+            });
+            let userIdFromResponse = loginResponse.data;
+            assertEqual(userId, userIdFromResponse);
+
+            let accessToken = await AuthHttpRequest.getAccessToken();
+            assertNotEqual(accessToken, undefined);
+
+            await AuthHttpRequest.signOut();
+
+            let getSessionResponse = await axiosInstance.get(`${BASE_URL}/`, {
+                headers: {
+                    authorization: `Bearer ${accessToken}`
+                }
+            });
+
+            assertEqual(getSessionResponse.status, 200);
+            assertEqual(getSessionResponse.data, userId);
+
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
 });
