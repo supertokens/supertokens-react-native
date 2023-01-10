@@ -1401,4 +1401,328 @@ describe("Fetch AuthHttpRequest class tests", function() {
             done(err);
         }
     });
+
+    /**
+     * - getAccessToken before creating a session should return undefined
+     * - getAccessToken after creating a session should return some value
+     * - getAccessToken after signOut should return undefined
+     */
+    it("getAccessToken should behave as expected", async function(done) {
+        try {
+            jest.setTimeout(10000);
+            await startST();
+            AuthHttpRequest.init({
+                apiDomain: BASE_URL
+            });
+
+            let accessToken = await AuthHttpRequest.getAccessToken();
+            assertEqual(accessToken, undefined);
+
+            let userId = "testing-supertokens-react-native";
+
+            // send api request to login
+            let loginResponse = await global.fetch(`${BASE_URL}/login`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+
+            assertEqual(await loginResponse.text(), userId);
+
+            accessToken = await AuthHttpRequest.getAccessToken();
+            assertNotEqual(accessToken, undefined);
+
+            await AuthHttpRequest.signOut();
+            accessToken = await AuthHttpRequest.getAccessToken();
+            assertEqual(accessToken, undefined);
+
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    /**
+     * Add authorization header with different casing and the API calls should still work normally
+     */
+    it("Different casing for custom authorization header should work fine", async function(done) {
+        try {
+            jest.setTimeout(10000);
+            await startST();
+            AuthHttpRequest.init({
+                apiDomain: BASE_URL
+            });
+
+            let userId = "testing-supertokens-react-native";
+
+            // send api request to login
+            let loginResponse = await global.fetch(`${BASE_URL}/login`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+
+            assertEqual(await loginResponse.text(), userId);
+
+            let accessToken = await AuthHttpRequest.getAccessToken();
+            assertNotEqual(accessToken, undefined);
+
+            let getSessionResponse = await global.fetch(`${BASE_URL}/`, {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`
+                }
+            });
+            assertEqual(await getSessionResponse.text(), userId);
+
+            getSessionResponse = await global.fetch(`${BASE_URL}/`, {
+                headers: {
+                    authorization: `Bearer ${accessToken}`
+                }
+            });
+            assertEqual(await getSessionResponse.text(), userId);
+
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    /**
+     * Add a authorization header whos token value does not match the access token.
+     * The SDK should not remove the header and it should be recieved by the API
+     */
+    it("Custom authorization header is sent to API if it does not match current access token", async function(done) {
+        try {
+            jest.setTimeout(10000);
+            await startST();
+            AuthHttpRequest.init({
+                apiDomain: BASE_URL
+            });
+
+            let userId = "testing-supertokens-react-native";
+
+            // send api request to login
+            let loginResponse = await global.fetch(`${BASE_URL}/login`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+
+            assertEqual(await loginResponse.text(), userId);
+
+            let originalFetch = global.fetch;
+
+            // We mock specific URLs here, for other URLs we make an actual network call
+            global.fetch = jest.fn((url, config) => {
+                if (url === BASE_URL + "/") {
+                    let headers = new Headers(config.headers);
+
+                    if (headers.get("authorization") === "Bearer customAccess") {
+                        let responseInit = {
+                            status: 500
+                        };
+
+                        let response = new Response(
+                            JSON.stringify({
+                                message: "test"
+                            }),
+                            responseInit
+                        );
+                        Object.defineProperty(response, "url", { value: BASE_URL + "/" });
+                        return Promise.resolve(response);
+                    }
+                }
+
+                return originalFetch(url, config);
+            });
+
+            let getSessionResponse = await global.fetch(`${BASE_URL}/`, {
+                headers: {
+                    Authorization: `Bearer customAccess`
+                }
+            });
+
+            assertEqual(getSessionResponse.status, 500);
+
+            getSessionResponse = await global.fetch(`${BASE_URL}/`, {
+                headers: {
+                    authorization: `Bearer customAccess`
+                }
+            });
+            assertEqual(getSessionResponse.status, 500);
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    /**
+     * If the URL for the request should not be intercepted by the SDK then even if the token
+     * matches the current access token it should not be removed
+     */
+    it("Custom authorization header is sent if API does not require interception", async function(done) {
+        try {
+            jest.setTimeout(10000);
+            await startST();
+            AuthHttpRequest.init({
+                apiDomain: BASE_URL
+            });
+
+            let userId = "testing-supertokens-react-native";
+
+            // send api request to login
+            let loginResponse = await global.fetch(`${BASE_URL}/login`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+
+            assertEqual(await loginResponse.text(), userId);
+
+            let accessToken = AuthHttpRequest.getAccessToken();
+            assertNotEqual(accessToken, undefined);
+
+            let originalFetch = global.fetch;
+
+            // We mock specific URLs here, for other URLs we make an actual network call
+            global.fetch = jest.fn((url, config) => {
+                if (url === "https://test.com/") {
+                    let headers = new Headers(config.headers);
+
+                    let responseInit = {
+                        status: 404
+                    };
+
+                    if (headers.get("authorization") === `Bearer ${accessToken}`) {
+                        responseInit = {
+                            status: 200
+                        };
+                    }
+
+                    let response = new Response(
+                        JSON.stringify({
+                            message: "test"
+                        }),
+                        responseInit
+                    );
+                    return Promise.resolve(response);
+                }
+
+                return originalFetch(url, config);
+            });
+
+            let getSessionResponse = await global.fetch("https://test.com/", {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`
+                }
+            });
+
+            assertEqual(getSessionResponse.status, 200);
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    /**
+     * Manually adding an access token that is an expired one as an authorization header should trigger a call
+     * to refresh and should work normally
+     */
+    it("Manually adding an expired access token should refresh and work normally", async function(done) {
+        try {
+            jest.setTimeout(15000);
+            await startST(3);
+            AuthHttpRequest.init({
+                apiDomain: BASE_URL
+            });
+
+            let userId = "testing-supertokens-react-native";
+
+            // send api request to login
+            let loginResponse = await global.fetch(`${BASE_URL}/login`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+
+            assertEqual(await loginResponse.text(), userId);
+
+            let accessToken = await AuthHttpRequest.getAccessToken();
+            assertNotEqual(accessToken, undefined);
+
+            // Wait for expiry
+            await delay(5);
+
+            let getSessionResponse = await global.fetch(`${BASE_URL}/`, {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`
+                }
+            });
+
+            assertEqual(await getNumberOfTimesRefreshCalled(), 1);
+            assertEqual(getSessionResponse.status, 200);
+            assertEqual(await getSessionResponse.text(), userId);
+
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    /**
+     * Create a session and call getAccessToken, the result should not be undefined
+     * Wait for session expiry and call getAccessToken, a new token should be recieved and refresh should be called
+     */
+    it("getAccessToken calls refresh if session has expired", async function(done) {
+        try {
+            jest.setTimeout(15000);
+            await startST(3);
+            AuthHttpRequest.init({
+                apiDomain: BASE_URL
+            });
+
+            let userId = "testing-supertokens-react-native";
+
+            // send api request to login
+            let loginResponse = await global.fetch(`${BASE_URL}/login`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+
+            assertEqual(await loginResponse.text(), userId);
+
+            let accessToken = await AuthHttpRequest.getAccessToken();
+            assertNotEqual(accessToken, undefined);
+
+            await delay(5);
+
+            let newAccessToken = await AuthHttpRequest.getAccessToken();
+            assertNotEqual(newAccessToken, undefined);
+            assertNotEqual(newAccessToken, accessToken);
+            assertEqual(await getNumberOfTimesRefreshCalled(), 1);
+
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
 });
