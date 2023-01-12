@@ -17,4 +17,5 @@ export declare let attemptRefreshingSession: () => Promise<boolean>;
 export declare let doesSessionExist: () => Promise<boolean>;
 export declare let addAxiosInterceptors: (axiosInstance: any) => void;
 export declare let signOut: () => Promise<void>;
+export declare let getAccessToken: () => Promise<string | undefined>;
 export { RecipeInterface, InputType };

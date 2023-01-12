@@ -78,4 +78,5 @@ export let attemptRefreshingSession = AuthHttpRequest.attemptRefreshingSession;
 export let doesSessionExist = AuthHttpRequest.doesSessionExist;
 export let addAxiosInterceptors = AuthHttpRequest.addAxiosInterceptors;
 export let signOut = AuthHttpRequest.signOut;
+export let getAccessToken = AuthHttpRequest.getAccessToken;
 export { RecipeInterface, InputType };
