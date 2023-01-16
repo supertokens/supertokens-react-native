@@ -30,7 +30,7 @@ export default class AntiCSRF {
 
     private constructor() {}
 
-    private static async getAntiCSRFToken(): Promise<string | null> {
+    private static async getAntiCSRFToken(associatedAccessTokenUpdate: string | undefined): Promise<string | null> {
         if (!((await getLocalSessionState()).status === "EXISTS")) {
             return null;
         }
@@ -46,6 +46,26 @@ export default class AntiCSRF {
         }
 
         let fromStorage = await getAntiCSRFFromStorage();
+
+        if (fromStorage != null) {
+            let value = "; " + fromStorage;
+            let parts = value.split("; " + ANTI_CSRF_NAME + "=");
+            let last = parts.pop();
+
+            if (last !== undefined) {
+                let temp = last.split(";").shift();
+                if (temp !== undefined) {
+                    // This means that the storage had a cookie string instead of a simple key value (legacy sessions)
+                    // We update storage to set just the value and return it
+                    await AntiCSRF.setItem(associatedAccessTokenUpdate, temp);
+                    return temp;
+                }
+
+                // This means that the storage had a cookie string but it was malformed somehow
+                return null;
+            }
+        }
+
         return fromStorage;
     }
 
@@ -56,7 +76,7 @@ export default class AntiCSRF {
         }
 
         if (AntiCSRF.tokenInfo === undefined) {
-            let antiCsrf = await this.getAntiCSRFToken();
+            let antiCsrf = await this.getAntiCSRFToken(associatedAccessTokenUpdate);
 
             if (antiCsrf === null) {
                 return undefined;
