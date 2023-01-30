@@ -1540,4 +1540,98 @@ describe("Fetch AuthHttpRequest class tests", function() {
             done(err);
         }
     });
+
+    /**
+     * - Create a session with cookies and add sIdRefreshToken manually to simulate old cookies
+     * - Change the token method to headers
+     * - Get session information and make sure the API succeeds, refresh is called and sIdRefreshToken is removed
+     * - Make sure getAccessToken returns undefined because the backend should have used cookies
+     * - Sign out
+     * - Login again and make sure access token is present because backend should now use headers
+     */
+    it("Test that old cookie sessions still work fine if header based auth is enabled", async function(done) {
+        try {
+            jest.setTimeout(15000);
+            await startST();
+            AuthHttpRequest.init({
+                apiDomain: BASE_URL,
+                tokenTransferMethod: "cookie"
+            });
+
+            let userId = "testing-supertokens-react-native";
+
+            // send api request to login
+            let loginResponse = await global.fetch(`${BASE_URL}/login`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+
+            assertEqual(await loginResponse.text(), userId);
+
+            // make sure there is no access token
+            let accessToken = await AuthHttpRequest.getAccessToken();
+            assertEqual(accessToken, undefined);
+
+            let getSessionResponse = await global.fetch(`${BASE_URL}/`, {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`
+                }
+            });
+
+            assertEqual(getSessionResponse.status, 200);
+            assertEqual(await getSessionResponse.text(), userId);
+
+            cookieJar.setCookieSync("sIdRefreshToken=asdf", `${BASE_URL}/`);
+            let currentCookies = cookieJar.getCookiesSync(`${BASE_URL}/`);
+            let idRefreshInCookies = currentCookies.filter(i => i.key === "sIdRefreshToken");
+
+            assert(idRefreshInCookies.length !== 0);
+
+            // Switch to header based auth
+            AuthHttpRequestFetch.config.tokenTransferMethod = "header";
+
+            let getResponse = await global.fetch(`${BASE_URL}/`);
+
+            //check that the response to getSession was success
+            assert((await getResponse.text()) === userId);
+
+            //check that the number of time the refreshAPI was called is 1
+            assert((await getNumberOfTimesRefreshCalled()) === 1);
+
+            currentCookies = cookieJar.getCookiesSync(`${BASE_URL}/`);
+            idRefreshInCookies = currentCookies.filter(i => i.key === "sIdRefreshToken");
+
+            assert(idRefreshInCookies.length === 0);
+
+            // Make sure this is still undefined because the backend should continue using cookies
+            accessToken = await AuthHttpRequest.getAccessToken();
+            assertEqual(accessToken, undefined);
+
+            await AuthHttpRequest.signOut();
+
+            // send api request to login
+            loginResponse = await global.fetch(`${BASE_URL}/login`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+
+            assertEqual(await loginResponse.text(), userId);
+
+            // Make sure now access token is present because it should use header based auth
+            accessToken = await AuthHttpRequest.getAccessToken();
+            assertNotEqual(accessToken, undefined);
+
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
 });
