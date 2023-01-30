@@ -81,6 +81,7 @@ SuperTokens.init({
     autoAddCredentials: true,
     sessionExpiredStatusCode: 401,
     sessionTokenBackendDomain: "",
+    tokenTransferMethod: "cookie",
     onHandleEvent: async (context) => {
 
     },
@@ -104,6 +105,7 @@ init({
     autoAddCredentials: true,
     sessionExpiredStatusCode: 401,
     sessionTokenBackendDomain: "",
+    tokenTransferMethod: "header",
     onHandleEvent: async (context) => {
 
     },
