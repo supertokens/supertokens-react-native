@@ -15,6 +15,7 @@
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import AuthHttpRequest from "./fetch";
+import { getLocalSessionState } from "./utils";
 
 const TOKEN_KEY = "supertokens-rn-anticsrf-key";
 const ANTI_CSRF_NAME = "sAntiCsrf";
@@ -24,13 +25,13 @@ export default class AntiCSRF {
         | undefined
         | {
               antiCsrf: string;
-              associatedIdRefreshToken: string;
+              associatedAccessTokenUpdate: string;
           };
 
     private constructor() {}
 
-    private static async getAntiCSRFToken(): Promise<string | null> {
-        if (!(await AuthHttpRequest.recipeImpl.doesSessionExist(AuthHttpRequest.config))) {
+    private static async getAntiCSRFToken(associatedAccessTokenUpdate: string | undefined): Promise<string | null> {
+        if (!((await getLocalSessionState()).status === "EXISTS")) {
             return null;
         }
 
@@ -38,43 +39,44 @@ export default class AntiCSRF {
             let fromStorage = await AsyncStorage.getItem(TOKEN_KEY);
 
             if (fromStorage !== null) {
-                let value = "; " + fromStorage;
-                let parts = value.split("; " + ANTI_CSRF_NAME + "=");
-
-                let last = parts.pop();
-                if (last !== undefined) {
-                    let splitForExpiry = fromStorage.split(";");
-                    let expiry = Date.parse(splitForExpiry[1].split("=")[1]);
-                    let currentTime = Date.now();
-
-                    if (expiry < currentTime) {
-                        await AntiCSRF.removeToken();
-                        return null;
-                    }
-
-                    let temp = last.split(";").shift();
-                    if (temp === undefined) {
-                        return null;
-                    }
-                    return temp;
-                }
+                return fromStorage;
             }
 
             return null;
         }
 
         let fromStorage = await getAntiCSRFFromStorage();
+
+        if (fromStorage != null) {
+            let value = "; " + fromStorage;
+            let parts = value.split("; " + ANTI_CSRF_NAME + "=");
+            let last = parts.pop();
+
+            if (last !== undefined) {
+                let temp = last.split(";").shift();
+                if (temp !== undefined) {
+                    // This means that the storage had a cookie string instead of a simple key value (legacy sessions)
+                    // We update storage to set just the value and return it
+                    await AntiCSRF.setItem(associatedAccessTokenUpdate, temp);
+                    return temp;
+                }
+
+                // This means that the storage had a cookie string but it was malformed somehow
+                return null;
+            }
+        }
+
         return fromStorage;
     }
 
-    static async getToken(associatedIdRefreshToken: string | undefined): Promise<string | undefined> {
-        if (associatedIdRefreshToken === undefined) {
+    static async getToken(associatedAccessTokenUpdate: string | undefined): Promise<string | undefined> {
+        if (associatedAccessTokenUpdate === undefined) {
             AntiCSRF.tokenInfo = undefined;
             return undefined;
         }
 
         if (AntiCSRF.tokenInfo === undefined) {
-            let antiCsrf = await this.getAntiCSRFToken();
+            let antiCsrf = await this.getAntiCSRFToken(associatedAccessTokenUpdate);
 
             if (antiCsrf === null) {
                 return undefined;
@@ -82,42 +84,31 @@ export default class AntiCSRF {
 
             AntiCSRF.tokenInfo = {
                 antiCsrf,
-                associatedIdRefreshToken
+                associatedAccessTokenUpdate
             };
-        } else if (AntiCSRF.tokenInfo.associatedIdRefreshToken !== associatedIdRefreshToken) {
+        } else if (AntiCSRF.tokenInfo.associatedAccessTokenUpdate !== associatedAccessTokenUpdate) {
             // csrf token has changed.
             AntiCSRF.tokenInfo = undefined;
-            return await AntiCSRF.getToken(associatedIdRefreshToken);
+            return await AntiCSRF.getToken(associatedAccessTokenUpdate);
         }
         return AntiCSRF.tokenInfo.antiCsrf;
     }
 
     // give antiCSRFToken as undefined to remove it.
     private static async setAntiCSRF(antiCSRFToken: string | undefined) {
-        async function setAntiCSRFToStorage(antiCSRFToken: string | undefined, domain: string) {
-            let expires: string | undefined = "Thu, 01 Jan 1970 00:00:01 GMT";
-            let cookieVal = "";
-            if (antiCSRFToken !== undefined) {
-                cookieVal = antiCSRFToken;
-                expires = undefined; // set cookie without expiry
-            }
-
-            let valueToSet = undefined;
-
-            if (expires !== undefined) {
-                valueToSet = `${ANTI_CSRF_NAME}=${cookieVal};expires=${expires};domain=${domain};path=/;samesite=lax`;
+        async function setAntiCSRFToStorage(antiCSRFToken: string | undefined) {
+            if (antiCSRFToken === undefined) {
+                await AntiCSRF.removeToken();
             } else {
-                valueToSet = `${ANTI_CSRF_NAME}=${cookieVal};domain=${domain};expires=Fri, 31 Dec 9999 23:59:59 GMT;path=/;samesite=lax`;
+                await AsyncStorage.setItem(TOKEN_KEY, antiCSRFToken);
             }
-
-            await AsyncStorage.setItem(TOKEN_KEY, valueToSet);
         }
 
-        await setAntiCSRFToStorage(antiCSRFToken, "");
+        await setAntiCSRFToStorage(antiCSRFToken);
     }
 
-    static async setItem(associatedIdRefreshToken: string | undefined, antiCsrf: string) {
-        if (associatedIdRefreshToken === undefined) {
+    static async setItem(associatedAccessTokenUpdate: string | undefined, antiCsrf: string) {
+        if (associatedAccessTokenUpdate === undefined) {
             AntiCSRF.tokenInfo = undefined;
             return;
         }
@@ -125,7 +116,7 @@ export default class AntiCSRF {
         await this.setAntiCSRF(antiCsrf);
         AntiCSRF.tokenInfo = {
             antiCsrf,
-            associatedIdRefreshToken
+            associatedAccessTokenUpdate
         };
     }
 

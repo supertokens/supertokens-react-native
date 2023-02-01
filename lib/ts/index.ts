@@ -15,6 +15,7 @@
 
 import AuthHttpRequestFetch from "./fetch";
 import { InputType, RecipeInterface } from "./types";
+import { getTokenForHeaderAuth } from "./utils";
 
 export default class AuthHttpRequest {
     private static axiosInterceptorQueue: (() => void)[] = [];
@@ -59,6 +60,15 @@ export default class AuthHttpRequest {
     static signOut = () => {
         return AuthHttpRequestFetch.recipeImpl.signOut(AuthHttpRequestFetch.config);
     };
+
+    static getAccessToken = async (): Promise<string | undefined> => {
+        // This takes care of refreshing the access token if needed
+        if (await AuthHttpRequestFetch.recipeImpl.doesSessionExist(AuthHttpRequestFetch.config)) {
+            return getTokenForHeaderAuth("access");
+        }
+
+        return undefined;
+    };
 }
 
 export let init = AuthHttpRequest.init;
@@ -68,4 +78,5 @@ export let attemptRefreshingSession = AuthHttpRequest.attemptRefreshingSession;
 export let doesSessionExist = AuthHttpRequest.doesSessionExist;
 export let addAxiosInterceptors = AuthHttpRequest.addAxiosInterceptors;
 export let signOut = AuthHttpRequest.signOut;
+export let getAccessToken = AuthHttpRequest.getAccessToken;
 export { RecipeInterface, InputType };

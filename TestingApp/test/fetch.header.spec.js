@@ -35,7 +35,6 @@ import "./setup";
 import { getLocalSessionState } from "supertokens-react-native/lib/build/utils";
 
 const BASE_URL = "http://localhost:8080";
-let cookieJar = new tough.CookieJar();
 
 /* TODO: 
     - User passed config should be sent as well
@@ -73,7 +72,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
     beforeAll(async function() {
         let child = spawn("./test/startServer", [
             process.env.INSTALL_PATH,
-            process.env.NODE_PORT === undefined ? 8080 : process.env.NODE_PORT
+            process.env.NODE_PORT === undefined ? 8080 : process.env.NODE_PORT,
+            "header"
         ]);
 
         // Uncomment this to print server logs
@@ -104,8 +104,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
         await instance.post(BASE_URL + "/beforeeach");
 
         let nodeFetch = require("node-fetch").default;
-        cookieJar = new tough.CookieJar();
-        const fetch = require("fetch-cookie")(nodeFetch, cookieJar);
+        const fetch = require("fetch-cookie")(nodeFetch, new tough.CookieJar());
         global.fetch = fetch;
         global.__supertokensOriginalFetch = undefined;
         global.__supertokensSessionRecipe = undefined;
@@ -142,8 +141,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
     it("testing with fetch api methods without config", async function() {
         AuthHttpRequest.init({
-            apiDomain: BASE_URL,
-            tokenTransferMethod: "cookie"
+            apiDomain: BASE_URL
         });
 
         let getResponse = await global.fetch(`${BASE_URL}/testing`, {
@@ -173,8 +171,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
     it("testing with fetch api methods with config", async function() {
         AuthHttpRequest.init({
-            apiDomain: BASE_URL,
-            tokenTransferMethod: "cookie"
+            apiDomain: BASE_URL
         });
 
         let testing = "testing";
@@ -221,8 +218,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
     it("testing with fetch api methods that doesn't exists", async function() {
         AuthHttpRequest.init({
-            apiDomain: BASE_URL,
-            tokenTransferMethod: "cookie"
+            apiDomain: BASE_URL
         });
 
         let getResponse = await global.fetch(`${BASE_URL}/fail`, {
@@ -262,8 +258,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             await startST(3);
 
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -305,8 +300,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             await startST(100, true, "0.002");
 
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
 
             let userId = "testing-supertokens-react-native";
@@ -350,8 +344,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             await startST(3);
 
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
 
             let userId = "testing-supertokens-react-native";
@@ -382,8 +375,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             await startST();
 
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
 
             let userId = "testing-supertokens-react-native";
@@ -417,8 +409,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             await startST(3);
 
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
 
             let userId = "testing-supertokens-react-native";
@@ -498,8 +489,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             await startST();
 
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -566,8 +556,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             await startST(5);
 
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -596,8 +585,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             await startST(5);
 
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -639,8 +627,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             await startST(5);
 
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -682,8 +669,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             await startST(5);
 
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -738,8 +724,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST(3, false);
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -786,8 +771,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST();
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
 
             let val = await global.fetch(`${BASE_URL}/testError`);
@@ -806,8 +790,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST();
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
 
             let val = await global.fetch(`${BASE_URL}/testError`);
@@ -826,12 +809,10 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST();
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -846,8 +827,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
             assertEqual(await loginResponse.text(), userId);
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
 
             let logoutResponse = await global.fetch(`${BASE_URL}/logout`, {
@@ -887,8 +867,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST(3);
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -927,8 +906,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST(5);
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -972,8 +950,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST(5);
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -1010,8 +987,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST(5);
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -1052,8 +1028,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST(5);
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -1106,8 +1081,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             jest.setTimeout(10000);
             await startST();
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
 
             let userId = "testing-supertokens-website";
@@ -1154,7 +1128,6 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
         AuthHttpRequest.init({
             apiDomain: BASE_URL,
-            tokenTransferMethod: "cookie",
             onHandleEvent: event => {
                 events.push("ST_" + event.action);
             }
@@ -1184,7 +1157,6 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
         AuthHttpRequest.init({
             apiDomain: BASE_URL,
-            tokenTransferMethod: "cookie",
             onHandleEvent: event => {
                 events.push(`ST_${event.action}:${JSON.stringify(event)}`);
             }
@@ -1261,8 +1233,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
             await startST();
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
 
             let userId = "testing-supertokens-react-native";
@@ -1338,8 +1309,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
             await startST(100, true, "0.002");
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
 
             let userId = "testing-supertokens-react-native";
@@ -1415,8 +1385,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
             await startST(100, true, "0.002");
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
 
             let response = await global.fetch(`${BASE_URL}/`, { method: "GET" });
@@ -1433,17 +1402,25 @@ describe("Fetch AuthHttpRequest class tests", function() {
         }
     });
 
-    it("should work after refresh migrating old cookie based sessions", async function(done) {
+    /**
+     * - getAccessToken before creating a session should return undefined
+     * - getAccessToken after creating a session should return some value
+     * - getAccessToken after signOut should return undefined
+     */
+    it("getAccessToken should behave as expected", async function(done) {
         try {
             jest.setTimeout(10000);
             await startST();
-
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
+
+            let accessToken = await AuthHttpRequest.getAccessToken();
+            assertEqual(accessToken, undefined);
+
             let userId = "testing-supertokens-react-native";
 
+            // send api request to login
             let loginResponse = await global.fetch(`${BASE_URL}/login`, {
                 method: "post",
                 headers: {
@@ -1453,87 +1430,14 @@ describe("Fetch AuthHttpRequest class tests", function() {
                 body: JSON.stringify({ userId })
             });
 
-            assert((await loginResponse.text()) === userId);
+            assertEqual(await loginResponse.text(), userId);
 
-            cookieJar.setCookieSync("sIdRefreshToken=asdf", `${BASE_URL}/`);
+            accessToken = await AuthHttpRequest.getAccessToken();
+            assertNotEqual(accessToken, undefined);
 
-            // This is to verify that the cookie is correctly set
-            let currentCookies = cookieJar.getCookiesSync(`${BASE_URL}/`);
-            let idRefreshInCookies = currentCookies.filter(i => i.key === "sIdRefreshToken");
-
-            assert(idRefreshInCookies.length !== 0);
-
-            //check that the number of times the refreshAPI was called is 0
-            assert((await getNumberOfTimesRefreshCalled()) === 0);
-
-            let getResponse = await global.fetch(`${BASE_URL}/`);
-
-            //check that the response to getSession was success
-            assert((await getResponse.text()) === userId);
-
-            //check that the number of time the refreshAPI was called is 1
-            assert((await getNumberOfTimesRefreshCalled()) === 1);
-
-            currentCookies = cookieJar.getCookiesSync(`${BASE_URL}/`);
-            idRefreshInCookies = currentCookies.filter(i => i.key === "sIdRefreshToken");
-
-            assert(idRefreshInCookies.length === 0);
-
-            done();
-        } catch (err) {
-            done(err);
-        }
-    });
-
-    it("should work after refresh migrating old cookie based sessions with expired access tokens", async function(done) {
-        try {
-            jest.setTimeout(10000);
-            await startST();
-
-            AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
-            });
-            let userId = "testing-supertokens-react-native";
-
-            let loginResponse = await global.fetch(`${BASE_URL}/login`, {
-                method: "post",
-                headers: {
-                    Accept: "application/json",
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ userId })
-            });
-
-            assert((await loginResponse.text()) === userId);
-
-            // This would work even without sIdRefreshToken since we don't actually check the body of the response, just call refresh on all 401s
-            cookieJar.setCookieSync("sIdRefreshToken=asdf", `${BASE_URL}/`);
-            cookieJar.setCookieSync(`sAccessToken=${""};Expires=0`, `${BASE_URL}/`);
-
-            // This is to verify that the cookie is correctly set
-            let currentCookies = cookieJar.getCookiesSync(`${BASE_URL}/`);
-            let idRefreshInCookies = currentCookies.filter(i => i.key === "sIdRefreshToken");
-            let accessTokenInCookies = currentCookies.filter(i => i.key === "sAccessToken");
-
-            assert(idRefreshInCookies.length !== 0);
-            assert(accessTokenInCookies.length !== 0);
-
-            //check that the number of times the refreshAPI was called is 0
-            assert((await getNumberOfTimesRefreshCalled()) === 0);
-
-            let getResponse = await global.fetch(`${BASE_URL}/`);
-
-            //check that the response to getSession was success
-            assert((await getResponse.text()) === userId);
-
-            //check that the number of time the refreshAPI was called is 1
-            assert((await getNumberOfTimesRefreshCalled()) === 1);
-
-            currentCookies = cookieJar.getCookiesSync(`${BASE_URL}/`);
-            idRefreshInCookies = currentCookies.filter(i => i.key === "sIdRefreshToken");
-
-            assert(idRefreshInCookies.length === 0);
+            await AuthHttpRequest.signOut();
+            accessToken = await AuthHttpRequest.getAccessToken();
+            assertEqual(accessToken, undefined);
 
             done();
         } catch (err) {
@@ -1542,20 +1446,14 @@ describe("Fetch AuthHttpRequest class tests", function() {
     });
 
     /**
-     * - Create a session with cookies and add sIdRefreshToken manually to simulate old cookies
-     * - Change the token method to headers
-     * - Get session information and make sure the API succeeds, refresh is called and sIdRefreshToken is removed
-     * - Make sure getAccessToken returns undefined because the backend should have used cookies
-     * - Sign out
-     * - Login again and make sure access token is present because backend should now use headers
+     * Add authorization header with different casing and the API calls should still work normally
      */
-    it("Test that old cookie sessions still work fine if header based auth is enabled", async function(done) {
+    it("Different casing for custom authorization header should work fine", async function(done) {
         try {
-            jest.setTimeout(15000);
+            jest.setTimeout(10000);
             await startST();
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
 
             let userId = "testing-supertokens-react-native";
@@ -1572,9 +1470,292 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
             assertEqual(await loginResponse.text(), userId);
 
-            // make sure there is no access token
             let accessToken = await AuthHttpRequest.getAccessToken();
-            assertEqual(accessToken, undefined);
+            assertNotEqual(accessToken, undefined);
+
+            let getSessionResponse = await global.fetch(`${BASE_URL}/`, {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`
+                }
+            });
+            assertEqual(await getSessionResponse.text(), userId);
+
+            getSessionResponse = await global.fetch(`${BASE_URL}/`, {
+                headers: {
+                    authorization: `Bearer ${accessToken}`
+                }
+            });
+            assertEqual(await getSessionResponse.text(), userId);
+
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    /**
+     * Add a authorization header whos token value does not match the access token.
+     * The SDK should not remove the header and it should be recieved by the API
+     */
+    it("Custom authorization header is sent to API if it does not match current access token", async function(done) {
+        try {
+            jest.setTimeout(10000);
+            await startST();
+            AuthHttpRequest.init({
+                apiDomain: BASE_URL
+            });
+
+            let userId = "testing-supertokens-react-native";
+
+            // send api request to login
+            let loginResponse = await global.fetch(`${BASE_URL}/login`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+
+            assertEqual(await loginResponse.text(), userId);
+
+            let originalFetch = global.fetch;
+
+            // We mock specific URLs here, for other URLs we make an actual network call
+            global.fetch = jest.fn((url, config) => {
+                if (url === BASE_URL + "/") {
+                    let headers = new Headers(config.headers);
+
+                    if (headers.get("authorization") === "Bearer customAccess") {
+                        let responseInit = {
+                            status: 500
+                        };
+
+                        let response = new Response(
+                            JSON.stringify({
+                                message: "test"
+                            }),
+                            responseInit
+                        );
+                        Object.defineProperty(response, "url", { value: BASE_URL + "/" });
+                        return Promise.resolve(response);
+                    }
+                }
+
+                return originalFetch(url, config);
+            });
+
+            let getSessionResponse = await global.fetch(`${BASE_URL}/`, {
+                headers: {
+                    Authorization: `Bearer customAccess`
+                }
+            });
+
+            assertEqual(getSessionResponse.status, 500);
+
+            getSessionResponse = await global.fetch(`${BASE_URL}/`, {
+                headers: {
+                    authorization: `Bearer customAccess`
+                }
+            });
+            assertEqual(getSessionResponse.status, 500);
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    /**
+     * If the URL for the request should not be intercepted by the SDK then even if the token
+     * matches the current access token it should not be removed
+     */
+    it("Custom authorization header is sent if API does not require interception", async function(done) {
+        try {
+            jest.setTimeout(10000);
+            await startST();
+            AuthHttpRequest.init({
+                apiDomain: BASE_URL
+            });
+
+            let userId = "testing-supertokens-react-native";
+
+            // send api request to login
+            let loginResponse = await global.fetch(`${BASE_URL}/login`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+
+            assertEqual(await loginResponse.text(), userId);
+
+            let accessToken = AuthHttpRequest.getAccessToken();
+            assertNotEqual(accessToken, undefined);
+
+            let originalFetch = global.fetch;
+
+            // We mock specific URLs here, for other URLs we make an actual network call
+            global.fetch = jest.fn((url, config) => {
+                if (url === "https://test.com/") {
+                    let headers = new Headers(config.headers);
+
+                    let responseInit = {
+                        status: 404
+                    };
+
+                    if (headers.get("authorization") === `Bearer ${accessToken}`) {
+                        responseInit = {
+                            status: 200
+                        };
+                    }
+
+                    let response = new Response(
+                        JSON.stringify({
+                            message: "test"
+                        }),
+                        responseInit
+                    );
+                    return Promise.resolve(response);
+                }
+
+                return originalFetch(url, config);
+            });
+
+            let getSessionResponse = await global.fetch("https://test.com/", {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`
+                }
+            });
+
+            assertEqual(getSessionResponse.status, 200);
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    /**
+     * Manually adding an access token that is an expired one as an authorization header should trigger a call
+     * to refresh and should work normally
+     */
+    it("Manually adding an expired access token should refresh and work normally", async function(done) {
+        try {
+            jest.setTimeout(15000);
+            await startST(3);
+            AuthHttpRequest.init({
+                apiDomain: BASE_URL
+            });
+
+            let userId = "testing-supertokens-react-native";
+
+            // send api request to login
+            let loginResponse = await global.fetch(`${BASE_URL}/login`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+
+            assertEqual(await loginResponse.text(), userId);
+
+            let accessToken = await AuthHttpRequest.getAccessToken();
+            assertNotEqual(accessToken, undefined);
+
+            // Wait for expiry
+            await delay(5);
+
+            let getSessionResponse = await global.fetch(`${BASE_URL}/`, {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`
+                }
+            });
+
+            assertEqual(await getNumberOfTimesRefreshCalled(), 1);
+            assertEqual(getSessionResponse.status, 200);
+            assertEqual(await getSessionResponse.text(), userId);
+
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    /**
+     * Create a session and call getAccessToken, the result should not be undefined
+     * Wait for session expiry and call getAccessToken, a new token should be recieved and refresh should be called
+     */
+    it("getAccessToken calls refresh if session has expired", async function(done) {
+        try {
+            jest.setTimeout(15000);
+            await startST(3);
+            AuthHttpRequest.init({
+                apiDomain: BASE_URL
+            });
+
+            let userId = "testing-supertokens-react-native";
+
+            // send api request to login
+            let loginResponse = await global.fetch(`${BASE_URL}/login`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+
+            assertEqual(await loginResponse.text(), userId);
+
+            let accessToken = await AuthHttpRequest.getAccessToken();
+            assertNotEqual(accessToken, undefined);
+
+            await delay(5);
+
+            let newAccessToken = await AuthHttpRequest.getAccessToken();
+            assertNotEqual(newAccessToken, undefined);
+            assertNotEqual(newAccessToken, accessToken);
+            assertEqual(await getNumberOfTimesRefreshCalled(), 1);
+
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    /**
+     * Create a session and store the access token. Call signOut to revoke the session and try calling
+     * an API with a manually added header. The API should work normally
+     */
+    it("Test that using old access token after signOut works fine", async function(done) {
+        try {
+            jest.setTimeout(15000);
+            await startST();
+            AuthHttpRequest.init({
+                apiDomain: BASE_URL
+            });
+
+            let userId = "testing-supertokens-react-native";
+
+            // send api request to login
+            let loginResponse = await global.fetch(`${BASE_URL}/login`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+
+            assertEqual(await loginResponse.text(), userId);
+
+            let accessToken = await AuthHttpRequest.getAccessToken();
+            assertNotEqual(accessToken, undefined);
+
+            await AuthHttpRequest.signOut();
 
             let getSessionResponse = await global.fetch(`${BASE_URL}/`, {
                 headers: {
@@ -1584,50 +1765,6 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
             assertEqual(getSessionResponse.status, 200);
             assertEqual(await getSessionResponse.text(), userId);
-
-            cookieJar.setCookieSync("sIdRefreshToken=asdf", `${BASE_URL}/`);
-            let currentCookies = cookieJar.getCookiesSync(`${BASE_URL}/`);
-            let idRefreshInCookies = currentCookies.filter(i => i.key === "sIdRefreshToken");
-
-            assert(idRefreshInCookies.length !== 0);
-
-            // Switch to header based auth
-            AuthHttpRequestFetch.config.tokenTransferMethod = "header";
-
-            let getResponse = await global.fetch(`${BASE_URL}/`);
-
-            //check that the response to getSession was success
-            assert((await getResponse.text()) === userId);
-
-            //check that the number of time the refreshAPI was called is 1
-            assert((await getNumberOfTimesRefreshCalled()) === 1);
-
-            currentCookies = cookieJar.getCookiesSync(`${BASE_URL}/`);
-            idRefreshInCookies = currentCookies.filter(i => i.key === "sIdRefreshToken");
-
-            assert(idRefreshInCookies.length === 0);
-
-            // Make sure this is still undefined because the backend should continue using cookies
-            accessToken = await AuthHttpRequest.getAccessToken();
-            assertEqual(accessToken, undefined);
-
-            await AuthHttpRequest.signOut();
-
-            // send api request to login
-            loginResponse = await global.fetch(`${BASE_URL}/login`, {
-                method: "post",
-                headers: {
-                    Accept: "application/json",
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ userId })
-            });
-
-            assertEqual(await loginResponse.text(), userId);
-
-            // Make sure now access token is present because it should use header based auth
-            accessToken = await AuthHttpRequest.getAccessToken();
-            assertNotEqual(accessToken, undefined);
 
             done();
         } catch (err) {

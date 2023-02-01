@@ -1,4 +1,5 @@
-import { IdRefreshTokenType, InputType, NormalisedInputType, RecipeInterface } from "./types";
+import { InputType, NormalisedInputType, RecipeInterface } from "./types";
+import { LocalSessionState } from "./utils";
 /**
  * @class AuthHttpRequest
  * @description wrapper for common http methods.
@@ -21,7 +22,7 @@ export default class AuthHttpRequest {
     static doRequest: (httpCall: (config?: RequestInit | undefined) => Promise<Response>, config?: RequestInit | undefined, url?: any) => Promise<Response>;
     static attemptRefreshingSession: () => Promise<boolean>;
 }
-export declare function onUnauthorisedResponse(preRequestIdToken: IdRefreshTokenType): Promise<{
+export declare function onUnauthorisedResponse(preRequestLocalSessionState: LocalSessionState): Promise<{
     result: "SESSION_EXPIRED";
     error?: any;
 } | {

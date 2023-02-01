@@ -19,7 +19,6 @@ import "isomorphic-fetch";
 // jest does not call setupFiles properly with the new react-native init, so doing it this way instead
 import "./setup";
 import AntiCsrfToken from "supertokens-react-native/lib/build/antiCsrf";
-import IdRefreshToken from "supertokens-react-native/lib/build/idRefreshToken";
 import FrontToken from "supertokens-react-native/lib/build/frontToken";
 import AuthHttpRequestFetch from "supertokens-react-native/lib/build/fetch";
 import AuthHttpRequest from "supertokens-react-native";
@@ -64,7 +63,6 @@ describe("Test general errors when calling sign out", function() {
             AuthHttpRequestFetch.initCalled = false;
             ProcessState.getInstance().reset();
             // reset all tokens
-            await IdRefreshToken.removeToken();
             await AntiCsrfToken.removeToken();
             await FrontToken.removeToken();
 
@@ -160,7 +158,6 @@ describe("Test general errors when calling sign out", function() {
             AuthHttpRequestFetch.initCalled = false;
             ProcessState.getInstance().reset();
             // reset all tokens
-            await IdRefreshToken.removeToken();
             await AntiCsrfToken.removeToken();
             await FrontToken.removeToken();
 

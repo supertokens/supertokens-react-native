@@ -8,6 +8,7 @@ export default class AuthHttpRequest {
     static doesSessionExist: () => Promise<boolean>;
     static addAxiosInterceptors: (axiosInstance: any) => void;
     static signOut: () => Promise<void>;
+    static getAccessToken: () => Promise<string | undefined>;
 }
 export declare let init: typeof AuthHttpRequest.init;
 export declare let getUserId: typeof AuthHttpRequest.getUserId;
@@ -16,4 +17,5 @@ export declare let attemptRefreshingSession: () => Promise<boolean>;
 export declare let doesSessionExist: () => Promise<boolean>;
 export declare let addAxiosInterceptors: (axiosInstance: any) => void;
 export declare let signOut: () => Promise<void>;
+export declare let getAccessToken: () => Promise<string | undefined>;
 export { RecipeInterface, InputType };

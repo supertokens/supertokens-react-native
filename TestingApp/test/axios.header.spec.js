@@ -66,14 +66,15 @@ describe("Axios AuthHttpRequest class tests", function() {
     beforeAll(async function() {
         let child = spawn("./test/startServer", [
             process.env.INSTALL_PATH,
-            process.env.NODE_PORT === undefined ? 8080 : process.env.NODE_PORT
+            process.env.NODE_PORT === undefined ? 8080 : process.env.NODE_PORT,
+            "header"
         ]);
 
         // Uncomment this to print server logs
-        // child.stdout.setEncoding('utf8');
-        // child.stderr.setEncoding('utf8');
-        // child.stdout.on("data", data => console.log(data))
-        // child.stderr.on("data", data => console.log(data))
+        child.stdout.setEncoding("utf8");
+        child.stderr.setEncoding("utf8");
+        child.stdout.on("data", data => console.log(data));
+        child.stderr.on("data", data => console.log(data));
         await new Promise(r => setTimeout(r, 1000));
     });
 
@@ -142,8 +143,7 @@ describe("Axios AuthHttpRequest class tests", function() {
 
     it("testing getDomain", async function() {
         AuthHttpRequest.init({
-            apiDomain: BASE_URL,
-            tokenTransferMethod: "cookie"
+            apiDomain: BASE_URL
         });
 
         let getResponse = await axios.get(`${BASE_URL}/testing`);
@@ -167,8 +167,7 @@ describe("Axios AuthHttpRequest class tests", function() {
 
     it("testing api methods without config", async function() {
         AuthHttpRequest.init({
-            apiDomain: BASE_URL,
-            tokenTransferMethod: "cookie"
+            apiDomain: BASE_URL
         });
 
         let getResponse = await axiosInstance.get(`${BASE_URL}/testing`);
@@ -193,8 +192,7 @@ describe("Axios AuthHttpRequest class tests", function() {
 
     it("testing api methods with config", async function() {
         AuthHttpRequest.init({
-            apiDomain: BASE_URL,
-            tokenTransferMethod: "cookie"
+            apiDomain: BASE_URL
         });
 
         let testing = "testing";
@@ -245,8 +243,7 @@ describe("Axios AuthHttpRequest class tests", function() {
 
     it("testing api methods that doesn't exists", async function() {
         AuthHttpRequest.init({
-            apiDomain: BASE_URL,
-            tokenTransferMethod: "cookie"
+            apiDomain: BASE_URL
         });
         let expectedStatusCode = 404;
         try {
@@ -317,8 +314,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             await startST();
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
-                apiDomain: UTILS_BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: UTILS_BASE_URL
             });
             let userId = "testing-supertokens-react-native";
             let loginResponse = await axiosInstance.post(`${UTILS_BASE_URL}/login`, JSON.stringify({ userId }), {
@@ -327,7 +323,6 @@ describe("Axios AuthHttpRequest class tests", function() {
                     "Content-Type": "application/json"
                 }
             });
-
             let userIdFromResponse = loginResponse.data;
             assertEqual(userId, userIdFromResponse);
             await delay(3);
@@ -351,7 +346,6 @@ describe("Axios AuthHttpRequest class tests", function() {
 
         AuthHttpRequest.init({
             apiDomain: BASE_URL,
-            tokenTransferMethod: "cookie",
             onHandleEvent: event => {
                 events.push("ST_" + event.action);
             }
@@ -379,7 +373,6 @@ describe("Axios AuthHttpRequest class tests", function() {
 
         AuthHttpRequest.init({
             apiDomain: BASE_URL,
-            tokenTransferMethod: "cookie",
             onHandleEvent: event => {
                 events.push(`ST_${event.action}:${JSON.stringify(event)}`);
             }
@@ -405,8 +398,7 @@ describe("Axios AuthHttpRequest class tests", function() {
         AuthHttpRequest.addAxiosInterceptors(axiosInstance);
 
         AuthHttpRequest.init({
-            apiDomain: BASE_URL,
-            tokenTransferMethod: "cookie"
+            apiDomain: BASE_URL
         });
 
         let userId = "testing-supertokens-react-native";
@@ -432,8 +424,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
 
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
 
             let userId = "testing-supertokens-react-native";
@@ -463,8 +454,7 @@ describe("Axios AuthHttpRequest class tests", function() {
         AuthHttpRequest.addAxiosInterceptors(axiosInstance);
 
         AuthHttpRequest.init({
-            apiDomain: BASE_URL,
-            tokenTransferMethod: "cookie"
+            apiDomain: BASE_URL
         });
 
         let userId = "testing-supertokens-react-native";
@@ -489,8 +479,7 @@ describe("Axios AuthHttpRequest class tests", function() {
         AuthHttpRequest.addAxiosInterceptors(axiosInstance);
 
         AuthHttpRequest.init({
-            apiDomain: BASE_URL,
-            tokenTransferMethod: "cookie"
+            apiDomain: BASE_URL
         });
 
         let userId = "testing-supertokens-react-native";
@@ -540,8 +529,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             await startST();
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -599,8 +587,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             await startST(5);
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -625,8 +612,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             await startST();
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -663,8 +649,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             await startST(5);
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
 
             let userId = "testing-supertokens-react-native";
@@ -703,8 +688,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             await startST(5, true);
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -755,8 +739,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             await startST(3, false);
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
             // test out anti-csrf
@@ -802,8 +785,7 @@ describe("Axios AuthHttpRequest class tests", function() {
 
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -863,8 +845,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             await startST();
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -894,8 +875,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             await startST();
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             try {
                 await axiosInstance.get(`${BASE_URL}/testError`);
@@ -916,8 +896,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             jest.setTimeout(15000);
             await startST();
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             try {
                 await axiosInstance.get(`${BASE_URL}/testError`);
@@ -940,12 +919,10 @@ describe("Axios AuthHttpRequest class tests", function() {
             await startST();
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -958,8 +935,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             assertEqual(userId, loginResponse.data);
 
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
 
             let logoutResponse = await axiosInstance.post(`${BASE_URL}/logout`, JSON.stringify({ userId }), {
@@ -996,8 +972,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             await startST(5);
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
 
             await axiosInstance.get(`https://www.google.com`);
@@ -1047,8 +1022,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             await startST(5);
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -1091,8 +1065,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             await startST(5);
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: BASE_URL
             });
             let userId = "testing-supertokens-react-native";
 
@@ -1127,8 +1100,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             await startST();
             addAxiosInterceptorsTest(axiosInstance);
             AuthHttpRequest.init({
-                apiDomain: UTILS_BASE_URL,
-                tokenTransferMethod: "cookie"
+                apiDomain: UTILS_BASE_URL
             });
             let userId = "testing-supertokens-react-native";
             let multipleInterceptorResponse = await axiosInstance.post(
@@ -1154,8 +1126,7 @@ describe("Axios AuthHttpRequest class tests", function() {
         await startST();
         AuthHttpRequest.addAxiosInterceptors(axiosInstance);
         AuthHttpRequest.init({
-            apiDomain: BASE_URL,
-            tokenTransferMethod: "cookie"
+            apiDomain: BASE_URL
         });
 
         let userId = "testing-supertokens-react-native";

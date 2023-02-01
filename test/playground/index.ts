@@ -80,7 +80,8 @@ SuperTokens.init({
     apiBasePath: "",
     autoAddCredentials: true,
     sessionExpiredStatusCode: 401,
-    cookieDomain: "",
+    sessionTokenBackendDomain: "",
+    tokenTransferMethod: "cookie",
     onHandleEvent: async (context) => {
 
     },
@@ -103,7 +104,8 @@ init({
     apiBasePath: "",
     autoAddCredentials: true,
     sessionExpiredStatusCode: 401,
-    cookieDomain: "",
+    sessionTokenBackendDomain: "",
+    tokenTransferMethod: "header",
     onHandleEvent: async (context) => {
 
     },

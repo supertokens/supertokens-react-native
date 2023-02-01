@@ -19,9 +19,14 @@ import AuthHttpRequestFetch, { onUnauthorisedResponse } from "./fetch";
 
 import FrontToken from "./frontToken";
 import AntiCSRF from "./antiCsrf";
-import IdRefreshToken from "./idRefreshToken";
 import { PROCESS_STATE, ProcessState } from "./processState";
-import { shouldDoInterceptionBasedOnUrl } from "./utils";
+import {
+    fireSessionUpdateEventsIfNecessary,
+    getLocalSessionState,
+    getTokenForHeaderAuth,
+    setToken,
+    shouldDoInterceptionBasedOnUrl
+} from "./utils";
 
 function getUrlFromConfig(config: AxiosRequestConfig) {
     let url: string = config.url === undefined ? "" : config.url;
@@ -49,7 +54,7 @@ export async function interceptorFunctionRequestFulfilled(config: AxiosRequestCo
             !shouldDoInterceptionBasedOnUrl(
                 url,
                 AuthHttpRequestFetch.config.apiDomain,
-                AuthHttpRequestFetch.config.cookieDomain
+                AuthHttpRequestFetch.config.sessionTokenBackendDomain
             );
     } catch (err) {
         // This is because when this function is called we always have a full URL (refer to getUrlFromConfig),
@@ -63,11 +68,11 @@ export async function interceptorFunctionRequestFulfilled(config: AxiosRequestCo
     }
 
     ProcessState.getInstance().addState(PROCESS_STATE.CALLING_INTERCEPTION_REQUEST);
-    const preRequestIdToken = await IdRefreshToken.getIdRefreshToken(true);
+    const preRequestLocalSessionState = await getLocalSessionState();
     let configWithAntiCsrf: AxiosRequestConfig = config;
 
-    if (preRequestIdToken.status === "EXISTS") {
-        const antiCsrfToken = await AntiCSRF.getToken(preRequestIdToken.token);
+    if (preRequestLocalSessionState.status === "EXISTS") {
+        const antiCsrfToken = await AntiCSRF.getToken(preRequestLocalSessionState.lastAccessTokenUpdate);
         if (antiCsrfToken !== undefined) {
             configWithAntiCsrf = {
                 ...configWithAntiCsrf,
@@ -105,6 +110,13 @@ export async function interceptorFunctionRequestFulfilled(config: AxiosRequestCo
                   }
     };
 
+    const transferMethod = AuthHttpRequestFetch.config.tokenTransferMethod;
+    configWithAntiCsrf.headers!["st-auth-mode"] = transferMethod;
+
+    configWithAntiCsrf = await removeAuthHeaderIfMatchesLocalToken(configWithAntiCsrf);
+
+    await setAuthorizationHeaderIfRequired(configWithAntiCsrf);
+
     return configWithAntiCsrf;
 }
 
@@ -124,7 +136,7 @@ export function responseInterceptor(axiosInstance: any) {
                     !shouldDoInterceptionBasedOnUrl(
                         url,
                         AuthHttpRequestFetch.config.apiDomain,
-                        AuthHttpRequestFetch.config.cookieDomain
+                        AuthHttpRequestFetch.config.sessionTokenBackendDomain
                     );
             } catch (err) {
                 // This is because when this function is called we always have a full URL (refer to getUrlFromConfig),
@@ -139,10 +151,14 @@ export function responseInterceptor(axiosInstance: any) {
 
             ProcessState.getInstance().addState(PROCESS_STATE.CALLING_INTERCEPTION_RESPONSE);
 
-            let idRefreshToken = response.headers["id-refresh-token"];
-            if (idRefreshToken !== undefined) {
-                await IdRefreshToken.setIdRefreshToken(idRefreshToken, response.status);
-            }
+            const preRequestLocalSessionState = await getLocalSessionState();
+            await saveTokensFromHeaders(response);
+
+            fireSessionUpdateEventsIfNecessary(
+                preRequestLocalSessionState.status === "EXISTS",
+                response.status,
+                response.headers["front-token"]
+            );
 
             if (response.status === AuthHttpRequestFetch.config.sessionExpiredStatusCode) {
                 let config = response.config;
@@ -159,24 +175,10 @@ export function responseInterceptor(axiosInstance: any) {
                     true
                 );
             } else {
-                let antiCsrfToken = response.headers["anti-csrf"];
-                if (antiCsrfToken !== undefined) {
-                    let tok = await IdRefreshToken.getIdRefreshToken(true);
-                    if (tok.status === "EXISTS") {
-                        await AntiCSRF.setItem(tok.token, antiCsrfToken);
-                    }
-                }
-                let frontToken = response.headers["front-token"];
-                if (frontToken !== undefined) {
-                    await FrontToken.setItem(frontToken);
-                }
                 return response;
             }
         } finally {
-            if (
-                !doNotDoInterception &&
-                !(await AuthHttpRequestFetch.recipeImpl.doesSessionExist(AuthHttpRequestFetch.config))
-            ) {
+            if (!doNotDoInterception && (await getLocalSessionState()).status !== "EXISTS") {
                 await AntiCSRF.removeToken();
                 await FrontToken.removeToken();
             }
@@ -240,7 +242,7 @@ export default class AuthHttpRequest {
                 !shouldDoInterceptionBasedOnUrl(
                     url,
                     AuthHttpRequestFetch.config.apiDomain,
-                    AuthHttpRequestFetch.config.cookieDomain
+                    AuthHttpRequestFetch.config.sessionTokenBackendDomain
                 ) &&
                 viaInterceptor;
         } catch (err) {
@@ -258,16 +260,17 @@ export default class AuthHttpRequest {
             return await httpCall(config);
         }
 
+        config = await removeAuthHeaderIfMatchesLocalToken(config);
         try {
             let returnObj = undefined;
             while (true) {
                 // we read this here so that if there is a session expiry error, then we can compare this value (that caused the error) with the value after the request is sent.
                 // to avoid race conditions
-                const preRequestIdToken = await IdRefreshToken.getIdRefreshToken(true);
+                const preRequestLocalSessionState = await getLocalSessionState();
                 let configWithAntiCsrf: AxiosRequestConfig = config;
 
-                if (preRequestIdToken.status === "EXISTS") {
-                    const antiCsrfToken = await AntiCSRF.getToken(preRequestIdToken.token);
+                if (preRequestLocalSessionState.status === "EXISTS") {
+                    const antiCsrfToken = await AntiCSRF.getToken(preRequestLocalSessionState.lastAccessTokenUpdate);
                     if (antiCsrfToken !== undefined) {
                         configWithAntiCsrf = {
                             ...configWithAntiCsrf,
@@ -307,6 +310,12 @@ export default class AuthHttpRequest {
                                   ...configWithAntiCsrf.headers
                               }
                 };
+
+                const transferMethod = AuthHttpRequestFetch.config.tokenTransferMethod;
+                configWithAntiCsrf.headers!["st-auth-mode"] = transferMethod;
+
+                await setAuthorizationHeaderIfRequired(configWithAntiCsrf);
+
                 try {
                     let localPrevError = prevError;
                     let localPrevResponse = prevResponse;
@@ -317,12 +326,17 @@ export default class AuthHttpRequest {
                     }
                     let response =
                         localPrevResponse === undefined ? await httpCall(configWithAntiCsrf) : localPrevResponse;
-                    let idRefreshToken = response.headers["id-refresh-token"];
-                    if (idRefreshToken !== undefined) {
-                        await IdRefreshToken.setIdRefreshToken(idRefreshToken, response.status);
-                    }
+
+                    await saveTokensFromHeaders(response);
+
+                    fireSessionUpdateEventsIfNecessary(
+                        preRequestLocalSessionState.status === "EXISTS",
+                        response.status,
+                        response.headers["front-token"]
+                    );
+
                     if (response.status === AuthHttpRequestFetch.config.sessionExpiredStatusCode) {
-                        const refreshResult = await onUnauthorisedResponse(preRequestIdToken);
+                        const refreshResult = await onUnauthorisedResponse(preRequestLocalSessionState);
 
                         if (refreshResult.result !== "RETRY") {
                             returnObj = refreshResult.error
@@ -331,29 +345,21 @@ export default class AuthHttpRequest {
                             break;
                         }
                     } else {
-                        let antiCsrfToken = response.headers["anti-csrf"];
-                        if (antiCsrfToken !== undefined) {
-                            let tok = await IdRefreshToken.getIdRefreshToken(true);
-                            if (tok.status === "EXISTS") {
-                                await AntiCSRF.setItem(tok.token, antiCsrfToken);
-                            }
-                        }
-                        let frontToken = response.headers["front-token"];
-                        if (frontToken !== undefined) {
-                            await FrontToken.setItem(frontToken);
-                        }
                         return response;
                     }
                 } catch (err) {
-                    if (err.response !== undefined) {
-                        let idRefreshToken = err.response.headers["id-refresh-token"];
+                    const response = (err as any).response;
+                    if (response !== undefined) {
+                        await saveTokensFromHeaders(response);
 
-                        if (idRefreshToken !== undefined) {
-                            await IdRefreshToken.setIdRefreshToken(idRefreshToken, err.response.status);
-                        }
+                        fireSessionUpdateEventsIfNecessary(
+                            preRequestLocalSessionState.status === "EXISTS",
+                            response.status,
+                            response.headers["front-token"]
+                        );
 
                         if (err.response.status === AuthHttpRequestFetch.config.sessionExpiredStatusCode) {
-                            const refreshResult = await onUnauthorisedResponse(preRequestIdToken);
+                            const refreshResult = await onUnauthorisedResponse(preRequestLocalSessionState);
                             if (refreshResult.result !== "RETRY") {
                                 // Returning refreshResult.error as an Axios Error if we attempted a refresh
                                 // Returning the original error if we did not attempt refreshing
@@ -378,11 +384,85 @@ export default class AuthHttpRequest {
         } finally {
             // If we get here we already tried refreshing so we should have the already id refresh token either in EXISTS or NOT_EXISTS, so no need to call the backend
             // The backend should not be down if we get here, but even if it were we shouldn't need to call refresh
-            const postRequestIdToken = await IdRefreshToken.getIdRefreshToken(false);
-            if (postRequestIdToken.status === "NOT_EXISTS") {
+            const postRequestLocalSessionState = await getLocalSessionState();
+            if (postRequestLocalSessionState.status === "NOT_EXISTS") {
                 await AntiCSRF.removeToken();
                 await FrontToken.removeToken();
             }
         }
     };
+}
+
+async function saveTokensFromHeaders(response: AxiosResponse) {
+    const refreshToken = response.headers["st-refresh-token"];
+    if (refreshToken !== undefined && refreshToken !== null) {
+        await setToken("refresh", refreshToken);
+    }
+
+    const accessToken = response.headers["st-access-token"];
+    if (accessToken !== undefined && accessToken !== null) {
+        await setToken("access", accessToken);
+    }
+
+    const frontToken = response.headers["front-token"];
+    if (frontToken !== undefined && frontToken !== null) {
+        await FrontToken.setItem(frontToken);
+    }
+
+    const antiCsrfToken = response.headers["anti-csrf"];
+    if (antiCsrfToken !== undefined && antiCsrfToken !== null) {
+        const tok = await getLocalSessionState();
+        if (tok.status === "EXISTS") {
+            await AntiCSRF.setItem(tok.lastAccessTokenUpdate, antiCsrfToken);
+        }
+    }
+}
+
+async function setAuthorizationHeaderIfRequired(requestConfig: AxiosRequestConfig) {
+    if (requestConfig.headers === undefined) {
+        // This is makes TS happy
+        requestConfig.headers = {};
+    }
+
+    // We set the Authorization header even if the tokenTransferMethod preference set in the config is cookies
+    // since the active session may be using cookies. By default, we want to allow users to continue these sessions.
+    // The new session preference should be applied at the start of the next session, if the backend allows it.
+
+    const accessToken = await getTokenForHeaderAuth("access");
+    const refreshToken = await getTokenForHeaderAuth("refresh");
+
+    // We don't add the refresh token because that's only required by the refresh call which is done with fetch
+    // Still, we only add the Authorization header if both are present, because we are planning to add an option to expose the
+    // access token to the frontend while using cookie based auth - so that users can get the access token to use
+    if (accessToken !== undefined && refreshToken !== undefined) {
+        if (
+            requestConfig.headers["Authorization"] !== undefined ||
+            requestConfig.headers["authorization"] !== undefined
+        ) {
+            // No-op, keeping it this way for simplicity to compare with web SDKs
+        } else {
+            requestConfig.headers = {
+                ...requestConfig.headers,
+                Authorization: `Bearer ${accessToken}`
+            };
+        }
+    }
+}
+
+async function removeAuthHeaderIfMatchesLocalToken(config: AxiosRequestConfig) {
+    const accessToken = await getTokenForHeaderAuth("access");
+    const authHeader = config.headers!.Authorization || config.headers!.authorization;
+
+    if (accessToken !== undefined) {
+        if (authHeader === `Bearer ${accessToken}`) {
+            // We are ignoring the Authorization header set by the user in this case, because it would cause issues
+            // If we do not ignore this, then this header would be used even if the request is being retried after a refresh, even though it contains an outdated access token.
+            // This causes an infinite refresh loop.
+            const res = { ...config, headers: { ...config.headers } };
+            delete res.headers.authorization;
+            delete res.headers.Authorization;
+            return res;
+        }
+    }
+    return config;
 }
