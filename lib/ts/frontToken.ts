@@ -25,6 +25,15 @@ export default class FrontToken {
 
                 let last = parts.pop();
                 if (last !== undefined) {
+                    let splitForExpiry = frontTokenFromStorage.split(";");
+                    let expiry = Date.parse(splitForExpiry[1].split("=")[1]);
+                    let currentTime = Date.now();
+
+                    if (expiry < currentTime) {
+                        await FrontToken.removeToken();
+                        return null;
+                    }
+
                     let temp = last.split(";").shift();
                     if (temp !== undefined) {
                         // We update storage to set just the value and return it
