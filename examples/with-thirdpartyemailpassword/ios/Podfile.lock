@@ -277,7 +277,7 @@ PODS:
   - React-jsinspector (0.66.1)
   - React-logger (0.66.1):
     - glog
-  - react-native-app-auth (6.4.0):
+  - react-native-app-auth (6.4.3):
     - AppAuth (= 1.4.0)
     - React-Core
   - React-perflogger (0.66.1)
@@ -345,9 +345,9 @@ PODS:
     - React-jsi (= 0.66.1)
     - React-logger (= 0.66.1)
     - React-perflogger (= 0.66.1)
-  - RNAppleAuthentication (2.1.5):
+  - RNAppleAuthentication (2.2.2):
     - React-Core
-  - RNCAsyncStorage (1.15.9):
+  - RNCAsyncStorage (1.17.10):
     - React-Core
   - Yoga (1.14.0)
   - YogaKit (1.18.1):
@@ -529,7 +529,7 @@ SPEC CHECKSUMS:
   React-jsiexecutor: db2f6e22a534d466fc0e34e622df47d9d20bab2f
   React-jsinspector: 8c0517dee5e8c70cd6c3066f20213ff7ce54f176
   React-logger: bfddd3418dc1d45b77b822958f3e31422e2c179b
-  react-native-app-auth: ed620d57f4b2bfc96c28ca264133c324a575a645
+  react-native-app-auth: fd1eaa667c0bc014199456d14a6440cb74de814e
   React-perflogger: fcac6090a80e3d967791b4c7f1b1a017f9d4a398
   React-RCTActionSheet: caf5913d9f9e605f5467206cf9d1caa6d47d7ad6
   React-RCTAnimation: 6539e3bf594f6a529cd861985ba6548286ae1ead
@@ -542,11 +542,11 @@ SPEC CHECKSUMS:
   React-RCTVibration: 6600b5eed7c0fda4a433fa1198d1cb2690151791
   React-runtimeexecutor: 33a949a51bec5f8a3c9e8d8092deb259600d761e
   ReactCommon: 620442811dc6f707b4bf5e3b27d4f19c12d5a821
-  RNAppleAuthentication: 63c2127ace11985b94f852fc480eb84145653712
-  RNCAsyncStorage: d599364c12b1ddb042cc2d7ab6f8258962b83097
+  RNAppleAuthentication: 0571c08da8c327ae2afc0261b48b4a515b0286a6
+  RNCAsyncStorage: 0c357f3156fcb16c8589ede67cc036330b6698ca
   Yoga: 2b4a01651f42a32f82e6cef3830a3ba48088237f
   YogaKit: f782866e155069a2cca2517aafea43200b01fd5a
 
 PODFILE CHECKSUM: fdd55422952266444d6d2a3968778d8813bd6626
 
-COCOAPODS: 1.11.2
+COCOAPODS: 1.11.3
