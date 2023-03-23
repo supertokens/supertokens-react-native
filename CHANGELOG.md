@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+### Changes
+
+- Adds dashboard to the with-thirdpartyemailpassword example app server
+
 ## [4.0.0] - 2023-01-30
 
 ### Breaking Changes

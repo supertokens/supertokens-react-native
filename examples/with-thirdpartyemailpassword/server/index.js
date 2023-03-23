@@ -2,6 +2,7 @@ let express = require("express");
 let supertokens = require("supertokens-node");
 let Session = require("supertokens-node/recipe/session");
 let ThirdPartyEmailPassword = require("supertokens-node/recipe/thirdpartyemailpassword");
+let Dashboard = require("supertokens-node/recipe/dashboard");
 let { Google, Github } = ThirdPartyEmailPassword;
 let cors = require("cors");
 let { middleware } = require("supertokens-node/framework/express");
@@ -76,7 +77,8 @@ supertokens.init({
                 })
             ]
         }),
-        Session.init() // initializes session features
+        Session.init(), // initializes session features
+        Dashboard.init()
     ]
 });
 
