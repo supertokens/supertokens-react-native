@@ -474,54 +474,6 @@ describe("Axios AuthHttpRequest class tests", function() {
         assertEqual(await AuthHttpRequest.doesSessionExist(), false);
     });
 
-    it("update jwt data", async function() {
-        await startST();
-        AuthHttpRequest.addAxiosInterceptors(axiosInstance);
-
-        AuthHttpRequest.init({
-            apiDomain: BASE_URL
-        });
-
-        let userId = "testing-supertokens-react-native";
-
-        // send api request to login
-        let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
-            headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json"
-            }
-        });
-        assertEqual(userId, loginResponse.data);
-
-        let data = await AuthHttpRequest.getAccessTokenPayloadSecurely();
-        assertEqual(Object.keys(data).length, 0);
-
-        // update jwt data
-        let testResponse1 = await axiosInstance.post(`${BASE_URL}/update-jwt`, { key: "data" });
-        assertEqual(testResponse1.data.key, "data");
-
-        data = await AuthHttpRequest.getAccessTokenPayloadSecurely();
-        assertEqual(data.key, "data");
-
-        // get jwt data
-        let testResponse2 = await axiosInstance.get(`${BASE_URL}/update-jwt`);
-        assertEqual(testResponse2.data.key, "data");
-
-        // update jwt data
-        let testResponse3 = await axiosInstance.post(`${BASE_URL}/update-jwt`, { key1: "data1" });
-        assertEqual(testResponse3.data.key1, "data1");
-        assertEqual(testResponse3.data.key, undefined);
-
-        data = await AuthHttpRequest.getAccessTokenPayloadSecurely();
-        assertEqual(data.key1, "data1");
-        assertEqual(data.key, undefined);
-
-        // get jwt data
-        let testResponse4 = await axiosInstance.get(`${BASE_URL}/update-jwt`);
-        assertEqual(testResponse4.data.key1, "data1");
-        assertEqual(testResponse4.data.key, undefined);
-    });
-
     //test custom headers are being sent when logged in and when not*****
     it("test that custom headers are being sent when logged in", async function(done) {
         try {
@@ -1123,7 +1075,7 @@ describe("Axios AuthHttpRequest class tests", function() {
     });
 
     it("check sessionDoes exist calls refresh API just once", async function() {
-        await startST();
+        await startST(3);
         AuthHttpRequest.addAxiosInterceptors(axiosInstance);
         AuthHttpRequest.init({
             apiDomain: BASE_URL

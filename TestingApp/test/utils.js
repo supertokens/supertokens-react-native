@@ -52,7 +52,7 @@ export async function getNumberOfTimesRefreshAttempted(BASE = BASE_URL) {
 }
 
 export async function startST(
-    accessTokenValidity = 1,
+    accessTokenValidity = 3,
     enableAntiCsrf = true,
     accessTokenSigningKeyUpdateInterval = undefined
 ) {
