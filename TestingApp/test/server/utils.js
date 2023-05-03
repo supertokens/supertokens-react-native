@@ -184,7 +184,7 @@ module.exports.maxVersion = function(version1, version2) {
     return version2;
 };
 
-module.exports.isProtectedPropName = function (name) {
+module.exports.isProtectedPropName = function(name) {
     return [
         "sub",
         "iat",

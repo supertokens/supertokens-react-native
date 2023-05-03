@@ -111,7 +111,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
         global.__supertokensSessionRecipe = undefined;
     });
 
-    it("should return the appropriate access token payload", async function (done) {
+    it("should return the appropriate access token payload", async function(done) {
         try {
             jest.setTimeout(10000);
             await startST();
@@ -159,7 +159,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
         }
     });
 
-    it("should be able to refresh a session started w/ CDI 2.18", async function (done) {
+    it("should be able to refresh a session started w/ CDI 2.18", async function(done) {
         try {
             jest.setTimeout(10000);
             await startST();
@@ -179,7 +179,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
             });
 
             assertNotEqual(await AuthHttpRequest.getAccessTokenPayloadSecurely(), undefined);
-            
+
             const payload = await AuthHttpRequest.getAccessTokenPayloadSecurely();
             assert.deepStrictEqual(payload, { asdf: 1 });
 
@@ -187,7 +187,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
             if (await checkIfV3AccessTokenIsSupported()) {
                 assertNotEqual(await AuthHttpRequest.getAccessTokenPayloadSecurely(), undefined);
-            
+
                 const v3Payload = await AuthHttpRequest.getAccessTokenPayloadSecurely();
 
                 const expectedKeys = [

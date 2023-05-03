@@ -1,17 +1,17 @@
 /* Copyright (c) 2022, VRAI Labs and/or its affiliates. All rights reserved.
-*
-* This software is licensed under the Apache License, Version 2.0 (the
-* "License") as published by the Apache Software Foundation.
-*
-* You may not use this file except in compliance with the License. You may
-* obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-* WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-* License for the specific language governing permissions and limitations
-* under the License.
-*/
+ *
+ * This software is licensed under the Apache License, Version 2.0 (the
+ * "License") as published by the Apache Software Foundation.
+ *
+ * You may not use this file except in compliance with the License. You may
+ * obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 let axios = require("axios");
 import axiosCookieJarSupport from "axios-cookiejar-support";
 // const axiosCookieJarSupport = require("axios-cookiejar-support").default;
@@ -107,7 +107,7 @@ describe("Axios AuthHttpRequest class tests", function() {
         global.__supertokensSessionRecipe = undefined;
     });
 
-    it("should return the appropriate access token payload", async function (done) {
+    it("should return the appropriate access token payload", async function(done) {
         try {
             jest.setTimeout(10000);
             await startST();
@@ -154,7 +154,7 @@ describe("Axios AuthHttpRequest class tests", function() {
         }
     });
 
-    it("should be able to refresh a session started w/ CDI 2.18", async function (done) {
+    it("should be able to refresh a session started w/ CDI 2.18", async function(done) {
         try {
             jest.setTimeout(10000);
             await startST();
@@ -165,20 +165,16 @@ describe("Axios AuthHttpRequest class tests", function() {
 
             let userId = "testing-supertokens-react-native";
 
-            await axiosInstance.post(
-                `${UTILS_BASE_URL}/login-2.18`, 
-                JSON.stringify({ userId, payload: { asdf: 1 } }), 
-                {
-                    method: "post",
-                    headers: {
-                        Accept: "application/json",
-                        "Content-Type": "application/json"
-                    },
-                }   
-            );
+            await axiosInstance.post(`${UTILS_BASE_URL}/login-2.18`, JSON.stringify({ userId, payload: { asdf: 1 } }), {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                }
+            });
 
             assertNotEqual(await AuthHttpRequest.getAccessTokenPayloadSecurely(), undefined);
-            
+
             const payload = await AuthHttpRequest.getAccessTokenPayloadSecurely();
             assert.deepStrictEqual(payload, { asdf: 1 });
 
@@ -186,7 +182,7 @@ describe("Axios AuthHttpRequest class tests", function() {
 
             if (await checkIfV3AccessTokenIsSupported()) {
                 assertNotEqual(await AuthHttpRequest.getAccessTokenPayloadSecurely(), undefined);
-            
+
                 const v3Payload = await AuthHttpRequest.getAccessTokenPayloadSecurely();
 
                 const expectedKeys = [

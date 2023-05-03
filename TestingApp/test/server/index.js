@@ -21,7 +21,16 @@ let cookieParser = require("cookie-parser");
 let bodyParser = require("body-parser");
 let http = require("http");
 let cors = require("cors");
-let { startST, stopST, killAllST, setupST, cleanST, setKeyValueInConfig, maxVersion, isProtectedPropName } = require("./utils");
+let {
+    startST,
+    stopST,
+    killAllST,
+    setupST,
+    cleanST,
+    setKeyValueInConfig,
+    maxVersion,
+    isProtectedPropName
+} = require("./utils");
 // let { package_version } = require("../../../lib/build/version");
 let { middleware, errorHandler } = require("supertokens-node/framework/express");
 let { verifySession } = require("supertokens-node/recipe/session/framework/express");
@@ -91,19 +100,19 @@ function getConfig(enableAntiCsrf, enableJWT) {
                         functions: oI => {
                             return {
                                 ...oI,
-                                createNewSession: async (input) => {
+                                createNewSession: async input => {
                                     const accessTokenPayload = {
                                         ...input.accessTokenPayload,
-                                        customClaim: "customValue",
+                                        customClaim: "customValue"
                                     };
 
                                     return oI.createNewSession({
                                         ...input,
-                                        accessTokenPayload,
-                                    })
-                                },
+                                        accessTokenPayload
+                                    });
+                                }
                             };
-                        },
+                        }
                     }
                 })
             ]
@@ -123,7 +132,7 @@ function getConfig(enableAntiCsrf, enableJWT) {
             recipeList: [
                 Session.init({
                     jwt: {
-                        enable: true,
+                        enable: true
                     },
                     getTokenTransferMethod: process.env.TRANSFER_METHOD ? () => process.env.TRANSFER_METHOD : undefined,
                     errorHandlers: {
@@ -153,19 +162,19 @@ function getConfig(enableAntiCsrf, enableJWT) {
                         functions: oI => {
                             return {
                                 ...oI,
-                                createNewSession: async (input) => {
+                                createNewSession: async input => {
                                     const accessTokenPayload = {
                                         ...input.accessTokenPayload,
-                                        customClaim: "customValue",
+                                        customClaim: "customValue"
                                     };
 
                                     return oI.createNewSession({
                                         ...input,
-                                        accessTokenPayload,
-                                    })
-                                },
+                                        accessTokenPayload
+                                    });
+                                }
                             };
-                        },
+                        }
                     }
                 })
             ]
