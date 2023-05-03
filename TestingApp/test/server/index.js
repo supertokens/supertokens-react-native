@@ -26,6 +26,8 @@ let { startST, stopST, killAllST, setupST, cleanST, setKeyValueInConfig, maxVers
 let { middleware, errorHandler } = require("supertokens-node/framework/express");
 let { verifySession } = require("supertokens-node/recipe/session/framework/express");
 let { version: nodeSDKVersion } = require("supertokens-node/lib/build/version");
+let Querier = require("supertokens-node/lib/build/querier").Querier;
+let NormalisedURLPath = require("supertokens-node/lib/build/normalisedURLPath").default;
 let noOfTimesRefreshCalledDuringTest = 0;
 let noOfTimesGetSessionCalledDuringTest = 0;
 let noOfTimesRefreshAttemptedDuringTest = 0;
@@ -438,23 +440,14 @@ app.get("/test/featureFlags", (req, res) => {
         available.push("sessionClaims");
     }
 
-    if (maxVersion(nodeSDKVersion, "14.0") === nodeSDKVersion) {
+    // TODO: Remove the hardcoded true
+    if (true || maxVersion(nodeSDKVersion, "14.0") === nodeSDKVersion) {
         available.push("v3AccessToken");
     }
 
     res.send({
         available
     });
-});
-
-app.use("*", async (req, res, next) => {
-    res.status(404).send();
-});
-
-app.use(errorHandler());
-
-app.use(async (err, req, res, next) => {
-    res.send(500).send(err);
 });
 
 app.post("/login-2.18", async (req, res) => {
@@ -490,6 +483,16 @@ app.post("/login-2.18", async (req, res) => {
             ).toString("base64")
         )
         .send();
+});
+
+app.use("*", async (req, res, next) => {
+    res.status(404).send();
+});
+
+app.use(errorHandler());
+
+app.use(async (err, req, res, next) => {
+    res.send(500).send(err);
 });
 
 let server = http.createServer(app);

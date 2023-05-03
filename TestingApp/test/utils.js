@@ -118,3 +118,12 @@ export async function isGeneralErrorSupported() {
 
     return true;
 }
+
+export async function checkIfV3AccessTokenIsSupported() {
+    const features = await getFeatureFlags();
+    if (!features.includes("v3AccessToken")) {
+        return false;
+    }
+
+    return true;
+};
