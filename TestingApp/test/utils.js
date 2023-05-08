@@ -52,7 +52,7 @@ export async function getNumberOfTimesRefreshAttempted(BASE = BASE_URL) {
 }
 
 export async function startST(
-    accessTokenValidity = 1,
+    accessTokenValidity = 3,
     enableAntiCsrf = true,
     accessTokenSigningKeyUpdateInterval = undefined
 ) {
@@ -113,6 +113,15 @@ export async function getFeatureFlags() {
 export async function isGeneralErrorSupported() {
     const features = await getFeatureFlags();
     if (!features.includes("generalerror")) {
+        return false;
+    }
+
+    return true;
+}
+
+export async function checkIfV3AccessTokenIsSupported() {
+    const features = await getFeatureFlags();
+    if (!features.includes("v3AccessToken")) {
         return false;
     }
 

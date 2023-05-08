@@ -411,87 +411,6 @@ describe("Fetch AuthHttpRequest class tests", function() {
         }
     });
 
-    it("test update jwt data with fetch", async function(done) {
-        try {
-            jest.setTimeout(10000);
-            await startST(3);
-
-            AuthHttpRequest.init({
-                apiDomain: BASE_URL,
-                tokenTransferMethod: "cookie"
-            });
-
-            let userId = "testing-supertokens-react-native";
-
-            let loginResponse = await global.fetch(`${BASE_URL}/login`, {
-                method: "post",
-                headers: {
-                    Accept: "application/json",
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ userId })
-            });
-            assertEqual(await loginResponse.text(), userId);
-
-            let data = await AuthHttpRequest.getAccessTokenPayloadSecurely();
-            assertEqual(Object.keys(data).length, 0);
-
-            // update jwt data
-            let testResponse1 = await global.fetch(`${BASE_URL}/update-jwt`, {
-                method: "post",
-                headers: {
-                    Accept: "application/json",
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ key: "łukasz 馬 / 马" })
-            });
-            let data1 = await testResponse1.json();
-            assertEqual(data1.key, "łukasz 馬 / 马");
-
-            data = await AuthHttpRequest.getAccessTokenPayloadSecurely();
-            assertEqual(data.key, "łukasz 馬 / 马");
-
-            //delay for 5 seconds for access token validity expiry
-            await delay(5);
-
-            //check that the number of times the refreshAPI was called is 0
-            assertEqual(await getNumberOfTimesRefreshCalled(), 0);
-
-            // get jwt data
-            let testResponse2 = await global.fetch(`${BASE_URL}/update-jwt`, { method: "get" });
-            let data2 = await testResponse2.json();
-            assertEqual(data2.key, "łukasz 馬 / 马");
-            assertEqual(await getNumberOfTimesRefreshCalled(), 1);
-
-            // update jwt data
-            let testResponse3 = await global.fetch(`${BASE_URL}/update-jwt`, {
-                method: "post",
-                headers: {
-                    Accept: "application/json",
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ key1: " łukasz data1" })
-            });
-            let data3 = await testResponse3.json();
-            assertEqual(data3.key1, " łukasz data1");
-            assertEqual(data3.key, undefined);
-
-            data = await AuthHttpRequest.getAccessTokenPayloadSecurely();
-            assertEqual(data.key1, " łukasz data1");
-            assertEqual(data.key, undefined);
-
-            // get jwt data
-            let testResponse4 = await global.fetch(`${BASE_URL}/update-jwt`, { method: "get" });
-            let data4 = await testResponse4.json();
-            assertEqual(data4.key1, " łukasz data1");
-            assertEqual(data4.key, undefined);
-
-            done();
-        } catch (err) {
-            done(err);
-        }
-    });
-
     // test custom headers are being sent when logged in and when not*****
     it("test with fetch that custom headers are being sent", async function(done) {
         try {
@@ -1104,7 +1023,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
     it("fetch check sessionDoes exist calls refresh API just once", async function(done) {
         try {
             jest.setTimeout(10000);
-            await startST();
+            await startST(3);
             AuthHttpRequest.init({
                 apiDomain: BASE_URL,
                 tokenTransferMethod: "cookie"

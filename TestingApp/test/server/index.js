@@ -21,11 +21,22 @@ let cookieParser = require("cookie-parser");
 let bodyParser = require("body-parser");
 let http = require("http");
 let cors = require("cors");
-let { startST, stopST, killAllST, setupST, cleanST, setKeyValueInConfig, maxVersion } = require("./utils");
+let {
+    startST,
+    stopST,
+    killAllST,
+    setupST,
+    cleanST,
+    setKeyValueInConfig,
+    maxVersion,
+    isProtectedPropName
+} = require("./utils");
 // let { package_version } = require("../../../lib/build/version");
 let { middleware, errorHandler } = require("supertokens-node/framework/express");
 let { verifySession } = require("supertokens-node/recipe/session/framework/express");
 let { version: nodeSDKVersion } = require("supertokens-node/lib/build/version");
+let Querier = require("supertokens-node/lib/build/querier").Querier;
+let NormalisedURLPath = require("supertokens-node/lib/build/normalisedURLPath").default;
 let noOfTimesRefreshCalledDuringTest = 0;
 let noOfTimesGetSessionCalledDuringTest = 0;
 let noOfTimesRefreshAttemptedDuringTest = 0;
@@ -47,7 +58,129 @@ app.use(urlencodedParser);
 app.use(jsonParser);
 app.use(cookieParser());
 
-function getConfig(enableAntiCsrf) {
+function getConfig(enableAntiCsrf, enableJWT) {
+    if (maxVersion(nodeSDKVersion, "14.0") === nodeSDKVersion && enableJWT) {
+        return {
+            appInfo: {
+                appName: "SuperTokens",
+                apiDomain: "0.0.0.0:" + (process.env.NODE_PORT === undefined ? 8080 : process.env.NODE_PORT),
+                websiteDomain: "http://localhost.org:8080"
+            },
+            supertokens: {
+                connectionURI: "http://localhost:9000"
+            },
+            recipeList: [
+                Session.init({
+                    exposeAccessTokenToFrontendInCookieBasedAuth: true,
+                    getTokenTransferMethod: process.env.TRANSFER_METHOD ? () => process.env.TRANSFER_METHOD : undefined,
+                    errorHandlers: {
+                        onUnauthorised: (err, req, res) => {
+                            res.setStatusCode(401);
+                            res.sendJSONResponse({});
+                        }
+                    },
+                    antiCsrf: enableAntiCsrf ? "VIA_TOKEN" : "NONE",
+                    override: {
+                        apis: oI => {
+                            return {
+                                ...oI,
+                                refreshPOST: undefined,
+                                signOutPOST: async input => {
+                                    let body = await input.options.req.getJSONBody();
+                                    if (body.generalError === true) {
+                                        return {
+                                            status: "GENERAL_ERROR",
+                                            message: "general error from signout API"
+                                        };
+                                    }
+                                    return oI.signOutPOST(input);
+                                }
+                            };
+                        },
+                        functions: oI => {
+                            return {
+                                ...oI,
+                                createNewSession: async input => {
+                                    const accessTokenPayload = {
+                                        ...input.accessTokenPayload,
+                                        customClaim: "customValue"
+                                    };
+
+                                    return oI.createNewSession({
+                                        ...input,
+                                        accessTokenPayload
+                                    });
+                                }
+                            };
+                        }
+                    }
+                })
+            ]
+        };
+    }
+
+    if (maxVersion(nodeSDKVersion, "8.3") === nodeSDKVersion && enableJWT) {
+        return {
+            appInfo: {
+                appName: "SuperTokens",
+                apiDomain: "0.0.0.0:" + (process.env.NODE_PORT === undefined ? 8080 : process.env.NODE_PORT),
+                websiteDomain: "http://localhost.org:8080"
+            },
+            supertokens: {
+                connectionURI: "http://localhost:9000"
+            },
+            recipeList: [
+                Session.init({
+                    jwt: {
+                        enable: true
+                    },
+                    getTokenTransferMethod: process.env.TRANSFER_METHOD ? () => process.env.TRANSFER_METHOD : undefined,
+                    errorHandlers: {
+                        onUnauthorised: (err, req, res) => {
+                            res.setStatusCode(401);
+                            res.sendJSONResponse({});
+                        }
+                    },
+                    antiCsrf: enableAntiCsrf ? "VIA_TOKEN" : "NONE",
+                    override: {
+                        apis: oI => {
+                            return {
+                                ...oI,
+                                refreshPOST: undefined,
+                                signOutPOST: async input => {
+                                    let body = await input.options.req.getJSONBody();
+                                    if (body.generalError === true) {
+                                        return {
+                                            status: "GENERAL_ERROR",
+                                            message: "general error from signout API"
+                                        };
+                                    }
+                                    return oI.signOutPOST(input);
+                                }
+                            };
+                        },
+                        functions: oI => {
+                            return {
+                                ...oI,
+                                createNewSession: async input => {
+                                    const accessTokenPayload = {
+                                        ...input.accessTokenPayload,
+                                        customClaim: "customValue"
+                                    };
+
+                                    return oI.createNewSession({
+                                        ...input,
+                                        accessTokenPayload
+                                    });
+                                }
+                            };
+                        }
+                    }
+                })
+            ]
+        };
+    }
+
     return {
         appInfo: {
             appName: "SuperTokens",
@@ -90,7 +223,7 @@ function getConfig(enableAntiCsrf) {
     };
 }
 
-SuperTokens.init(getConfig(true));
+SuperTokens.init(getConfig(true, false));
 
 app.use(
     cors({
@@ -112,6 +245,7 @@ app.post("/login", async (req, res) => {
 app.post("/startST", async (req, res) => {
     let accessTokenValidity = req.body.accessTokenValidity === undefined ? 1 : req.body.accessTokenValidity;
     let enableAntiCsrf = req.body.enableAntiCsrf === undefined ? true : req.body.enableAntiCsrf;
+    let enableJWT = req.body.enableJWT === undefined ? false : req.body.enableJWT;
     await setKeyValueInConfig("access_token_validity", accessTokenValidity);
     if (req.body.accessTokenSigningKeyUpdateInterval !== undefined) {
         await setKeyValueInConfig(
@@ -122,7 +256,7 @@ app.post("/startST", async (req, res) => {
     if (enableAntiCsrf !== undefined) {
         SuperTokensRaw.reset();
         SessionRecipeRaw.reset();
-        SuperTokens.init(getConfig(enableAntiCsrf));
+        SuperTokens.init(getConfig(enableAntiCsrf, enableJWT));
     }
     let pid = await startST();
     res.send(pid + "");
@@ -197,8 +331,18 @@ app.post(
         if (req.session.getJWTPayload !== undefined) {
             await req.session.updateJWTPayload(req.body);
             res.json(req.session.getJWTPayload());
-        } else {
+        } else if (req.session.updateAccessTokenPayload !== undefined) {
             await req.session.updateAccessTokenPayload(req.body);
+            res.json(req.session.getAccessTokenPayload());
+        } else {
+            let clearing = {};
+
+            for (const key of Object.keys(req.session.getAccessTokenPayload())) {
+                if (!isProtectedPropName(key)) {
+                    clearing[key] = null;
+                }
+            }
+            await req.session.mergeIntoAccessTokenPayload({ ...clearing, ...req.body });
             res.json(req.session.getAccessTokenPayload());
         }
     }
@@ -301,9 +445,52 @@ app.get("/test/featureFlags", (req, res) => {
         available.push("generalerror");
     }
 
+    if (maxVersion(nodeSDKVersion, "12.0") === nodeSDKVersion) {
+        available.push("sessionClaims");
+    }
+
+    if (maxVersion(nodeSDKVersion, "14.0") === nodeSDKVersion) {
+        available.push("v3AccessToken");
+    }
+
     res.send({
         available
     });
+});
+
+app.post("/login-2.18", async (req, res) => {
+    // This CDI version is no longer supported by this SDK, but we want to ensure that sessions keep working after the upgrade
+    // We can hard-code the structure of the request&response, since this is a fixed CDI version and it's not going to change
+    Querier.apiVersion = "2.18";
+    const payload = req.body.payload || {};
+    const userId = req.body.userId;
+    const legacySessionResp = await Querier.getNewInstanceOrThrowError().sendPostRequest(
+        new NormalisedURLPath("/recipe/session"),
+        {
+            userId,
+            enableAntiCsrf: false,
+            userDataInJWT: payload,
+            userDataInDatabase: {}
+        }
+    );
+    Querier.apiVersion = undefined;
+
+    const legacyAccessToken = legacySessionResp.accessToken.token;
+    const legacyRefreshToken = legacySessionResp.refreshToken.token;
+
+    res.set("st-access-token", legacyAccessToken)
+        .set("st-refresh-token", legacyRefreshToken)
+        .set(
+            "front-token",
+            Buffer.from(
+                JSON.stringify({
+                    uid: userId,
+                    ate: Date.now() + 3600000,
+                    up: payload
+                })
+            ).toString("base64")
+        )
+        .send();
 });
 
 app.use("*", async (req, res, next) => {
