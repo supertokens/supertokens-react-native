@@ -449,8 +449,7 @@ app.get("/test/featureFlags", (req, res) => {
         available.push("sessionClaims");
     }
 
-    // TODO: Remove the hardcoded true
-    if (true || maxVersion(nodeSDKVersion, "14.0") === nodeSDKVersion) {
+    if (maxVersion(nodeSDKVersion, "14.0") === nodeSDKVersion) {
         available.push("v3AccessToken");
     }
 
