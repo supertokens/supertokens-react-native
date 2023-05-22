@@ -29,10 +29,18 @@ export default class AuthHttpRequest {
     }
 
     static getUserId(): Promise<string> {
+        if (!AuthHttpRequestFetch.initCalled) {
+            throw Error("init function not called");
+        }
+
         return AuthHttpRequestFetch.recipeImpl.getUserId(AuthHttpRequestFetch.config);
     }
 
     static async getAccessTokenPayloadSecurely(): Promise<any> {
+        if (!AuthHttpRequestFetch.initCalled) {
+            throw Error("init function not called");
+        }
+
         return AuthHttpRequestFetch.recipeImpl.getAccessTokenPayloadSecurely(AuthHttpRequestFetch.config);
     }
 
@@ -41,6 +49,10 @@ export default class AuthHttpRequest {
     };
 
     static doesSessionExist = () => {
+        if (!AuthHttpRequestFetch.initCalled) {
+            throw Error("init function not called");
+        }
+
         return AuthHttpRequestFetch.recipeImpl.doesSessionExist(AuthHttpRequestFetch.config);
     };
 
@@ -58,10 +70,18 @@ export default class AuthHttpRequest {
     };
 
     static signOut = () => {
+        if (!AuthHttpRequestFetch.initCalled) {
+            throw Error("init function not called");
+        }
+
         return AuthHttpRequestFetch.recipeImpl.signOut(AuthHttpRequestFetch.config);
     };
 
     static getAccessToken = async (): Promise<string | undefined> => {
+        if (!AuthHttpRequestFetch.initCalled) {
+            throw Error("init function not called");
+        }
+
         // This takes care of refreshing the access token if needed
         if (await AuthHttpRequestFetch.recipeImpl.doesSessionExist(AuthHttpRequestFetch.config)) {
             return getTokenForHeaderAuth("access");
