@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [4.0.2] - 2023-05-22
+
+- Adds a check to make sure `SuperTokens.init` is called when using functions exposed by the SDK
+
 ## [4.0.1] - 2023-05-03
 
 - Adds tests based on changes in the session management logic in the backend SDKs and SuperTokens core
