@@ -13,7 +13,7 @@
     "@react-native-async-storage/async-storage": "^1.12.1",
     "axios": "0.19.2",
     "react": "17.0.2",
-    "react-native": "0.66.1",
+    "react-native": "0.71.3",
     "supertokens-react-native": "github:supertokens/supertokens-react-native#4.0"
   },
   "devDependencies": {
