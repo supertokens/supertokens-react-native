@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import AuthHttpRequest from "./fetch";
 import { decode as atob } from "base-64";
-import { getLocalSessionState, saveLastAccessTokenUpdate } from "./utils";
+import { getLocalSessionState, saveLastAccessTokenUpdate, setToken } from "./utils";
 
 const FRONT_TOKEN_KEY = "supertokens-rn-front-token-key";
 const FRONT_TOKEN_NAME = "sFrontToken";
@@ -99,6 +99,8 @@ export default class FrontToken {
 
     static async removeToken() {
         await this.setFrontToken(undefined);
+        await setToken("access", "");
+        await setToken("refresh", "");
         FrontToken.waiters.forEach(f => f(undefined));
         FrontToken.waiters = [];
     }

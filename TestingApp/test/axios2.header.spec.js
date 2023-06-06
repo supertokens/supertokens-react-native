@@ -24,6 +24,7 @@ import AuthHttpRequest from "supertokens-react-native";
 
 import { ProcessState } from "supertokens-react-native/lib/build/processState";
 import assert from "assert";
+import { getTokenForHeaderAuth } from "supertokens-react-native/lib/build/utils";
 
 import {
     getNumberOfTimesRefreshCalled,
@@ -555,6 +556,49 @@ describe("Axios AuthHttpRequest class tests", function() {
 
             assertEqual(getSessionResponse.status, 200);
             assertEqual(getSessionResponse.data, userId);
+
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    it("Test that access token and refresh token are cleared when front token is cleared", async function(done) {
+        try {
+            jest.setTimeout(15000);
+            await startST();
+            AuthHttpRequest.addAxiosInterceptors(axiosInstance);
+            AuthHttpRequest.init({
+                apiDomain: BASE_URL
+            });
+
+            let userId = "testing-supertokens-react-native";
+
+            await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                }
+            });
+
+            let accessToken = await getTokenForHeaderAuth("access");
+            let refreshToken = await getTokenForHeaderAuth("refresh");
+
+            assertNotEqual(accessToken, undefined);
+            assertNotEqual(refreshToken, undefined);
+
+            await axiosInstance.post(`${BASE_URL}/logout-alt`, JSON.stringify({}), {
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                }
+            });
+
+            let accessTokenAfter = await getTokenForHeaderAuth("access");
+            let refreshTokenAfter = await getTokenForHeaderAuth("refresh");
+
+            assertEqual(accessTokenAfter, undefined);
+            assertEqual(refreshTokenAfter, undefined);
 
             done();
         } catch (err) {

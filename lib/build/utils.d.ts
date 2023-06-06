@@ -13,7 +13,7 @@ export declare function storeInStorage(name: string, value: string, expiry: numb
  * to the refresh endpoint
  */
 export declare function saveLastAccessTokenUpdate(): Promise<void>;
-export declare function getStorageNameForToken(tokenType: TokenType): "st-refresh-token" | "st-access-token";
+export declare function getStorageNameForToken(tokenType: TokenType): "st-access-token" | "st-refresh-token";
 export declare function getTokenForHeaderAuth(tokenType: TokenType): Promise<string | undefined>;
 export declare type LocalSessionState = {
     status: "NOT_EXISTS" | "MAY_EXIST";
