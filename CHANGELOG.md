@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [4.0.3] - 2023-06-06
+
+- Refactors session logic to delete access token and refresh token if the front token is removed. This helps with proxies that strip headers with empty values which would result in the access token and refresh token to persist after signout
+
 ## [4.0.2] - 2023-05-22
 
 - Adds a check to make sure `SuperTokens.init` is called when using functions exposed by the SDK
