@@ -581,21 +581,21 @@ describe("Axios AuthHttpRequest class tests", function() {
                 }
             });
 
-            let accessToken = getTokenForHeaderAuth("access");
-            let refreshToken = getTokenForHeaderAuth("refresh");
+            let accessToken = await getTokenForHeaderAuth("access");
+            let refreshToken = await getTokenForHeaderAuth("refresh");
 
             assertNotEqual(accessToken, undefined);
             assertNotEqual(refreshToken, undefined);
 
-            let response = await axiosInstance.post(`${BASE_URL}/logout-alt`, JSON.stringify({}), {
+            await axiosInstance.post(`${BASE_URL}/logout-alt`, JSON.stringify({}), {
                 headers: {
                     Accept: "application/json",
                     "Content-Type": "application/json"
                 }
             });
 
-            let accessTokenAfter = getTokenForHeaderAuth("access");
-            let refreshTokenAfter = getTokenForHeaderAuth("refresh");
+            let accessTokenAfter = await getTokenForHeaderAuth("access");
+            let refreshTokenAfter = await getTokenForHeaderAuth("refresh");
 
             assertEqual(accessTokenAfter, undefined);
             assertEqual(refreshTokenAfter, undefined);

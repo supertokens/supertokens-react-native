@@ -33,6 +33,7 @@ import "isomorphic-fetch";
 // jest does not call setupFiles properly with the new react-native init, so doing it this way instead
 import "./setup";
 import { getLocalSessionState } from "supertokens-react-native/lib/build/utils";
+import { getTokenForHeaderAuth } from "supertokens-react-native/lib/build/utils";
 
 const BASE_URL = "http://localhost:8080";
 
@@ -1685,6 +1686,53 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
             assertEqual(getSessionResponse.status, 200);
             assertEqual(await getSessionResponse.text(), userId);
+
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    it("Test that access token and refresh token are cleared when front token is cleared", async function(done) {
+        try {
+            jest.setTimeout(15000);
+            await startST();
+            AuthHttpRequest.init({
+                apiDomain: BASE_URL
+            });
+
+            let userId = "testing-supertokens-react-native";
+
+            // send api request to login
+            await global.fetch(`${BASE_URL}/login`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+
+            let accessToken = await getTokenForHeaderAuth("access");
+            let refreshToken = await getTokenForHeaderAuth("refresh");
+
+            assertNotEqual(accessToken, undefined);
+            assertNotEqual(refreshToken, undefined);
+
+            await global.fetch(`${BASE_URL}/logout-alt`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({})
+            });
+
+            let accessTokenAfter = await getTokenForHeaderAuth("access");
+            let refreshTokenAfter = await getTokenForHeaderAuth("refresh");
+
+            assertEqual(accessTokenAfter, undefined);
+            assertEqual(refreshTokenAfter, undefined);
 
             done();
         } catch (err) {
