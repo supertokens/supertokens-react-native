@@ -493,6 +493,12 @@ app.post("/login-2.18", async (req, res) => {
         .send();
 });
 
+app.post("/logout-alt", async (req, res) => {
+    res.status(200)
+        .header("front-token", "remove")
+        .json({});
+});
+
 app.use("*", async (req, res, next) => {
     res.status(404).send();
 });
