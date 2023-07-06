@@ -4,7 +4,6 @@ export declare function normaliseURLDomainOrThrowError(input: string): string;
 export declare function normaliseURLPathOrThrowError(input: string): string;
 export declare function normaliseCookieDomainOrThrowError(cookieDomain: string): string;
 export declare function validateAndNormaliseInputOrThrowError(options: InputType): NormalisedInputType;
-export declare function shouldDoInterceptionBasedOnUrl(toCheckUrl: string, apiDomain: string, sessionTokenBackendDomain: string | undefined): boolean;
 export declare function setToken(tokenType: TokenType, value: string): Promise<void>;
 export declare function storeInStorage(name: string, value: string, expiry: number): Promise<void>;
 /**

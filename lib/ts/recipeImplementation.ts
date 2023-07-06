@@ -4,7 +4,7 @@ import FrontToken from "./frontToken";
 import { supported_fdi } from "./version";
 import { interceptorFunctionRequestFulfilled, responseErrorInterceptor, responseInterceptor } from "./axios";
 import { SuperTokensGeneralError } from "./error";
-import { getLocalSessionState } from "./utils";
+import { getLocalSessionState, normaliseCookieDomainOrThrowError, normaliseURLDomainOrThrowError } from "./utils";
 
 export default function RecipeImplementation(): RecipeInterface {
     return {
@@ -122,6 +122,43 @@ export default function RecipeImplementation(): RecipeInterface {
             }
 
             // we do not send an event here since it's triggered in fireSessionUpdateEventsIfNecessary.
+        },
+
+        shouldDoInterceptionBasedOnUrl: (toCheckUrl, apiDomain, sessionTokenBackendDomain) => {
+            function isNumeric(str: any) {
+                if (typeof str != "string") return false; // we only process strings!
+                return (
+                    !isNaN(str as any) && !isNaN(parseFloat(str)) // use type coercion to parse the _entirety_ of the string (`parseFloat` alone does not do this)...
+                ); // ...and ensure strings of whitespace fail
+            }
+            toCheckUrl = normaliseURLDomainOrThrowError(toCheckUrl);
+            // @ts-ignore (Typescript complains that URL does not expect a parameter in constructor even though it does for react-native-url-polyfill)
+            let urlObj: any = new URL(toCheckUrl);
+            let domain = urlObj.hostname;
+            if (sessionTokenBackendDomain === undefined) {
+                domain = urlObj.port === "" ? domain : domain + ":" + urlObj.port;
+                apiDomain = normaliseURLDomainOrThrowError(apiDomain);
+                // @ts-ignore (Typescript complains that URL does not expect a parameter in constructor even though it does for react-native-url-polyfill)
+                let apiUrlObj: any = new URL(apiDomain);
+                return (
+                    domain === (apiUrlObj.port === "" ? apiUrlObj.hostname : apiUrlObj.hostname + ":" + apiUrlObj.port)
+                );
+            } else {
+                let normalisedSessionDomain = normaliseCookieDomainOrThrowError(sessionTokenBackendDomain);
+                if (sessionTokenBackendDomain.split(":").length > 1) {
+                    // this means that a port may have been provided
+                    let portStr = sessionTokenBackendDomain.split(":")[sessionTokenBackendDomain.split(":").length - 1];
+                    if (isNumeric(portStr)) {
+                        normalisedSessionDomain += ":" + portStr;
+                        domain = urlObj.port === "" ? domain : domain + ":" + urlObj.port;
+                    }
+                }
+                if (sessionTokenBackendDomain.startsWith(".")) {
+                    return ("." + domain).endsWith(normalisedSessionDomain);
+                } else {
+                    return domain === normalisedSessionDomain;
+                }
+            }
         }
     };
 }

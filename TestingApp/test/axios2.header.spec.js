@@ -24,7 +24,7 @@ import AuthHttpRequest from "supertokens-react-native";
 
 import { ProcessState } from "supertokens-react-native/lib/build/processState";
 import assert from "assert";
-import { getTokenForHeaderAuth } from "supertokens-react-native/lib/build/utils";
+import { getTokenForHeaderAuth, setToken } from "supertokens-react-native/lib/build/utils";
 
 import {
     getNumberOfTimesRefreshCalled,
@@ -603,6 +603,85 @@ describe("Axios AuthHttpRequest class tests", function() {
             done();
         } catch (err) {
             done(err);
+        }
+    });
+
+    it("should not ignore the auth header even if it matches the stored access token", async function(done) {
+        try {
+            jest.setTimeout(15000);
+            await startST();
+            AuthHttpRequest.addAxiosInterceptors(axiosInstance);
+            AuthHttpRequest.init({
+                apiDomain: BASE_URL,
+                tokenTransferMethod: "cookie"
+            });
+
+            let originalGet = axiosInstance.get;
+            let calledWithCustomHeader = false;
+
+            // We mock specific URLs here, for other URLs we make an actual network call
+            axiosInstance.get = jest.fn((url, config) => {
+                console.log(url);
+                if (url === BASE_URL + "/") {
+                    let headers = new Headers(config.headers);
+                    if (headers.get("authorization") === "Bearer myOwnHeHe") {
+                        calledWithCustomHeader = true;
+                        let response = {
+                            data: {
+                                message: "OK"
+                            },
+                            status: 200,
+                            headers: {},
+                            config: config,
+                            request: undefined
+                        };
+
+                        return Promise.resolve(response);
+                    } else {
+                        let response = {
+                            data: {
+                                message: "Bad auth header"
+                            },
+                            status: 500,
+                            headers: {},
+                            config: config,
+                            request: undefined
+                        };
+
+                        return Promise.resolve(response);
+                    }
+                }
+
+                return originalGet(url, config);
+            });
+
+            let userId = "testing-supertokens-react-native";
+
+            let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                }
+            });
+            let userIdFromResponse = loginResponse.data;
+            assertEqual(userId, userIdFromResponse);
+
+            await delay(5);
+            await setToken("access", "myOwnHeHe");
+
+            let response = await axiosInstance.get(`${BASE_URL}/`, {
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                    Authorization: "Bearer myOwnHeHe"
+                }
+            });
+
+            assertEqual(response.status, 200);
+            assertEqual(calledWithCustomHeader, true);
+            done();
+        } catch (e) {
+            done(e);
         }
     });
 });

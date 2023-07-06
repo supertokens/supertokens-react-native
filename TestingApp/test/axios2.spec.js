@@ -297,4 +297,33 @@ describe("Axios AuthHttpRequest class tests", function() {
 
         assert(idRefreshInCookies.length === 0);
     });
+
+    it("test that interception happens based on the return value of shouldDoInterceptionBasedOnUrl override", async function() {
+        await startST();
+        AuthHttpRequest.addAxiosInterceptors(axiosInstance);
+        AuthHttpRequest.init({
+            apiDomain: BASE_URL,
+            tokenTransferMethod: "cookie",
+            override: {
+                functions: oI => {
+                    return {
+                        ...oI,
+                        shouldDoInterceptionBasedOnUrl: url => {
+                            if (url.includes("doOverride")) {
+                                return true;
+                            }
+
+                            return false;
+                        }
+                    };
+                }
+            }
+        });
+
+        let response = await axiosInstance.get(`${BASE_URL}/check-rid-no-session`);
+        assertEqual(response.data, "fail");
+
+        let response2 = await axiosInstance.get(`${BASE_URL}/check-rid-no-session?doOverride`);
+        assertEqual(response2.data, "success");
+    });
 });

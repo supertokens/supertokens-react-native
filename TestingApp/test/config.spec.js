@@ -42,6 +42,13 @@ describe("Config tests", function() {
     });
 
     it("testing shouldDoInterceptionBasedOnUrl", async function() {
+        AuthHttpRequest.init({
+            apiDomain: "example.com",
+            apiBasePath: "/"
+        });
+        const shouldDoInterceptionBasedOnUrl = AuthHttpRequestFetch.recipeImpl.shouldDoInterceptionBasedOnUrl.bind(
+            AuthHttpRequestFetch.recipeImpl
+        );
         // true cases without cookieDomain
         assert(shouldDoInterceptionBasedOnUrl("api.example.com", "https://api.example.com", undefined));
         assert(shouldDoInterceptionBasedOnUrl("http://api.example.com", "http://api.example.com", undefined));

@@ -123,3 +123,18 @@ init({
         }
     }
 });
+
+init({
+    apiDomain: "",
+    override: {
+        functions: (oI) => {
+            return {
+                ...oI,
+                // Defining the input variables like this also typechecks the signature of it in future releases
+                shouldDoInterceptionBasedOnUrl: (toCheckUrl: string, apiDomain: string, sessionTokenBackendDomain: string) => {
+                    return true;
+                },
+            };
+        },
+    },
+})

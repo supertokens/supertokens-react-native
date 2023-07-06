@@ -24,7 +24,6 @@ import {
     getTokenForHeaderAuth,
     LocalSessionState,
     setToken,
-    shouldDoInterceptionBasedOnUrl,
     validateAndNormaliseInputOrThrowError
 } from "./utils";
 import FrontToken from "./frontToken";
@@ -97,14 +96,14 @@ export default class AuthHttpRequest {
         try {
             doNotDoInterception =
                 (typeof url === "string" &&
-                    !shouldDoInterceptionBasedOnUrl(
+                    !AuthHttpRequest.recipeImpl.shouldDoInterceptionBasedOnUrl(
                         url,
                         AuthHttpRequest.config.apiDomain,
                         AuthHttpRequest.config.sessionTokenBackendDomain
                     )) ||
                 (url !== undefined &&
                 typeof url.url === "string" && // this is because url can be an object like {method: ..., url: ...}
-                    !shouldDoInterceptionBasedOnUrl(
+                    !AuthHttpRequest.recipeImpl.shouldDoInterceptionBasedOnUrl(
                         url.url,
                         AuthHttpRequest.config.apiDomain,
                         AuthHttpRequest.config.sessionTokenBackendDomain
@@ -125,8 +124,13 @@ export default class AuthHttpRequest {
 
         if (originalHeaders.has("Authorization")) {
             const accessToken = await getTokenForHeaderAuth("access");
+            const refreshToken = await getTokenForHeaderAuth("refresh");
 
-            if (accessToken !== undefined && originalHeaders.get("Authorization") === `Bearer ${accessToken}`) {
+            if (
+                accessToken !== undefined &&
+                refreshToken !== undefined &&
+                originalHeaders.get("Authorization") === `Bearer ${accessToken}`
+            ) {
                 // We are ignoring the Authorization header set by the user in this case, because it would cause issues
                 // If we do not ignore this, then this header would be used even if the request is being retried after a refresh, even though it contains an outdated access token.
                 // This causes an infinite refresh loop.
