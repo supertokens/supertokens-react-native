@@ -19,7 +19,6 @@ import FrontToken from "supertokens-react-native/lib/build/frontToken";
 import AuthHttpRequestFetch from "supertokens-react-native/lib/build/fetch";
 import AuthHttpRequest from "supertokens-react-native";
 import assert from "assert";
-import { startST, BASE_URL_FOR_ST } from "./utils";
 import {
     getNumberOfTimesRefreshCalled,
     startST,
