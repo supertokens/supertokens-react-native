@@ -28,7 +28,7 @@ import {
     getNumberOfTimesRefreshAttempted
 } from "./utils";
 import { spawn } from "child_process";
-import { ProcessState } from "supertokens-react-native/lib/build/processState";
+import { ProcessState, PROCESS_STATE } from "supertokens-react-native/lib/build/processState";
 import "isomorphic-fetch";
 // jest does not call setupFiles properly with the new react-native init, so doing it this way instead
 import "./setup";
