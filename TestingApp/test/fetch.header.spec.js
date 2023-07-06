@@ -19,21 +19,13 @@ import FrontToken from "supertokens-react-native/lib/build/frontToken";
 import AuthHttpRequestFetch from "supertokens-react-native/lib/build/fetch";
 import AuthHttpRequest from "supertokens-react-native";
 import assert from "assert";
-import {
-    getNumberOfTimesRefreshCalled,
-    startST,
-    getNumberOfTimesGetSessionCalled,
-    BASE_URL_FOR_ST,
-    coreTagEqualToOrAfter,
-    getNumberOfTimesRefreshAttempted
-} from "./utils";
+import { startST, BASE_URL_FOR_ST } from "./utils";
 import { spawn } from "child_process";
-import { ProcessState, PROCESS_STATE } from "supertokens-react-native/lib/build/processState";
+import { ProcessState } from "supertokens-react-native/lib/build/processState";
 import "isomorphic-fetch";
 // jest does not call setupFiles properly with the new react-native init, so doing it this way instead
 import "./setup";
-import { getLocalSessionState } from "supertokens-react-native/lib/build/utils";
-import { getTokenForHeaderAuth } from "supertokens-react-native/lib/build/utils";
+import { setToken } from "supertokens-react-native/lib/build/utils";
 
 const BASE_URL = "http://localhost:8080";
 
@@ -1733,6 +1725,86 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
             assertEqual(accessTokenAfter, undefined);
             assertEqual(refreshTokenAfter, undefined);
+
+            done();
+        } catch (err) {
+            done(err);
+        }
+    });
+
+    it("should not ignore the auth header even if it matches the stored access token", async function(done) {
+        try {
+            jest.setTimeout(10000);
+            let originalFetch = global.fetch;
+
+            // We mock specific URLs here, for other URLs we make an actual network call
+            let calledWithCustomHeader = false;
+
+            global.fetch = jest.fn((url, config) => {
+                if (url === BASE_URL + "/") {
+                    let headers = new Headers(config.headers);
+                    if (headers.get("authorization") === "Bearer myOwnHeHe") {
+                        calledWithCustomHeader = true;
+                        let responseInit = {
+                            status: 200
+                        };
+
+                        let response = new Response(
+                            JSON.stringify({
+                                message: "OK"
+                            }),
+                            responseInit
+                        );
+                        Object.defineProperty(response, "url", { value: BASE_URL + "/" });
+
+                        return Promise.resolve(response);
+                    } else {
+                        let responseInit = {
+                            status: 500
+                        };
+
+                        let response = new Response(
+                            JSON.stringify({
+                                message: "Bad auth header"
+                            }),
+                            responseInit
+                        );
+                        Object.defineProperty(response, "url", { value: BASE_URL + "/" });
+
+                        return Promise.resolve(response);
+                    }
+                }
+
+                return originalFetch(url, config);
+            });
+
+            await startST();
+            AuthHttpRequest.init({
+                apiDomain: BASE_URL
+            });
+
+            let userId = "testing-supertokens-react-native";
+
+            // send api request to login
+            await global.fetch(`${BASE_URL}/login`, {
+                method: "post",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ userId })
+            });
+
+            await delay(5);
+            await setToken("access", "myOwnHeHe");
+
+            const resp = await global.fetch(`${BASE_URL}/`, {
+                method: "GET",
+                headers: { "Cache-Control": "no-cache, private", Authorization: "Bearer myOwnHeHe" }
+            });
+
+            assertEqual(resp.status, 200);
+            assertEqual(calledWithCustomHeader, true);
 
             done();
         } catch (err) {
