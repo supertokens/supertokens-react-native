@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [4.0.4] - 2023-07-06
+
+### Changes
+
+- Added `shouldDoInterceptionBasedOnUrl` as an overrideable function to the recipe interface
+
+### Fixes
+
+- Fixed an issue where the Authorization header was getting removed unnecessarily
+
 ## [4.0.3] - 2023-06-06
 
 - Refactors session logic to delete access token and refresh token if the front token is removed. This helps with proxies that strip headers with empty values which would result in the access token and refresh token to persist after signout
