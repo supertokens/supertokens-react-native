@@ -1553,4 +1553,32 @@ describe("Fetch AuthHttpRequest class tests", function() {
             done(err);
         }
     });
+
+    it("test that interception happens based on the return value of shouldDoInterceptionBasedOnUrl override", async function() {
+        await startST();
+        AuthHttpRequest.init({
+            apiDomain: BASE_URL,
+            tokenTransferMethod: "cookie",
+            override: {
+                functions: oI => {
+                    return {
+                        ...oI,
+                        shouldDoInterceptionBasedOnUrl: url => {
+                            if (url.includes("doOverride")) {
+                                return true;
+                            }
+
+                            return false;
+                        }
+                    };
+                }
+            }
+        });
+
+        let response = await global.fetch(`${BASE_URL}/check-rid-no-session`);
+        assertEqual(await response.text(), "fail");
+
+        let response2 = await global.fetch(`${BASE_URL}/check-rid-no-session?doOverride`);
+        assertEqual(await response2.text(), "success");
+    });
 });
