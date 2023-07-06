@@ -85,6 +85,12 @@ export type RecipeInterface = {
     doesSessionExist: (config: NormalisedInputType) => Promise<boolean>;
 
     signOut: (config: NormalisedInputType) => Promise<void>;
+
+    shouldDoInterceptionBasedOnUrl(
+        toCheckUrl: string,
+        apiDomain: string,
+        sessionTokenBackendDomain: string | undefined
+    ): boolean;
 };
 
 export type IdRefreshTokenType =

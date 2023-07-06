@@ -1,6 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { URL } from "react-native-url-polyfill";
-import AntiCSRF from "./antiCsrf";
 import AuthHttpRequest from "./fetch";
 import FrontToken from "./frontToken";
 import NormalisedURLDomain from "./normalisedURLDomain";
@@ -133,45 +132,6 @@ export function validateAndNormaliseInputOrThrowError(options: InputType): Norma
         onHandleEvent,
         override
     };
-}
-
-export function shouldDoInterceptionBasedOnUrl(
-    toCheckUrl: string,
-    apiDomain: string,
-    sessionTokenBackendDomain: string | undefined
-): boolean {
-    function isNumeric(str: any) {
-        if (typeof str != "string") return false; // we only process strings!
-        return (
-            !isNaN(str as any) && !isNaN(parseFloat(str)) // use type coercion to parse the _entirety_ of the string (`parseFloat` alone does not do this)...
-        ); // ...and ensure strings of whitespace fail
-    }
-    toCheckUrl = normaliseURLDomainOrThrowError(toCheckUrl);
-    // @ts-ignore (Typescript complains that URL does not expect a parameter in constructor even though it does for react-native-url-polyfill)
-    let urlObj: any = new URL(toCheckUrl);
-    let domain = urlObj.hostname;
-    if (sessionTokenBackendDomain === undefined) {
-        domain = urlObj.port === "" ? domain : domain + ":" + urlObj.port;
-        apiDomain = normaliseURLDomainOrThrowError(apiDomain);
-        // @ts-ignore (Typescript complains that URL does not expect a parameter in constructor even though it does for react-native-url-polyfill)
-        let apiUrlObj: any = new URL(apiDomain);
-        return domain === (apiUrlObj.port === "" ? apiUrlObj.hostname : apiUrlObj.hostname + ":" + apiUrlObj.port);
-    } else {
-        let normalisedSessionDomain = normaliseCookieDomainOrThrowError(sessionTokenBackendDomain);
-        if (sessionTokenBackendDomain.split(":").length > 1) {
-            // this means that a port may have been provided
-            let portStr = sessionTokenBackendDomain.split(":")[sessionTokenBackendDomain.split(":").length - 1];
-            if (isNumeric(portStr)) {
-                normalisedSessionDomain += ":" + portStr;
-                domain = urlObj.port === "" ? domain : domain + ":" + urlObj.port;
-            }
-        }
-        if (sessionTokenBackendDomain.startsWith(".")) {
-            return ("." + domain).endsWith(normalisedSessionDomain);
-        } else {
-            return domain === normalisedSessionDomain;
-        }
-    }
 }
 
 export function setToken(tokenType: TokenType, value: string) {

@@ -20,13 +20,7 @@ import AuthHttpRequestFetch, { onUnauthorisedResponse } from "./fetch";
 import FrontToken from "./frontToken";
 import AntiCSRF from "./antiCsrf";
 import { PROCESS_STATE, ProcessState } from "./processState";
-import {
-    fireSessionUpdateEventsIfNecessary,
-    getLocalSessionState,
-    getTokenForHeaderAuth,
-    setToken,
-    shouldDoInterceptionBasedOnUrl
-} from "./utils";
+import { fireSessionUpdateEventsIfNecessary, getLocalSessionState, getTokenForHeaderAuth, setToken } from "./utils";
 
 function getUrlFromConfig(config: AxiosRequestConfig) {
     let url: string = config.url === undefined ? "" : config.url;
@@ -51,7 +45,7 @@ export async function interceptorFunctionRequestFulfilled(config: AxiosRequestCo
     try {
         doNotDoInterception =
             typeof url === "string" &&
-            !shouldDoInterceptionBasedOnUrl(
+            !AuthHttpRequestFetch.recipeImpl.shouldDoInterceptionBasedOnUrl(
                 url,
                 AuthHttpRequestFetch.config.apiDomain,
                 AuthHttpRequestFetch.config.sessionTokenBackendDomain
@@ -133,7 +127,7 @@ export function responseInterceptor(axiosInstance: any) {
             try {
                 doNotDoInterception =
                     typeof url === "string" &&
-                    !shouldDoInterceptionBasedOnUrl(
+                    !AuthHttpRequestFetch.recipeImpl.shouldDoInterceptionBasedOnUrl(
                         url,
                         AuthHttpRequestFetch.config.apiDomain,
                         AuthHttpRequestFetch.config.sessionTokenBackendDomain
@@ -239,7 +233,7 @@ export default class AuthHttpRequest {
         try {
             doNotDoInterception =
                 typeof url === "string" &&
-                !shouldDoInterceptionBasedOnUrl(
+                !AuthHttpRequestFetch.recipeImpl.shouldDoInterceptionBasedOnUrl(
                     url,
                     AuthHttpRequestFetch.config.apiDomain,
                     AuthHttpRequestFetch.config.sessionTokenBackendDomain

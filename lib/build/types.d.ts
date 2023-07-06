@@ -60,6 +60,7 @@ export declare type RecipeInterface = {
     getAccessTokenPayloadSecurely: (config: NormalisedInputType) => Promise<any>;
     doesSessionExist: (config: NormalisedInputType) => Promise<boolean>;
     signOut: (config: NormalisedInputType) => Promise<void>;
+    shouldDoInterceptionBasedOnUrl(toCheckUrl: string, apiDomain: string, sessionTokenBackendDomain: string | undefined): boolean;
 };
 export declare type IdRefreshTokenType = {
     status: "NOT_EXISTS" | "MAY_EXIST";

@@ -24,7 +24,6 @@ import {
     getTokenForHeaderAuth,
     LocalSessionState,
     setToken,
-    shouldDoInterceptionBasedOnUrl,
     validateAndNormaliseInputOrThrowError
 } from "./utils";
 import FrontToken from "./frontToken";
@@ -97,14 +96,14 @@ export default class AuthHttpRequest {
         try {
             doNotDoInterception =
                 (typeof url === "string" &&
-                    !shouldDoInterceptionBasedOnUrl(
+                    !AuthHttpRequest.recipeImpl.shouldDoInterceptionBasedOnUrl(
                         url,
                         AuthHttpRequest.config.apiDomain,
                         AuthHttpRequest.config.sessionTokenBackendDomain
                     )) ||
                 (url !== undefined &&
                 typeof url.url === "string" && // this is because url can be an object like {method: ..., url: ...}
-                    !shouldDoInterceptionBasedOnUrl(
+                    !AuthHttpRequest.recipeImpl.shouldDoInterceptionBasedOnUrl(
                         url.url,
                         AuthHttpRequest.config.apiDomain,
                         AuthHttpRequest.config.sessionTokenBackendDomain
