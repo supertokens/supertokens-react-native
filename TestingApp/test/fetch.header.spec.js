@@ -20,11 +20,21 @@ import AuthHttpRequestFetch from "supertokens-react-native/lib/build/fetch";
 import AuthHttpRequest from "supertokens-react-native";
 import assert from "assert";
 import { startST, BASE_URL_FOR_ST } from "./utils";
+import {
+    getNumberOfTimesRefreshCalled,
+    startST,
+    getNumberOfTimesGetSessionCalled,
+    BASE_URL_FOR_ST,
+    coreTagEqualToOrAfter,
+    getNumberOfTimesRefreshAttempted
+} from "./utils";
 import { spawn } from "child_process";
-import { ProcessState } from "supertokens-react-native/lib/build/processState";
+import { ProcessState, PROCESS_STATE } from "supertokens-react-native/lib/build/processState";
 import "isomorphic-fetch";
 // jest does not call setupFiles properly with the new react-native init, so doing it this way instead
 import "./setup";
+import { getLocalSessionState } from "supertokens-react-native/lib/build/utils";
+import { getTokenForHeaderAuth } from "supertokens-react-native/lib/build/utils";
 import { setToken } from "supertokens-react-native/lib/build/utils";
 
 const BASE_URL = "http://localhost:8080";
