@@ -53,9 +53,8 @@ const loginWithGoogle = async () => {
     let signInUpResponse = await axios.post(
         `${API_DOMAIN}/auth/signinup`,
         {
-            redirectURI: "com.demoapp:/oauthredirect",
             thirdPartyId: "google",
-            authCodeResponse: authResult,
+            oAuthTokens: authResult,
             clientId: "1060725074195-c7mgk8p0h27c4428prfuo3lg7ould5o7.apps.googleusercontent.com"
         },
         {

@@ -13,6 +13,7 @@
     "@invertase/react-native-apple-authentication": "^2.1.5",
     "react": "17.0.2",
     "react-native": "0.66.1",
+    "react-native-url-polyfill": "^2.0.0",
     "supertokens-node": "^15.0.1",
     "supertokens-react-native": "^4.0.0"
   },

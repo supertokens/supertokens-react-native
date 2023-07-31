@@ -48,10 +48,13 @@ const loginWithGithub = async () => {
     let signInUpResponse = await axios.post(
         `${API_DOMAIN}/auth/signinup`,
         {
-            redirectURI: "com.demoapp://oauthredirect",
+            redirectURIInfo: {
+                redirectURIOnProviderDashboard: "com.demoapp://oauthredirect",
+                redirectURIQueryParams: {
+                    code: authResult.authorizationCode,
+                },
+            },
             thirdPartyId: "github",
-            code: authResult.authorizationCode,
-            clientId: "8a9152860ce869b64c44"
         },
         {
             headers: {

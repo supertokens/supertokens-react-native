@@ -43,9 +43,13 @@ const loginWithApple = async () => {
         let signInUpResponse = await axios.post(
             `${API_DOMAIN}/auth/signinup`,
             {
-                redirectURI: "com.demoapp:/oauthredirect",
+                redirectURIInfo: {
+                    redirectURIOnProviderDashboard: "com.demoapp:/oauthredirect",
+                    redirectURIQueryParams: {
+                        code: authCode,
+                    },
+                },
                 thirdPartyId: "apple",
-                code: authCode,
                 clientType: "ios"
             },
             {
@@ -82,9 +86,13 @@ const loginWithApple = async () => {
         let signInUpResponse = await axios.post(
             `${API_DOMAIN}/auth/signinup`,
             {
-                redirectURI: "https://supertokens.io/dev/oauth/redirect-to-app",
+                redirectURIInfo: {
+                    redirectURIOnProviderDashboard: "https://supertokens.io/dev/oauth/redirect-to-app",
+                    redirectURIQueryParams: {
+                        code: authCode,
+                    },
+                },
                 thirdPartyId: "apple",
-                code: authCode,
                 clientType: "service"
             },
             {
