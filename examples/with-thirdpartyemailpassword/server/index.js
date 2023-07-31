@@ -39,7 +39,6 @@ supertokens.init({
                         clients: [
                             {
                                 clientId: "1060725074195-c7mgk8p0h27c4428prfuo3lg7ould5o7.apps.googleusercontent.com",
-                                clientSecret: ""
                             },
                         ],
                     },
