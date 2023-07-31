@@ -13,7 +13,7 @@
     "@invertase/react-native-apple-authentication": "^2.1.5",
     "react": "17.0.2",
     "react-native": "0.66.1",
-    "supertokens-node": "^13.1.5",
+    "supertokens-node": "^15.0.1",
     "supertokens-react-native": "^4.0.0"
   },
   "devDependencies": {
