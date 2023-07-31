@@ -14,10 +14,11 @@ import loginWithGoogle from "./google";
 import { getAppleButton } from "./apple";
 import loginWithGithub from "./github";
 import SuccessView from "./success-view";
+import "react-native-url-polyfill/auto";
 
 // TODO: Replace this with your own IP
 // NOTE: We use our IP (and not 10.0.2.2) here because of iOS
-export const API_DOMAIN = "http://192.168.1.100:3001";
+export const API_DOMAIN = "http://192.168.29.16:3001";
 
 // Initialise SuperTokens
 SuperTokens.init({

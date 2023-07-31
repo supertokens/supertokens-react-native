@@ -36,17 +36,21 @@ const loginWithApple = async () => {
         authCode = appleAuthRequestResponse.authorizationCode;
 
         /*
-          We use the code returned by the Apple servers to sign in the user and create a session using SuperTokens.
+          We use the code returned by the Apple servers to sign in the user and create a session using SuperTokens. We then send the clientType along with the request to indicate to the backend which provider should be used to sign in the user.
 
-          NOTE: For iOS the client_id should always match your app's bundle identifier.
+          NOTE: The clientType must match the one set in the backend
         */
         let signInUpResponse = await axios.post(
             `${API_DOMAIN}/auth/signinup`,
             {
-                redirectURI: "com.demoapp:/oauthredirect",
+                redirectURIInfo: {
+                    redirectURIOnProviderDashboard: "com.demoapp:/oauthredirect",
+                    redirectURIQueryParams: {
+                        code: authCode
+                    }
+                },
                 thirdPartyId: "apple",
-                code: authCode,
-                clientId: "4398792-io.supertokens.example"
+                clientType: "ios"
             },
             {
                 headers: {
@@ -76,13 +80,20 @@ const loginWithApple = async () => {
 
         /*
           We use the code returned by the Apple servers to sign in the user and create a session using SuperTokens.
+
+          NOTE: The clientType must match the one set in the backend
         */
         let signInUpResponse = await axios.post(
             `${API_DOMAIN}/auth/signinup`,
             {
-                redirectURI: "https://supertokens.io/dev/oauth/redirect-to-app",
+                redirectURIInfo: {
+                    redirectURIOnProviderDashboard: "https://supertokens.io/dev/oauth/redirect-to-app",
+                    redirectURIQueryParams: {
+                        code: authCode
+                    }
+                },
                 thirdPartyId: "apple",
-                code: authCode
+                clientType: "service"
             },
             {
                 headers: {
