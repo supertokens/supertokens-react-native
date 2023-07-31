@@ -46,8 +46,8 @@ const loginWithApple = async () => {
                 redirectURIInfo: {
                     redirectURIOnProviderDashboard: "com.demoapp:/oauthredirect",
                     redirectURIQueryParams: {
-                        code: authCode,
-                    },
+                        code: authCode
+                    }
                 },
                 thirdPartyId: "apple",
                 clientType: "ios"
@@ -89,8 +89,8 @@ const loginWithApple = async () => {
                 redirectURIInfo: {
                     redirectURIOnProviderDashboard: "https://supertokens.io/dev/oauth/redirect-to-app",
                     redirectURIQueryParams: {
-                        code: authCode,
-                    },
+                        code: authCode
+                    }
                 },
                 thirdPartyId: "apple",
                 clientType: "service"

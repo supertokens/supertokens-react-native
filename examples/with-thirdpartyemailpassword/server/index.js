@@ -38,10 +38,10 @@ supertokens.init({
                         thirdPartyId: "google",
                         clients: [
                             {
-                                clientId: "1060725074195-c7mgk8p0h27c4428prfuo3lg7ould5o7.apps.googleusercontent.com",
-                            },
-                        ],
-                    },
+                                clientId: "1060725074195-c7mgk8p0h27c4428prfuo3lg7ould5o7.apps.googleusercontent.com"
+                            }
+                        ]
+                    }
                 },
                 {
                     config: {
@@ -50,10 +50,9 @@ supertokens.init({
                             {
                                 clientId: "8a9152860ce869b64c44",
                                 clientSecret: "00e841f10f288363cd3786b1b1f538f05cfdbda2"
-
-                            },
-                        ],
-                    },
+                            }
+                        ]
+                    }
                 },
                 /*
                     For sign in with Apple we need a different client ID for iOS and a different one for Android. We
@@ -75,8 +74,8 @@ supertokens.init({
                                     keyId: "7M48Y4RYDL",
                                     privateKey:
                                         "-----BEGIN PRIVATE KEY-----\nMIGTAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBHkwdwIBAQQgu8gXs+XYkqXD6Ala9Sf/iJXzhbwcoG5dMh1OonpdJUmgCgYIKoZIzj0DAQehRANCAASfrvlFbFCYqn3I2zeknYXLwtH30JuOKestDbSfZYxZNMqhF/OzdZFTV0zc5u5s3eN+oCWbnvl0hM+9IW0UlkdA\n-----END PRIVATE KEY-----",
-                                    teamId: "YWQCXGJRJL",
-                                },
+                                    teamId: "YWQCXGJRJL"
+                                }
                             },
                             {
                                 clientId: "4398792-io.supertokens.example",
@@ -86,11 +85,11 @@ supertokens.init({
                                     privateKey:
                                         "-----BEGIN PRIVATE KEY-----\nMIGTAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBHkwdwIBAQQgu8gXs+XYkqXD6Ala9Sf/iJXzhbwcoG5dMh1OonpdJUmgCgYIKoZIzj0DAQehRANCAASfrvlFbFCYqn3I2zeknYXLwtH30JuOKestDbSfZYxZNMqhF/OzdZFTV0zc5u5s3eN+oCWbnvl0hM+9IW0UlkdA\n-----END PRIVATE KEY-----",
                                     teamId: "YWQCXGJRJL"
-                                },
-                            },
-                        ],
-                    },
-                },
+                                }
+                            }
+                        ]
+                    }
+                }
             ]
         }),
         Session.init(), // initializes session features

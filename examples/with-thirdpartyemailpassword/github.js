@@ -51,10 +51,10 @@ const loginWithGithub = async () => {
             redirectURIInfo: {
                 redirectURIOnProviderDashboard: "com.demoapp://oauthredirect",
                 redirectURIQueryParams: {
-                    code: authResult.authorizationCode,
-                },
+                    code: authResult.authorizationCode
+                }
             },
-            thirdPartyId: "github",
+            thirdPartyId: "github"
         },
         {
             headers: {
