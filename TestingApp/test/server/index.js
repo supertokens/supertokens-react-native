@@ -246,7 +246,7 @@ app.use(middleware());
 
 app.post("/login", async (req, res) => {
     let userId = req.body.userId;
-    
+
     let session;
     if (multitenancySupported) {
         session = await Session.createNewSession(req, res, "public", userId);
@@ -271,7 +271,7 @@ app.post("/startST", async (req, res) => {
     if (enableAntiCsrf !== undefined) {
         SuperTokensRaw.reset();
         SessionRecipeRaw.reset();
-        
+
         if (multitenancySupported) {
             MultitenancyRaw.reset();
         }
