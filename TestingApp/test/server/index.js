@@ -40,6 +40,14 @@ let NormalisedURLPath = require("supertokens-node/lib/build/normalisedURLPath").
 let noOfTimesRefreshCalledDuringTest = 0;
 let noOfTimesGetSessionCalledDuringTest = 0;
 let noOfTimesRefreshAttemptedDuringTest = 0;
+let Multitenancy, MultitenancyRaw, multitenancySupported;
+try {
+    MultitenancyRaw = require("supertokens-node/lib/build/recipe/multitenancy/recipe").default;
+    Multitenancy = require("supertokens-node/lib/build/recipe/multitenancy");
+    multitenancySupported = true;
+} catch {
+    multitenancySupported = false;
+}
 
 let generalErrorSupported;
 
@@ -238,7 +246,14 @@ app.use(middleware());
 
 app.post("/login", async (req, res) => {
     let userId = req.body.userId;
-    let session = await Session.createNewSession(req, res, userId);
+    
+    let session;
+    if (multitenancySupported) {
+        session = await Session.createNewSession(req, res, "public", userId);
+    } else {
+        session = await Session.createNewSession(req, res, userId);
+    }
+
     res.send(session.userId);
 });
 
@@ -256,6 +271,11 @@ app.post("/startST", async (req, res) => {
     if (enableAntiCsrf !== undefined) {
         SuperTokensRaw.reset();
         SessionRecipeRaw.reset();
+        
+        if (multitenancySupported) {
+            MultitenancyRaw.reset();
+        }
+
         SuperTokens.init(getConfig(enableAntiCsrf, enableJWT));
     }
     let pid = await startST();

@@ -145,6 +145,11 @@ describe("Fetch AuthHttpRequest class tests", function() {
                     "antiCsrfToken",
                     "iss"
                 ];
+
+                if (payload["tId"]) {
+                    expectedKeys.push("tId");
+                }
+
                 assertEqual(Object.keys(payload).length, expectedKeys.length);
                 for (const key of Object.keys(payload)) {
                     assert(expectedKeys.includes(key));
@@ -200,6 +205,11 @@ describe("Fetch AuthHttpRequest class tests", function() {
                     "antiCsrfToken",
                     "asdf"
                 ];
+
+                if (v3Payload["tId"]) {
+                    expectedKeys.push("tId");
+                }
+
                 assert.strictEqual(Object.keys(v3Payload).length, expectedKeys.length);
                 for (const key of Object.keys(v3Payload)) {
                     assert(expectedKeys.includes(key));
