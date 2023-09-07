@@ -12,7 +12,10 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-import { URL } from "react-native-url-polyfill";
+import { URL as URLPolyfill } from "react-native-url-polyfill";
+import { Platform } from "react-native";
+
+const URLObjectToUse = Platform.OS === "web" ? URL : URLPolyfill;
 
 export default class NormalisedURLPath {
     private value: string;
@@ -41,7 +44,7 @@ function normaliseURLPathOrThrowError(input: string): string {
             throw new Error("converting to proper URL");
         }
         // @ts-ignore (Typescript complains that URL does not expect a parameter in constructor even though it does for react-native-url-polyfill)
-        const urlObj: any = new URL(input);
+        const urlObj: any = new URLObjectToUse(input);
         input = urlObj.pathname;
 
         if (input.charAt(input.length - 1) === "/") {
@@ -71,7 +74,7 @@ function normaliseURLPathOrThrowError(input: string): string {
     try {
         // test that we can convert this to prevent an infinite loop
         // @ts-ignore (Typescript complains that URL does not expect a parameter in constructor even though it does for react-native-url-polyfill)
-        new URL("http://example.com" + input);
+        new URLObjectToUse("http://example.com" + input);
         return normaliseURLPathOrThrowError("http://example.com" + input);
     } catch (err) {
         throw new Error("Please provide a valid URL path");
@@ -86,13 +89,13 @@ function domainGiven(input: string): boolean {
 
     try {
         // @ts-ignore (Typescript complains that URL does not expect a parameter in constructor even though it does for react-native-url-polyfill)
-        const url: any = new URL(input);
+        const url: any = new URLObjectToUse(input);
         return url.hostname.indexOf(".") !== -1;
     } catch (e) {}
 
     try {
         // @ts-ignore (Typescript complains that URL does not expect a parameter in constructor even though it does for react-native-url-polyfill)
-        const url: any = new URL("http://" + input);
+        const url: any = new URLObjectToUse("http://" + input);
         return url.hostname.indexOf(".") !== -1;
     } catch (e) {}
 
