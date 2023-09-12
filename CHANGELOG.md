@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [4.0.6] - 2023-09-12
+
+### Fixes
+
+- Fixed an issue where refreshing tokens could hang while an interactive looping animation is running
+
 ## [4.0.5] - 2023-07-31
 
 - Updates supported FDI versions to include 
