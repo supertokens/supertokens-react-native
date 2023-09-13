@@ -13,8 +13,6 @@
  * under the License.
  */
 
-import { InteractionManager } from "react-native";
-
 /*
     WARNING: Do not acquire a lock and then re acquire the same lock without
              releasing that lock first!!
@@ -70,7 +68,7 @@ class Locking {
         let toCall = callbacks.pop();
         this.locked.set(key, callbacks);
         if (toCall !== undefined) {
-            InteractionManager.runAfterInteractions(toCall);
+            setImmediate(toCall);
         }
     };
 }
