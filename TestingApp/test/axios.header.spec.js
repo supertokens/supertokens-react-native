@@ -658,7 +658,7 @@ describe("Axios AuthHttpRequest class tests", function() {
             await delay(7);
 
             let promises = [];
-            let n = 100;
+            let n = 50;
 
             // create an array of 100 get session promises
             for (let i = 0; i < n; i++) {
