@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [4.0.6] - 2023-07-31
 
+- Adds 1.18 to the list of supported FDI versions
 - Refactors SDK code to support react native web
 - Refactors the usage of react-native-url-polyfill to only be used when the platform is not web
 
