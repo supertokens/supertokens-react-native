@@ -58,7 +58,7 @@ if (maxVersion(nodeSDKVersion, "10.0.0") === nodeSDKVersion) {
     generalErrorSupported = false;
 }
 
-let accountLinkingSupported = maxVersion(nodeSDKVersion, "15.0") === nodeSDKVersion;
+let accountLinkingSupported = maxVersion(nodeSDKVersion, "16.0") === nodeSDKVersion;
 
 let urlencodedParser = bodyParser.urlencoded({ limit: "20mb", extended: true, parameterLimit: 20000 });
 let jsonParser = bodyParser.json({ limit: "20mb" });
