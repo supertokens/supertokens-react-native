@@ -150,6 +150,10 @@ describe("Fetch AuthHttpRequest class tests", function() {
                     expectedKeys.push("tId");
                 }
 
+                if (payload["rsub"]) {
+                    expectedKeys.push("rsub");
+                }
+
                 assertEqual(Object.keys(payload).length, expectedKeys.length);
                 for (const key of Object.keys(payload)) {
                     assert(expectedKeys.includes(key));
@@ -208,6 +212,10 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
                 if (v3Payload["tId"]) {
                     expectedKeys.push("tId");
+                }
+
+                if (v3Payload["rsub"]) {
+                    expectedKeys.push("rsub");
                 }
 
                 assert.strictEqual(Object.keys(v3Payload).length, expectedKeys.length);
