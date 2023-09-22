@@ -251,7 +251,12 @@ app.post("/login", async (req, res) => {
 
     let session;
     if (multitenancySupported) {
-        session = await Session.createNewSession(req, res, "public", accountLinkingSupported ? SuperTokens.convertToRecipeUserId(userId) : userId);
+        session = await Session.createNewSession(
+            req,
+            res,
+            "public",
+            accountLinkingSupported ? SuperTokens.convertToRecipeUserId(userId) : userId
+        );
     } else {
         session = await Session.createNewSession(req, res, userId);
     }
