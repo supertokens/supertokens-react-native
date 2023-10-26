@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [4.0.8] - 2023-09-26
+- use `URL` polyfill for `shouldDoInterceptionBasedOnUrl`: https://github.com/supertokens/supertokens-react-native/pull/111
+
 ## [4.0.7] - 2023-09-13
 
 - Adds 1.18 to the list of FDI versions supported
