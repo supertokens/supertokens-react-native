@@ -22,7 +22,7 @@ export const performGithubLogin = async (): Promise<boolean> => {
       body: JSON.stringify({
         thirdPartyId: "github",
         redirectURIInfo: {
-          redirectURIOnProviderDashboard: "",
+          redirectURIOnProviderDashboard: "com.supertokens.supertokensexample://oauthredirect",
           redirectURIQueryParams: {
             code: result.authorizationCode,
           },
