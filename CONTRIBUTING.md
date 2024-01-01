@@ -14,7 +14,7 @@ We're so excited you're interested in helping with SuperTokens! We are happy to 
 ## Development Setup  
 
 ### Prerequisites
-- Nodejs & npm
+- **Node.js v16.x** & npm
 - IDE: [VSCode](https://code.visualstudio.com/download)(recommended) or equivalent IDE  
 
 ### Project Setup
@@ -55,11 +55,12 @@ We're so excited you're interested in helping with SuperTokens! We are happy to 
    cp -r ./test/tough-cookie ./node_modules/
    npm i git+https://github.com:<your username>/supertokens-react-native.git
    ```
-5. Navigate to `supertokens-react-native/TestingApp` and run all tests
+5. Add a static entry for `127.0.0.1   	localhost.org` in your `/etc/hosts` file
+6. Navigate to `supertokens-react-native/TestingApp` and run all tests
    ```
    INSTALL_PATH=../../supertokens-root npm test
    ```
-6. If all tests pass the output should be:
+7. If all tests pass the output should be:
 
    <img src="https://github.com/supertokens/supertokens-logo/blob/master/images/supertokens-react-native-tests-passing.png" alt="React Native tests passing" width="500px">
 

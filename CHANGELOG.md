@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [unreleased]
+- Update contributing Prerequisites
+- Remove unused ESLint and Prettier config files from TestingApp
 
 ## [4.0.8] - 2023-09-26
 - use `URL` polyfill for `shouldDoInterceptionBasedOnUrl`: https://github.com/supertokens/supertokens-react-native/pull/111
