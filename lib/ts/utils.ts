@@ -5,6 +5,7 @@ import FrontToken from "./frontToken";
 import NormalisedURLDomain from "./normalisedURLDomain";
 import NormalisedURLPath from "./normalisedURLPath";
 import { InputType, NormalisedInputType, EventHandler, RecipeInterface, TokenType } from "./types";
+import { enableLogging } from "./logger";
 
 const LAST_ACCESS_TOKEN_UPDATE = "st-last-access-token-update";
 const REFRESH_TOKEN_NAME = "st-refresh-token";
@@ -110,6 +111,10 @@ export function validateAndNormaliseInputOrThrowError(options: InputType): Norma
     let onHandleEvent: EventHandler = () => {};
     if (options.onHandleEvent !== undefined) {
         onHandleEvent = options.onHandleEvent;
+    }
+
+    if (options.enableDebugLogs !== undefined && options.enableDebugLogs) {
+        enableLogging();
     }
 
     let override: {
