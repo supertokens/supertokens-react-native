@@ -335,9 +335,7 @@ export async function onUnauthorisedResponse(
         );
 
         logDebugMessage("onUnauthorisedResponse: Refresh call ended");
-
         await saveTokensFromHeaders(response);
-
         logDebugMessage("onUnauthorisedResponse: Refresh status code is: " + response.status);
 
         const isUnauthorised = response.status === AuthHttpRequest.config.sessionExpiredStatusCode;
