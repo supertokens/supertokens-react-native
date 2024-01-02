@@ -5,7 +5,7 @@ import FrontToken from "./frontToken";
 import NormalisedURLDomain from "./normalisedURLDomain";
 import NormalisedURLPath from "./normalisedURLPath";
 import { InputType, NormalisedInputType, EventHandler, RecipeInterface, TokenType } from "./types";
-import { enableLogging } from "./logger";
+import { enableLogging, logDebugMessage } from "./logger";
 
 const LAST_ACCESS_TOKEN_UPDATE = "st-last-access-token-update";
 const REFRESH_TOKEN_NAME = "st-refresh-token";
@@ -141,7 +141,7 @@ export function validateAndNormaliseInputOrThrowError(options: InputType): Norma
 
 export function setToken(tokenType: TokenType, value: string) {
     const name = getStorageNameForToken(tokenType);
-
+    logDebugMessage(`setToken: saved ${tokenType} token in storage`);
     // We save the tokens with a 100-year expiration time
     return storeInStorage(name, value, Date.now() + 3153600000);
 }
@@ -161,8 +161,10 @@ export async function storeInStorage(name: string, value: string, expiry: number
  * to the refresh endpoint
  */
 export async function saveLastAccessTokenUpdate() {
+    logDebugMessage("saveLastAccessTokenUpdate: called");
     const now = Date.now().toString();
 
+    logDebugMessage("saveLastAccessTokenUpdate: setting " + now);
     await storeInStorage(LAST_ACCESS_TOKEN_UPDATE, now, Number.MAX_SAFE_INTEGER);
 
     // We clear the sIRTFrontend cookie
@@ -212,11 +214,18 @@ export type LocalSessionState =
  * but a session may still exist
  */
 export async function getLocalSessionState(): Promise<LocalSessionState> {
+    logDebugMessage("getLocalSessionState: called");
     const lastAccessTokenUpdate = await getFromStorage(LAST_ACCESS_TOKEN_UPDATE);
     const frontTokenExists = await FrontToken.doesTokenExists();
     if (frontTokenExists && lastAccessTokenUpdate !== undefined) {
+        logDebugMessage(
+            "getLocalSessionState: returning EXISTS since both frontToken and lastAccessTokenUpdate exists"
+        );
         return { status: "EXISTS", lastAccessTokenUpdate: lastAccessTokenUpdate };
     } else {
+        logDebugMessage(
+            "getLocalSessionState: returning NOT_EXISTS since frontToken was cleared but lastAccessTokenUpdate exists"
+        );
         return { status: "NOT_EXISTS" };
     }
 }
@@ -232,6 +241,7 @@ export function fireSessionUpdateEventsIfNecessary(
     // This may be considered a bug, but it is the existing behaviour before the rework
     if (frontTokenHeaderFromResponse === undefined || frontTokenHeaderFromResponse === null) {
         // The access token (and the session) hasn't been updated.
+        logDebugMessage("fireSessionUpdateEventsIfNecessary returning early because the front token was not updated");
         return;
     }
 
@@ -239,23 +249,30 @@ export function fireSessionUpdateEventsIfNecessary(
     // any other update means it's created or updated.
     const frontTokenExistsAfter = frontTokenHeaderFromResponse !== "remove";
 
+    logDebugMessage(
+        `fireSessionUpdateEventsIfNecessary wasLoggedIn: ${wasLoggedIn} frontTokenExistsAfter: ${frontTokenExistsAfter} status: ${status}`
+    );
+
     if (wasLoggedIn) {
         // we check for wasLoggedIn cause we don't want to fire an event
         // unnecessarily on first app load or if the user tried
         // to query an API that returned 401 while the user was not logged in...
         if (!frontTokenExistsAfter) {
             if (status === AuthHttpRequest.config.sessionExpiredStatusCode) {
+                logDebugMessage("onUnauthorisedResponse: firing UNAUTHORISED event");
                 AuthHttpRequest.config.onHandleEvent({
                     action: "UNAUTHORISED",
                     sessionExpiredOrRevoked: true
                 });
             } else {
+                logDebugMessage("onUnauthorisedResponse: firing SIGN_OUT event");
                 AuthHttpRequest.config.onHandleEvent({
                     action: "SIGN_OUT"
                 });
             }
         }
     } else if (frontTokenExistsAfter) {
+        logDebugMessage("onUnauthorisedResponse: firing SESSION_CREATED event");
         AuthHttpRequest.config.onHandleEvent({
             action: "SESSION_CREATED"
         });
