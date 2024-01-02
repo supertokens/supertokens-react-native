@@ -405,30 +405,36 @@ export async function onUnauthorisedResponse(
 }
 
 async function saveTokensFromHeaders(response: Response) {
+    logDebugMessage("saveTokensFromHeaders: Saving updated tokens from the response headers");
     const refreshToken = response.headers.get("st-refresh-token");
     if (refreshToken !== undefined && refreshToken !== null) {
+        logDebugMessage("saveTokensFromHeaders: saving new refresh token");
         await setToken("refresh", refreshToken);
     }
 
     const accessToken = response.headers.get("st-access-token");
     if (accessToken !== undefined && accessToken !== null) {
+        logDebugMessage("saveTokensFromHeaders: saving new access token");
         await setToken("access", accessToken);
     }
 
     const frontToken = response.headers.get("front-token");
     if (frontToken !== undefined && frontToken !== null) {
+        logDebugMessage("saveTokensFromHeaders: Setting sFrontToken: " + frontToken);
         await FrontToken.setItem(frontToken);
     }
     const antiCsrfToken = response.headers.get("anti-csrf");
     if (antiCsrfToken !== undefined && antiCsrfToken !== null) {
         const tok = await getLocalSessionState();
         if (tok.status === "EXISTS") {
+            logDebugMessage("saveTokensFromHeaders: Setting anti-csrf token");
             await AntiCSRF.setItem(tok.lastAccessTokenUpdate, antiCsrfToken);
         }
     }
 }
 
 async function setAuthorizationHeaderIfRequired(clonedHeaders: Headers, addRefreshToken: boolean = false) {
+    logDebugMessage("setTokenHeaders: adding existing tokens as header");
     // We set the Authorization header even if the tokenTransferMethod preference set in the config is cookies
     // since the active session may be using cookies. By default, we want to allow users to continue these sessions.
     // The new session preference should be applied at the start of the next session, if the backend allows it.
@@ -442,8 +448,12 @@ async function setAuthorizationHeaderIfRequired(clonedHeaders: Headers, addRefre
     if (accessToken !== undefined && refreshToken !== undefined) {
         // the Headers class normalizes header names so we don't have to worry about casing
         if (clonedHeaders.has("Authorization")) {
+            logDebugMessage("setAuthorizationHeaderIfRequired: Authorization header defined by the user, not adding");
         } else {
             clonedHeaders.set("Authorization", `Bearer ${addRefreshToken ? refreshToken : accessToken}`);
+            logDebugMessage("setAuthorizationHeaderIfRequired: added authorization header");
         }
+    } else {
+        logDebugMessage("setAuthorizationHeaderIfRequired: token for header based auth not found");
     }
 }
