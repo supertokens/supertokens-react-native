@@ -23,6 +23,10 @@ export function enableLogging() {
     __supertokensWebsiteLogging = true;
 }
 
+export function disableLogging() {
+    __supertokensWebsiteLogging = false;
+}
+
 export function logDebugMessage(message: string) {
     if (__supertokensWebsiteLogging) {
         console.log(
