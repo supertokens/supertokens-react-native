@@ -26,7 +26,7 @@ export function enableLogging() {
 export function logDebugMessage(message: string) {
     if (__supertokensWebsiteLogging) {
         console.log(
-            `${SUPERTOKENS_DEBUG_NAMESPACE} {t: "${new Date().toISOString()}", message: \"${message}\", supertokens-website-ver: "${version}"}`
+            `${SUPERTOKENS_DEBUG_NAMESPACE} {t: "${new Date().toISOString()}", message: \"${message}\", supertokens-react-native: "${version}"}`
         );
     }
 }

@@ -29,7 +29,7 @@ import {
 import FrontToken from "./frontToken";
 import RecipeImplementation from "./recipeImplementation";
 import OverrideableBuilder from "supertokens-js-override";
-import { logDebugMessage } from "./logger";
+import { logDebugMessage, enableLogging } from "./logger";
 
 declare let global: any;
 
@@ -48,6 +48,11 @@ export default class AuthHttpRequest {
 
     static init(options: InputType) {
         let config = validateAndNormaliseInputOrThrowError(options);
+
+        if (options.enableDebugLogs !== undefined && options.enableDebugLogs) {
+            enableLogging();
+        }
+
         logDebugMessage("init: called");
         logDebugMessage("init: Input apiBasePath: " + config.apiBasePath);
         logDebugMessage("init: Input apiDomain: " + config.apiDomain);
