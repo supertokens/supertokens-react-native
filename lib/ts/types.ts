@@ -27,6 +27,7 @@ export type Event =
 export type EventHandler = (event: Event) => void;
 
 export type InputType = {
+    enableDebugLogs?: boolean;
     apiDomain: string;
     apiBasePath?: string;
     sessionExpiredStatusCode?: number;

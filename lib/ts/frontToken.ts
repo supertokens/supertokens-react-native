@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import AuthHttpRequest from "./fetch";
 import { decode as atob } from "base-64";
 import { getLocalSessionState, saveLastAccessTokenUpdate, setToken } from "./utils";
+import { logDebugMessage } from "./logger";
 
 const FRONT_TOKEN_KEY = "supertokens-rn-front-token-key";
 const FRONT_TOKEN_NAME = "sFrontToken";
@@ -14,6 +15,7 @@ export default class FrontToken {
     private constructor() {}
 
     private static async getFrontTokenFromStorage(): Promise<string | null> {
+        logDebugMessage("getFrontTokenFromStorage: called");
         let frontTokenFromStorage = await AsyncStorage.getItem(FRONT_TOKEN_KEY);
 
         if (frontTokenFromStorage !== null) {
@@ -53,11 +55,14 @@ export default class FrontToken {
     }
 
     static async getFrontToken(): Promise<string | null> {
+        logDebugMessage("getFrontToken: called");
         if ((await getLocalSessionState()).status !== "EXISTS") {
+            logDebugMessage("getFrontToken: Returning because sIRTFrontend != EXISTS");
             return null;
         }
 
         let token = await this.getFrontTokenFromStorage();
+        logDebugMessage("getFrontToken: returning: " + token);
         return token;
     }
 
@@ -69,6 +74,7 @@ export default class FrontToken {
           }
         | undefined
     > {
+        logDebugMessage("FrontToken.getTokenInfo: called");
         let frontToken = await this.getFrontToken();
         if (frontToken === null) {
             if ((await getLocalSessionState()).status === "EXISTS") {
@@ -82,10 +88,15 @@ export default class FrontToken {
                 return undefined;
             }
         }
-        return JSON.parse(decodeURIComponent(escape(atob(frontToken))));
+        const parsedToken = JSON.parse(decodeURIComponent(escape(atob(frontToken))));
+        logDebugMessage("FrontToken.getTokenInfo: returning ate: " + parsedToken.ate);
+        logDebugMessage("FrontToken.getTokenInfo: returning uid: " + parsedToken.uid);
+        logDebugMessage("FrontToken.getTokenInfo: returning up: " + parsedToken.up);
+        return parsedToken;
     }
 
     private static async setFrontToken(frontToken: string | undefined) {
+        logDebugMessage("setFrontToken: called");
         async function setFrontTokenToStorage(frontToken: string | undefined) {
             if (frontToken === undefined) {
                 await AsyncStorage.removeItem(FRONT_TOKEN_KEY);
@@ -98,6 +109,7 @@ export default class FrontToken {
     }
 
     static async removeToken() {
+        logDebugMessage("FrontToken.removeToken: called");
         await this.setFrontToken(undefined);
         await setToken("access", "");
         await setToken("refresh", "");
@@ -119,6 +131,7 @@ export default class FrontToken {
             return FrontToken.removeToken();
         }
 
+        logDebugMessage("FrontToken.setItem: called");
         await this.setFrontToken(frontToken);
         FrontToken.waiters.forEach(f => f(undefined));
         FrontToken.waiters = [];

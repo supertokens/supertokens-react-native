@@ -16,6 +16,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import AuthHttpRequest from "./fetch";
 import { getLocalSessionState } from "./utils";
+import { logDebugMessage } from "./logger";
 
 const TOKEN_KEY = "supertokens-rn-anticsrf-key";
 const ANTI_CSRF_NAME = "sAntiCsrf";
@@ -31,7 +32,9 @@ export default class AntiCSRF {
     private constructor() {}
 
     private static async getAntiCSRFToken(associatedAccessTokenUpdate: string | undefined): Promise<string | null> {
+        logDebugMessage("AntiCSRF.getAntiCSRFToken: called");
         if (!((await getLocalSessionState()).status === "EXISTS")) {
+            logDebugMessage("AntiCSRF.getAntiCSRFToken: returning null because local session state != EXISTS");
             return null;
         }
 
@@ -62,6 +65,7 @@ export default class AntiCSRF {
 
                     if (expiry < currentTime) {
                         await AntiCSRF.removeToken();
+                        logDebugMessage("AntiCSRF.getAntiCSRFToken: returning null because of expired token");
                         return null;
                     }
 
@@ -69,21 +73,25 @@ export default class AntiCSRF {
                     if (temp !== undefined) {
                         // We update storage to set just the value and return it
                         await AntiCSRF.setItem(associatedAccessTokenUpdate, temp);
+                        logDebugMessage("AntiCSRF.getToken: returning " + temp);
                         return temp;
                     }
-
                     // This means that the storage had a cookie string but it was malformed somehow
+                    logDebugMessage("AntiCSRF.getAntiCSRFToken: returning null because of malformed cookie string");
                     return null;
                 }
             }
         }
 
+        logDebugMessage("AntiCSRF.getAntiCSRFToken: returning null");
         return fromStorage;
     }
 
     static async getToken(associatedAccessTokenUpdate: string | undefined): Promise<string | undefined> {
+        logDebugMessage("AntiCSRF.getToken: called");
         if (associatedAccessTokenUpdate === undefined) {
             AntiCSRF.tokenInfo = undefined;
+            logDebugMessage("AntiCSRF.getToken: returning undefined");
             return undefined;
         }
 
@@ -91,6 +99,7 @@ export default class AntiCSRF {
             let antiCsrf = await this.getAntiCSRFToken(associatedAccessTokenUpdate);
 
             if (antiCsrf === null) {
+                logDebugMessage("AntiCSRF.getToken: returning undefined");
                 return undefined;
             }
 
@@ -103,11 +112,13 @@ export default class AntiCSRF {
             AntiCSRF.tokenInfo = undefined;
             return await AntiCSRF.getToken(associatedAccessTokenUpdate);
         }
+        logDebugMessage("AntiCSRF.getToken: returning: " + AntiCSRF.tokenInfo.antiCsrf);
         return AntiCSRF.tokenInfo.antiCsrf;
     }
 
     // give antiCSRFToken as undefined to remove it.
     private static async setAntiCSRF(antiCSRFToken: string | undefined) {
+        logDebugMessage("AntiCSRF.setAntiCSRF: called " + antiCSRFToken);
         async function setAntiCSRFToStorage(antiCSRFToken: string | undefined) {
             if (antiCSRFToken === undefined) {
                 await AntiCSRF.removeToken();
@@ -124,7 +135,7 @@ export default class AntiCSRF {
             AntiCSRF.tokenInfo = undefined;
             return;
         }
-
+        logDebugMessage("AntiCSRF.setItem: called");
         await this.setAntiCSRF(antiCsrf);
         AntiCSRF.tokenInfo = {
             antiCsrf,
@@ -133,6 +144,7 @@ export default class AntiCSRF {
     }
 
     static async removeToken() {
+        logDebugMessage("AntiCSRF.removeToken: called");
         AntiCSRF.tokenInfo = undefined;
         await AsyncStorage.removeItem(TOKEN_KEY);
     }

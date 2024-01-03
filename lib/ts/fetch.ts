@@ -29,6 +29,7 @@ import {
 import FrontToken from "./frontToken";
 import RecipeImplementation from "./recipeImplementation";
 import OverrideableBuilder from "supertokens-js-override";
+import { logDebugMessage, enableLogging } from "./logger";
 
 declare let global: any;
 
@@ -47,6 +48,18 @@ export default class AuthHttpRequest {
 
     static init(options: InputType) {
         let config = validateAndNormaliseInputOrThrowError(options);
+
+        if (options.enableDebugLogs !== undefined && options.enableDebugLogs) {
+            enableLogging();
+        }
+
+        logDebugMessage("init: called");
+        logDebugMessage("init: Input apiBasePath: " + config.apiBasePath);
+        logDebugMessage("init: Input apiDomain: " + config.apiDomain);
+        logDebugMessage("init: Input autoAddCredentials: " + config.autoAddCredentials);
+        logDebugMessage("init: Input sessionTokenBackendDomain: " + config.sessionTokenBackendDomain);
+        logDebugMessage("init: Input sessionExpiredStatusCode: " + config.sessionExpiredStatusCode);
+        logDebugMessage("init: Input tokenTransferMethod: " + config.tokenTransferMethod);
         AuthHttpRequest.env = global;
 
         AuthHttpRequest.refreshTokenUrl = config.apiDomain + config.apiBasePath + "/session/refresh";
@@ -55,6 +68,7 @@ export default class AuthHttpRequest {
         AuthHttpRequest.config = config;
 
         if (AuthHttpRequest.env.__supertokensOriginalFetch === undefined) {
+            logDebugMessage("init: __supertokensOriginalFetch is undefined");
             // this block contains code that is run just once per page load..
             // all items in this block are attached to the global env so that
             // even if the init function is called more than once (maybe across JS scripts),
@@ -91,6 +105,7 @@ export default class AuthHttpRequest {
             throw Error("init function not called");
         }
 
+        logDebugMessage("doRequest: start of fetch interception");
         let doNotDoInterception = false;
 
         try {
@@ -114,7 +129,9 @@ export default class AuthHttpRequest {
             throw err;
         }
 
+        logDebugMessage("doRequest: Value of doNotDoInterception: " + doNotDoInterception);
         if (doNotDoInterception) {
+            logDebugMessage("doRequest: Returning without interception");
             return await httpCall(config);
         }
 
@@ -135,10 +152,14 @@ export default class AuthHttpRequest {
                 // If we do not ignore this, then this header would be used even if the request is being retried after a refresh, even though it contains an outdated access token.
                 // This causes an infinite refresh loop.
 
+                logDebugMessage(
+                    "doRequest: Removing Authorization from user provided headers because it contains our access token"
+                );
                 originalHeaders.delete("Authorization");
             }
         }
 
+        logDebugMessage("doRequest: Interception started");
         ProcessState.getInstance().addState(PROCESS_STATE.CALLING_INTERCEPTION_REQUEST);
 
         try {
@@ -157,11 +178,13 @@ export default class AuthHttpRequest {
                 if (preRequestLocalSessionState.status === "EXISTS") {
                     const antiCsrfToken = await AntiCSRF.getToken(preRequestLocalSessionState.lastAccessTokenUpdate);
                     if (antiCsrfToken !== undefined) {
+                        logDebugMessage("doRequest: Adding anti-csrf token to request");
                         clonedHeaders.set("anti-csrf", antiCsrfToken);
                     }
                 }
 
                 if (AuthHttpRequest.config.autoAddCredentials) {
+                    logDebugMessage("doRequest: Adding credentials include");
                     if (configWithAntiCsrf === undefined) {
                         configWithAntiCsrf = {
                             credentials: "include"
@@ -176,15 +199,21 @@ export default class AuthHttpRequest {
 
                 // adding rid for anti-csrf protection: Anti-csrf via custom header
                 if (!clonedHeaders.has("rid")) {
+                    logDebugMessage("doRequest: Adding rid header: anti-csrf");
                     clonedHeaders.set("rid", "anti-csrf");
+                } else {
+                    logDebugMessage("doRequest: rid header was already there in request");
                 }
 
                 const transferMethod = AuthHttpRequest.config.tokenTransferMethod;
+                logDebugMessage("doRequest: Adding st-auth-mode header: " + transferMethod);
                 clonedHeaders.set("st-auth-mode", transferMethod);
 
                 await setAuthorizationHeaderIfRequired(clonedHeaders);
 
+                logDebugMessage("doRequest: Making user's http call");
                 let response = await httpCall(configWithAntiCsrf);
+                logDebugMessage("doRequest: User's http call ended");
 
                 await saveTokensFromHeaders(response);
 
@@ -195,8 +224,10 @@ export default class AuthHttpRequest {
                 );
 
                 if (response.status === AuthHttpRequest.config.sessionExpiredStatusCode) {
+                    logDebugMessage("doRequest: Status code is: " + response.status);
                     let refreshResponse = await onUnauthorisedResponse(preRequestLocalSessionState);
                     if (refreshResponse.result !== "RETRY") {
+                        logDebugMessage("doRequest: Not retrying original request");
                         returnObj = refreshResponse.error !== undefined ? refreshResponse.error : response;
                         break;
                     }
@@ -212,6 +243,7 @@ export default class AuthHttpRequest {
             // or the backend is down and we don't need to call it.
             const postRequestLocalSessionState = await getLocalSessionState();
             if (postRequestLocalSessionState.status === "NOT_EXISTS") {
+                logDebugMessage("doRequest: local session doesn't exist, so removing anti-csrf and sFrontToken");
                 await AntiCSRF.removeToken();
                 await FrontToken.removeToken();
             }
@@ -240,11 +272,14 @@ export async function onUnauthorisedResponse(
     preRequestLocalSessionState: LocalSessionState
 ): Promise<{ result: "SESSION_EXPIRED"; error?: any } | { result: "API_ERROR"; error: any } | { result: "RETRY" }> {
     let lock = getLock();
+    logDebugMessage("onUnauthorisedResponse: trying to acquire lock");
     await lock.lock(LOCK_NAME);
+    logDebugMessage("onUnauthorisedResponse: lock acquired");
     try {
         let postLockLocalSessionState = await getLocalSessionState();
 
         if (postLockLocalSessionState.status === "NOT_EXISTS") {
+            logDebugMessage("onUnauthorisedResponse: Not refreshing because local session state is NOT_EXISTS");
             // if it comes here, it means a request was made thinking
             // that the session exists, but it doesn't actually exist.
             AuthHttpRequest.config.onHandleEvent({
@@ -260,6 +295,9 @@ export async function onUnauthorisedResponse(
                 preRequestLocalSessionState.status === "EXISTS" &&
                 postLockLocalSessionState.lastAccessTokenUpdate !== preRequestLocalSessionState.lastAccessTokenUpdate)
         ) {
+            logDebugMessage(
+                "onUnauthorisedResponse: Retrying early because pre and post lastAccessTokenUpdate don't match"
+            );
             // means that some other process has already called this API and succeeded. so we need to call it again
             return { result: "RETRY" };
         }
@@ -269,18 +307,22 @@ export async function onUnauthorisedResponse(
         if (preRequestLocalSessionState.status === "EXISTS") {
             const antiCsrfToken = await AntiCSRF.getToken(preRequestLocalSessionState.lastAccessTokenUpdate);
             if (antiCsrfToken !== undefined) {
+                logDebugMessage("onUnauthorisedResponse: Adding anti-csrf token to refresh API call");
                 headers.set("anti-csrf", antiCsrfToken);
             }
         }
 
+        logDebugMessage("onUnauthorisedResponse: Adding rid and fdi-versions to refresh call header");
         headers.set("rid", AuthHttpRequest.rid);
         headers.set("fdi-version", supported_fdi.join(","));
 
         const transferMethod = AuthHttpRequest.config.tokenTransferMethod;
+        logDebugMessage("onUnauthorisedResponse: Adding st-auth-mode header: " + transferMethod);
         headers.set("st-auth-mode", transferMethod);
 
         await setAuthorizationHeaderIfRequired(headers, true);
 
+        logDebugMessage("onUnauthorisedResponse: Calling refresh pre API hook");
         let preAPIResult = await AuthHttpRequest.config.preAPIHook({
             action: "REFRESH_SESSION",
             requestInit: {
@@ -290,13 +332,16 @@ export async function onUnauthorisedResponse(
             },
             url: AuthHttpRequest.refreshTokenUrl
         });
+        logDebugMessage("onUnauthorisedResponse: Making refresh call");
 
         const response = await AuthHttpRequest.env.__supertokensOriginalFetch(
             preAPIResult.url,
             preAPIResult.requestInit
         );
 
+        logDebugMessage("onUnauthorisedResponse: Refresh call ended");
         await saveTokensFromHeaders(response);
+        logDebugMessage("onUnauthorisedResponse: Refresh status code is: " + response.status);
 
         const isUnauthorised = response.status === AuthHttpRequest.config.sessionExpiredStatusCode;
 
@@ -319,6 +364,7 @@ export async function onUnauthorisedResponse(
         }
 
         if ((await getLocalSessionState()).status === "NOT_EXISTS") {
+            logDebugMessage("onUnauthorisedResponse: local session doesn't exist, so returning session expired");
             // The execution should never come here.. but just in case.
             // removed by server. So we logout
 
@@ -332,9 +378,11 @@ export async function onUnauthorisedResponse(
         AuthHttpRequest.config.onHandleEvent({
             action: "REFRESH_SESSION"
         });
+        logDebugMessage("onUnauthorisedResponse: Sending RETRY signal");
         return { result: "RETRY" };
     } catch (error) {
         if ((await getLocalSessionState()).status === "NOT_EXISTS") {
+            logDebugMessage("onUnauthorisedResponse: local session doesn't exist, so returning session expired");
             // removed by server.
 
             // we do not send "UNAUTHORISED" event here because
@@ -343,12 +391,16 @@ export async function onUnauthorisedResponse(
             // in the first place.
             return { result: "SESSION_EXPIRED", error };
         }
-
+        logDebugMessage("onUnauthorisedResponse: sending API_ERROR");
         return { result: "API_ERROR", error };
     } finally {
         lock.unlock(LOCK_NAME);
+        logDebugMessage("onUnauthorisedResponse: Released lock");
 
         if ((await getLocalSessionState()).status === "NOT_EXISTS") {
+            logDebugMessage(
+                "onUnauthorisedResponse: local session doesn't exist, so removing anti-csrf and sFrontToken"
+            );
             await AntiCSRF.removeToken();
             await FrontToken.removeToken();
         }
@@ -356,30 +408,36 @@ export async function onUnauthorisedResponse(
 }
 
 async function saveTokensFromHeaders(response: Response) {
+    logDebugMessage("saveTokensFromHeaders: Saving updated tokens from the response headers");
     const refreshToken = response.headers.get("st-refresh-token");
     if (refreshToken !== undefined && refreshToken !== null) {
+        logDebugMessage("saveTokensFromHeaders: saving new refresh token");
         await setToken("refresh", refreshToken);
     }
 
     const accessToken = response.headers.get("st-access-token");
     if (accessToken !== undefined && accessToken !== null) {
+        logDebugMessage("saveTokensFromHeaders: saving new access token");
         await setToken("access", accessToken);
     }
 
     const frontToken = response.headers.get("front-token");
     if (frontToken !== undefined && frontToken !== null) {
+        logDebugMessage("saveTokensFromHeaders: Setting sFrontToken: " + frontToken);
         await FrontToken.setItem(frontToken);
     }
     const antiCsrfToken = response.headers.get("anti-csrf");
     if (antiCsrfToken !== undefined && antiCsrfToken !== null) {
         const tok = await getLocalSessionState();
         if (tok.status === "EXISTS") {
+            logDebugMessage("saveTokensFromHeaders: Setting anti-csrf token");
             await AntiCSRF.setItem(tok.lastAccessTokenUpdate, antiCsrfToken);
         }
     }
 }
 
 async function setAuthorizationHeaderIfRequired(clonedHeaders: Headers, addRefreshToken: boolean = false) {
+    logDebugMessage("setTokenHeaders: adding existing tokens as header");
     // We set the Authorization header even if the tokenTransferMethod preference set in the config is cookies
     // since the active session may be using cookies. By default, we want to allow users to continue these sessions.
     // The new session preference should be applied at the start of the next session, if the backend allows it.
@@ -393,8 +451,12 @@ async function setAuthorizationHeaderIfRequired(clonedHeaders: Headers, addRefre
     if (accessToken !== undefined && refreshToken !== undefined) {
         // the Headers class normalizes header names so we don't have to worry about casing
         if (clonedHeaders.has("Authorization")) {
+            logDebugMessage("setAuthorizationHeaderIfRequired: Authorization header defined by the user, not adding");
         } else {
             clonedHeaders.set("Authorization", `Bearer ${addRefreshToken ? refreshToken : accessToken}`);
+            logDebugMessage("setAuthorizationHeaderIfRequired: added authorization header");
         }
+    } else {
+        logDebugMessage("setAuthorizationHeaderIfRequired: token for header based auth not found");
     }
 }

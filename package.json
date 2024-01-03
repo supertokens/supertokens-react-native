@@ -1,6 +1,6 @@
 {
   "name": "supertokens-react-native",
-  "version": "4.0.8",
+  "version": "4.1.0",
   "description": "React Native SDK for SuperTokens",
   "main": "index.js",
   "scripts": {
@@ -55,7 +55,7 @@
   "size-limit": [
     {
       "path": "lib/build/index.js",
-      "limit": "25kb"
+      "limit": "27kb"
     }
   ]
 }
