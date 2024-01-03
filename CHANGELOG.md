@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update contributing Prerequisites
 - Remove unused ESLint and Prettier config files from TestingApp
 
+## [4.1.0] - 2024-01-03
+- Added debug logs to the SDK
+
 ## [4.0.8] - 2023-09-26
 - use `URL` polyfill for `shouldDoInterceptionBasedOnUrl`: https://github.com/supertokens/supertokens-react-native/pull/111
 
