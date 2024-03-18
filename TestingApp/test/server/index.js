@@ -49,6 +49,13 @@ try {
     multitenancySupported = false;
 }
 
+let UserMetaDataRecipeRaw;
+try {
+    UserMetaDataRecipeRaw = require("supertokens-node/lib/build/recipe/usermetadata/recipe").default;
+} catch {
+    // Ignored
+}
+
 let generalErrorSupported;
 
 if (maxVersion(nodeSDKVersion, "10.0.0") === nodeSDKVersion) {
@@ -283,6 +290,9 @@ app.post("/startST", async (req, res) => {
             MultitenancyRaw.reset();
         }
 
+        if (UserMetaDataRecipeRaw !== undefined) {
+            UserMetaDataRecipeRaw.reset();
+        }
         SuperTokens.init(getConfig(enableAntiCsrf, enableJWT));
     }
     let pid = await startST();
