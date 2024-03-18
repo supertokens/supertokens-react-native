@@ -513,7 +513,8 @@ app.post("/login-2.18", async (req, res) => {
             enableAntiCsrf: false,
             userDataInJWT: payload,
             userDataInDatabase: {}
-        }
+        },
+        {}
     );
     Querier.apiVersion = undefined;
 
