@@ -26,7 +26,7 @@ export function normaliseURLPathOrThrowError(input: string): string {
     return new NormalisedURLPath(input).getAsStringDangerous();
 }
 
-export function normaliseCookieDomainOrThrowError(cookieDomain: string): string {
+export function normaliseSessionScopeOrThrowError(cookieDomain: string): string {
     function helper(cookieDomain: string): string {
         cookieDomain = cookieDomain.trim().toLowerCase();
 
@@ -43,11 +43,6 @@ export function normaliseCookieDomainOrThrowError(cookieDomain: string): string 
             // @ts-ignore (Typescript complains that URL does not expect a parameter in constructor even though it does for react-native-url-polyfill)
             let urlObj: any = new URL(cookieDomain);
             cookieDomain = urlObj.hostname;
-
-            // remove leading dot
-            if (cookieDomain.startsWith(".")) {
-                cookieDomain = cookieDomain.substr(1);
-            }
 
             return cookieDomain;
         } catch (err) {
@@ -94,7 +89,7 @@ export function validateAndNormaliseInputOrThrowError(options: InputType): Norma
 
     let sessionTokenBackendDomain: string | undefined = undefined;
     if (options.sessionTokenBackendDomain !== undefined) {
-        sessionTokenBackendDomain = normaliseCookieDomainOrThrowError(options.sessionTokenBackendDomain);
+        sessionTokenBackendDomain = normaliseSessionScopeOrThrowError(options.sessionTokenBackendDomain);
     }
 
     let preAPIHook = async (context: {

@@ -20,8 +20,7 @@ import { ProcessState } from "supertokens-react-native/lib/build/processState";
 import {
     normaliseCookieDomainOrThrowError,
     normaliseURLPathOrThrowError,
-    normaliseURLDomainOrThrowError,
-    shouldDoInterceptionBasedOnUrl
+    normaliseURLDomainOrThrowError
 } from "supertokens-react-native/lib/build/utils";
 // jest does not call setupFiles properly with the new react-native init, so doing it this way instead
 import "./setup";
@@ -59,6 +58,9 @@ describe("Config tests", function() {
         );
         assert(shouldDoInterceptionBasedOnUrl("localhost:3000", "localhost:3000", undefined));
         assert(shouldDoInterceptionBasedOnUrl("https://localhost:3000", "https://localhost:3000", undefined));
+        assert(shouldDoInterceptionBasedOnUrl("https://localhost:3000", "https://localhost:3001", undefined));
+        assert(shouldDoInterceptionBasedOnUrl("http://localhost:3000", "http://localhost:3001", undefined));
+        assert(shouldDoInterceptionBasedOnUrl("localhost:3000", "localhost:3001", undefined));
         assert(shouldDoInterceptionBasedOnUrl("http://localhost:3000", "http://localhost:3000", undefined));
         assert(shouldDoInterceptionBasedOnUrl("localhost:3000", "https://localhost:3000", undefined));
         assert(shouldDoInterceptionBasedOnUrl("localhost", "https://localhost", undefined));
@@ -69,19 +71,29 @@ describe("Config tests", function() {
         assert(shouldDoInterceptionBasedOnUrl("127.0.0.1:3000", "https://127.0.0.1:3000", undefined));
         assert(shouldDoInterceptionBasedOnUrl("http://127.0.0.1:3000", "https://127.0.0.1:3000", undefined));
         assert(shouldDoInterceptionBasedOnUrl("http://127.0.0.1", "https://127.0.0.1", undefined));
+        assert(shouldDoInterceptionBasedOnUrl("http://localhost.org", "localhost.org", undefined));
+        assert(shouldDoInterceptionBasedOnUrl("http://localhost.org", "http://localhost.org", undefined));
 
         // true cases with cookieDomain
         assert(shouldDoInterceptionBasedOnUrl("api.example.com", "", "api.example.com"));
         assert(shouldDoInterceptionBasedOnUrl("http://api.example.com", "", "http://api.example.com"));
         assert(shouldDoInterceptionBasedOnUrl("api.example.com", "", ".example.com"));
+        assert(shouldDoInterceptionBasedOnUrl("api.example.com", "", "example.com"));
         assert(shouldDoInterceptionBasedOnUrl("https://api.example.com", "", "http://api.example.com"));
         assert(shouldDoInterceptionBasedOnUrl("https://api.example.com", "", "https://api.example.com"));
+        assert(shouldDoInterceptionBasedOnUrl("https://sub.api.example.com", "", ".sub.api.example.com"));
+        assert(shouldDoInterceptionBasedOnUrl("https://sub.api.example.com", "", "sub.api.example.com"));
         assert(shouldDoInterceptionBasedOnUrl("https://sub.api.example.com", "", ".api.example.com"));
+        assert(shouldDoInterceptionBasedOnUrl("https://sub.api.example.com", "", "api.example.com"));
         assert(shouldDoInterceptionBasedOnUrl("https://sub.api.example.com", "", ".example.com"));
+        assert(shouldDoInterceptionBasedOnUrl("https://sub.api.example.com", "", "example.com"));
         assert(shouldDoInterceptionBasedOnUrl("https://sub.api.example.com:3000", "", ".example.com:3000"));
+        assert(shouldDoInterceptionBasedOnUrl("https://sub.api.example.com:3000", "", "example.com:3000"));
         assert(shouldDoInterceptionBasedOnUrl("https://sub.api.example.com:3000", "", ".example.com"));
+        assert(shouldDoInterceptionBasedOnUrl("https://sub.api.example.com:3000", "", "example.com"));
         assert(shouldDoInterceptionBasedOnUrl("https://sub.api.example.com:3000", "", "https://sub.api.example.com"));
         assert(shouldDoInterceptionBasedOnUrl("https://api.example.com:3000", "", ".api.example.com"));
+        assert(shouldDoInterceptionBasedOnUrl("https://api.example.com:3000", "", "api.example.com"));
         assert(shouldDoInterceptionBasedOnUrl("localhost:3000", "", "localhost:3000"));
         assert(shouldDoInterceptionBasedOnUrl("https://localhost:3000", "", ".localhost:3000"));
         assert(shouldDoInterceptionBasedOnUrl("localhost", "", "localhost"));
@@ -92,32 +104,51 @@ describe("Config tests", function() {
         assert(shouldDoInterceptionBasedOnUrl("127.0.0.1:3000", "", "https://127.0.0.1:3000"));
         assert(shouldDoInterceptionBasedOnUrl("http://127.0.0.1:3000", "", "https://127.0.0.1:3000"));
         assert(shouldDoInterceptionBasedOnUrl("http://127.0.0.1", "", "https://127.0.0.1"));
+        assert(shouldDoInterceptionBasedOnUrl("http://localhost.org", "", ".localhost.org"));
+        assert(shouldDoInterceptionBasedOnUrl("http://localhost.org", "", "localhost.org"));
         assert(shouldDoInterceptionBasedOnUrl("https://sub.api.example.com:3000", "", ".com"));
         assert(shouldDoInterceptionBasedOnUrl("https://sub.api.example.co.uk:3000", "", ".api.example.co.uk"));
         assert(shouldDoInterceptionBasedOnUrl("https://sub1.api.example.co.uk:3000", "", ".api.example.co.uk"));
         assert(shouldDoInterceptionBasedOnUrl("https://api.example.co.uk:3000", "", ".api.example.co.uk"));
         assert(shouldDoInterceptionBasedOnUrl("https://api.example.co.uk:3000", "", "api.example.co.uk"));
+        assert(shouldDoInterceptionBasedOnUrl("localhost:3000", "localhost:8080", undefined));
+        assert(shouldDoInterceptionBasedOnUrl("localhost:3001", "localhost", undefined));
+        assert(
+            shouldDoInterceptionBasedOnUrl("https://api.example.com:3002", "https://api.example.com:3001", undefined)
+        );
+        assert(shouldDoInterceptionBasedOnUrl("http://localhost.org", "localhost.org:2000", undefined));
+        assert(shouldDoInterceptionBasedOnUrl("http://localhost.org", "localhost", "localhost.org"));
+        assert(shouldDoInterceptionBasedOnUrl("localhost", "localhost", "localhost.org"));
+        assert(shouldDoInterceptionBasedOnUrl("localhost", "", "localhost:8080"));
+        assert(shouldDoInterceptionBasedOnUrl("http://localhost:80", "", "localhost:8080"));
+        assert(shouldDoInterceptionBasedOnUrl("localhost:3000", "", "localhost:8080"));
+        assert(shouldDoInterceptionBasedOnUrl("https://sub.api.example.com:3000", "", ".example.com:3001"));
+        assert(shouldDoInterceptionBasedOnUrl("http://127.0.0.1:3000", "", "https://127.0.0.1:3010"));
 
         // false cases with api
-        assert(!shouldDoInterceptionBasedOnUrl("localhost:3001", "localhost:3000", undefined));
+        assert(!shouldDoInterceptionBasedOnUrl("localhost", "localhost.org"));
+        assert(!shouldDoInterceptionBasedOnUrl("google.com", "localhost.org"));
+        assert(!shouldDoInterceptionBasedOnUrl("http://google.com", "localhost.org"));
+        assert(!shouldDoInterceptionBasedOnUrl("https://google.com", "localhost.org"));
+        assert(!shouldDoInterceptionBasedOnUrl("https://google.com:8080", "localhost.org"));
         assert(!shouldDoInterceptionBasedOnUrl("localhost:3001", "example.com", undefined));
-        assert(!shouldDoInterceptionBasedOnUrl("localhost:3001", "localhost", undefined));
         assert(!shouldDoInterceptionBasedOnUrl("https://example.com", "https://api.example.com", undefined));
         assert(!shouldDoInterceptionBasedOnUrl("https://api.example.com", "https://a.api.example.com", undefined));
+        assert(!shouldDoInterceptionBasedOnUrl("https://api.example.com", "https://a.api.example.com:3000", undefined));
         assert(!shouldDoInterceptionBasedOnUrl("https://api.example.com", "https://example.com", undefined));
         assert(!shouldDoInterceptionBasedOnUrl("https://example.com:3001", "https://api.example.com:3001", undefined));
-        assert(
-            !shouldDoInterceptionBasedOnUrl("https://api.example.com:3002", "https://api.example.com:3001", undefined)
-        );
 
         // false cases with cookieDomain
-        assert(!shouldDoInterceptionBasedOnUrl("https://sub.api.example.com:3000", "", ".example.com:3001"));
-        assert(!shouldDoInterceptionBasedOnUrl("https://sub.api.example.com:3000", "", "example.com"));
+        assert(!shouldDoInterceptionBasedOnUrl("localhost", "", "localhost.org"));
+        assert(!shouldDoInterceptionBasedOnUrl("google.com", "", "localhost.org"));
+        assert(!shouldDoInterceptionBasedOnUrl("http://google.com", "", "localhost.org"));
+        assert(!shouldDoInterceptionBasedOnUrl("https://google.com", "", "localhost.org"));
+        assert(!shouldDoInterceptionBasedOnUrl("https://google.com:8080", "", "localhost.org"));
         assert(!shouldDoInterceptionBasedOnUrl("https://api.example.com:3000", "", ".a.api.example.com"));
         assert(!shouldDoInterceptionBasedOnUrl("https://sub.api.example.com:3000", "", "localhost"));
-        assert(!shouldDoInterceptionBasedOnUrl("http://127.0.0.1:3000", "", "https://127.0.0.1:3010"));
-        assert(!shouldDoInterceptionBasedOnUrl("https://sub.api.example.co.uk:3000", "", "api.example.co.uk"));
-        assert(!shouldDoInterceptionBasedOnUrl("https://sub.api.example.co.uk", "", "api.example.co.uk"));
+        assert(!shouldDoInterceptionBasedOnUrl("http://localhost.org", "", "localhost"));
+        assert(!shouldDoInterceptionBasedOnUrl("http://localhost.org", "", ".localhost"));
+        assert(!shouldDoInterceptionBasedOnUrl("http://localhost.org", "", "localhost:2000"));
 
         // errors in input
         try {

@@ -5,7 +5,7 @@ import FrontToken from "./frontToken";
 import { supported_fdi } from "./version";
 import { interceptorFunctionRequestFulfilled, responseErrorInterceptor, responseInterceptor } from "./axios";
 import { SuperTokensGeneralError } from "./error";
-import { getLocalSessionState, normaliseCookieDomainOrThrowError, normaliseURLDomainOrThrowError } from "./utils";
+import { getLocalSessionState, normaliseSessionScopeOrThrowError, normaliseURLDomainOrThrowError } from "./utils";
 import { logDebugMessage } from "./logger";
 
 export default function RecipeImplementation(): RecipeInterface {
@@ -144,7 +144,11 @@ export default function RecipeImplementation(): RecipeInterface {
             // we do not send an event here since it's triggered in fireSessionUpdateEventsIfNecessary.
         },
 
-        shouldDoInterceptionBasedOnUrl: (toCheckUrl, apiDomain, sessionTokenBackendDomain) => {
+        shouldDoInterceptionBasedOnUrl: function(
+            toCheckUrl: string,
+            apiDomain: string,
+            sessionTokenBackendDomain: string | undefined
+        ): boolean {
             logDebugMessage(
                 "shouldDoInterceptionBasedOnUrl: toCheckUrl: " +
                     toCheckUrl +
@@ -153,40 +157,44 @@ export default function RecipeImplementation(): RecipeInterface {
                     " sessionTokenBackendDomain: " +
                     sessionTokenBackendDomain
             );
-            function isNumeric(str: any) {
-                if (typeof str != "string") return false; // we only process strings!
-                return (
-                    !isNaN(str as any) && !isNaN(parseFloat(str)) // use type coercion to parse the _entirety_ of the string (`parseFloat` alone does not do this)...
-                ); // ...and ensure strings of whitespace fail
+
+            // The safest/best way to add this is the hash as the browser strips it before sending
+            // but we don't have a reason to limit checking to that part.
+            if (toCheckUrl.includes("superTokensDoNotDoInterception")) {
+                return false;
             }
+
             toCheckUrl = normaliseURLDomainOrThrowError(toCheckUrl);
-            // @ts-ignore (Typescript complains that URL does not expect a parameter in constructor even though it does for react-native-url-polyfill)
-            let urlObj: any = new URL(toCheckUrl);
+            let urlObj = new URL(toCheckUrl);
             let domain = urlObj.hostname;
-            if (sessionTokenBackendDomain === undefined) {
-                domain = urlObj.port === "" ? domain : domain + ":" + urlObj.port;
+            let apiDomainAndInputDomainMatch = false;
+            if (apiDomain !== "") {
+                // we have the "" check cause in tests, we pass "" in lots of cases.
                 apiDomain = normaliseURLDomainOrThrowError(apiDomain);
-                // @ts-ignore (Typescript complains that URL does not expect a parameter in constructor even though it does for react-native-url-polyfill)
-                let apiUrlObj: any = new URL(apiDomain);
-                return (
-                    domain === (apiUrlObj.port === "" ? apiUrlObj.hostname : apiUrlObj.hostname + ":" + apiUrlObj.port)
-                );
+                let apiUrlObj = new URL(apiDomain);
+                apiDomainAndInputDomainMatch = domain === apiUrlObj.hostname;
+            }
+            if (sessionTokenBackendDomain === undefined || apiDomainAndInputDomainMatch) {
+                // even if sessionTokenBackendDomain !== undefined, if there is an exact match
+                // of api domain, ignoring the port, we return true
+                return apiDomainAndInputDomainMatch;
             } else {
-                let normalisedSessionDomain = normaliseCookieDomainOrThrowError(sessionTokenBackendDomain);
-                if (sessionTokenBackendDomain.split(":").length > 1) {
-                    // this means that a port may have been provided
-                    let portStr = sessionTokenBackendDomain.split(":")[sessionTokenBackendDomain.split(":").length - 1];
-                    if (isNumeric(portStr)) {
-                        normalisedSessionDomain += ":" + portStr;
-                        domain = urlObj.port === "" ? domain : domain + ":" + urlObj.port;
-                    }
-                }
-                if (sessionTokenBackendDomain.startsWith(".")) {
-                    return ("." + domain).endsWith(normalisedSessionDomain);
-                } else {
-                    return domain === normalisedSessionDomain;
-                }
+                let normalisedsessionDomain = normaliseSessionScopeOrThrowError(sessionTokenBackendDomain);
+                return matchesDomainOrSubdomain(domain, normalisedsessionDomain);
             }
         }
     };
+}
+
+function matchesDomainOrSubdomain(hostname: string, str: string): boolean {
+    const parts = hostname.split(".");
+
+    for (let i = 0; i < parts.length; i++) {
+        const subdomainCandidate = parts.slice(i).join(".");
+        if (subdomainCandidate === str || `.${subdomainCandidate}` === str) {
+            return true;
+        }
+    }
+
+    return false;
 }
