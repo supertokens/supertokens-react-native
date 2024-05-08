@@ -2,7 +2,7 @@ import { InputType, NormalisedInputType, TokenType } from "./types";
 export declare function isAnIpAddress(ipaddress: string): boolean;
 export declare function normaliseURLDomainOrThrowError(input: string): string;
 export declare function normaliseURLPathOrThrowError(input: string): string;
-export declare function normaliseCookieDomainOrThrowError(cookieDomain: string): string;
+export declare function normaliseSessionScopeOrThrowError(cookieDomain: string): string;
 export declare function validateAndNormaliseInputOrThrowError(options: InputType): NormalisedInputType;
 export declare function setToken(tokenType: TokenType, value: string): Promise<void>;
 export declare function storeInStorage(name: string, value: string, expiry: number): Promise<void>;
