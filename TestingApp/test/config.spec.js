@@ -18,7 +18,7 @@ import AuthHttpRequest from "supertokens-react-native";
 import assert from "assert";
 import { ProcessState } from "supertokens-react-native/lib/build/processState";
 import {
-    normaliseCookieDomainOrThrowError,
+    normaliseSessionScopeOrThrowError,
     normaliseURLPathOrThrowError,
     normaliseURLDomainOrThrowError
 } from "supertokens-react-native/lib/build/utils";
@@ -170,35 +170,35 @@ describe("Config tests", function() {
     });
 
     it("testing cookieDomain normalisation", async function() {
-        assert(normaliseCookieDomainOrThrowError("api.example.com") === "api.example.com");
-        assert(normaliseCookieDomainOrThrowError("http://api.example.com") === "api.example.com");
-        assert(normaliseCookieDomainOrThrowError("https://api.example.com") === "api.example.com");
-        assert(normaliseCookieDomainOrThrowError("http://api.example.com?hello=1") === "api.example.com");
-        assert(normaliseCookieDomainOrThrowError("http://api.example.com/hello") === "api.example.com");
-        assert(normaliseCookieDomainOrThrowError("http://api.example.com/") === "api.example.com");
-        assert(normaliseCookieDomainOrThrowError("http://api.example.com:8080") === "api.example.com");
-        assert(normaliseCookieDomainOrThrowError("http://api.example.com#random2") === "api.example.com");
-        assert(normaliseCookieDomainOrThrowError("api.example.com/") === "api.example.com");
-        assert(normaliseCookieDomainOrThrowError("api.example.com#random") === "api.example.com");
-        assert(normaliseCookieDomainOrThrowError("example.com") === "example.com");
-        assert(normaliseCookieDomainOrThrowError("api.example.com/?hello=1&bye=2") === "api.example.com");
-        assert(normaliseCookieDomainOrThrowError("localhost") === "localhost");
-        assert(normaliseCookieDomainOrThrowError("localhost:8080") === "localhost");
-        assert(normaliseCookieDomainOrThrowError("localhost.org") === "localhost.org");
-        assert(normaliseCookieDomainOrThrowError("127.0.0.1") === "127.0.0.1");
+        assert(normaliseSessionScopeOrThrowError("api.example.com") === "api.example.com");
+        assert(normaliseSessionScopeOrThrowError("http://api.example.com") === "api.example.com");
+        assert(normaliseSessionScopeOrThrowError("https://api.example.com") === "api.example.com");
+        assert(normaliseSessionScopeOrThrowError("http://api.example.com?hello=1") === "api.example.com");
+        assert(normaliseSessionScopeOrThrowError("http://api.example.com/hello") === "api.example.com");
+        assert(normaliseSessionScopeOrThrowError("http://api.example.com/") === "api.example.com");
+        assert(normaliseSessionScopeOrThrowError("http://api.example.com:8080") === "api.example.com");
+        assert(normaliseSessionScopeOrThrowError("http://api.example.com#random2") === "api.example.com");
+        assert(normaliseSessionScopeOrThrowError("api.example.com/") === "api.example.com");
+        assert(normaliseSessionScopeOrThrowError("api.example.com#random") === "api.example.com");
+        assert(normaliseSessionScopeOrThrowError("example.com") === "example.com");
+        assert(normaliseSessionScopeOrThrowError("api.example.com/?hello=1&bye=2") === "api.example.com");
+        assert(normaliseSessionScopeOrThrowError("localhost") === "localhost");
+        assert(normaliseSessionScopeOrThrowError("localhost:8080") === "localhost");
+        assert(normaliseSessionScopeOrThrowError("localhost.org") === "localhost.org");
+        assert(normaliseSessionScopeOrThrowError("127.0.0.1") === "127.0.0.1");
 
-        assert(normaliseCookieDomainOrThrowError(".api.example.com") === ".api.example.com");
-        assert(normaliseCookieDomainOrThrowError(".api.example.com/") === ".api.example.com");
-        assert(normaliseCookieDomainOrThrowError(".api.example.com#random") === ".api.example.com");
-        assert(normaliseCookieDomainOrThrowError(".example.com") === ".example.com");
-        assert(normaliseCookieDomainOrThrowError(".api.example.com/?hello=1&bye=2") === ".api.example.com");
-        assert(normaliseCookieDomainOrThrowError(".localhost") === "localhost");
-        assert(normaliseCookieDomainOrThrowError(".localhost:8080") === "localhost");
-        assert(normaliseCookieDomainOrThrowError(".localhost.org") === ".localhost.org");
-        assert(normaliseCookieDomainOrThrowError(".127.0.0.1") === "127.0.0.1");
+        assert(normaliseSessionScopeOrThrowError(".api.example.com") === ".api.example.com");
+        assert(normaliseSessionScopeOrThrowError(".api.example.com/") === ".api.example.com");
+        assert(normaliseSessionScopeOrThrowError(".api.example.com#random") === ".api.example.com");
+        assert(normaliseSessionScopeOrThrowError(".example.com") === ".example.com");
+        assert(normaliseSessionScopeOrThrowError(".api.example.com/?hello=1&bye=2") === ".api.example.com");
+        assert(normaliseSessionScopeOrThrowError(".localhost") === "localhost");
+        assert(normaliseSessionScopeOrThrowError(".localhost:8080") === "localhost");
+        assert(normaliseSessionScopeOrThrowError(".localhost.org") === ".localhost.org");
+        assert(normaliseSessionScopeOrThrowError(".127.0.0.1") === "127.0.0.1");
 
         try {
-            normaliseCookieDomainOrThrowError("http://");
+            normaliseSessionScopeOrThrowError("http://");
             assert(false);
         } catch (err) {
             assert(err.message === "Please provide a valid cookieDomain");
