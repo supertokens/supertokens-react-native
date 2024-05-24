@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [5.0.1] - 2024-05-24
+
+### Fixes
+
+- Fix a possible refresh loop in the axios interceptor
+
 ## [5.0.0] - 2024-05-08
 
 ### Breaking changes
