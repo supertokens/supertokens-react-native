@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [5.0.2] - 2024-05-28
+
+- Adds FDI 2.0 and 3.0 to the list of supported FDI versions
+
 ## [5.0.1] - 2024-05-24
 
 ### Fixes
