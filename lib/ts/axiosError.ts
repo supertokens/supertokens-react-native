@@ -97,13 +97,3 @@ export async function createAxiosErrorFromFetchResp(response: Response): Promise
         axiosResponse
     );
 }
-
-export async function createAxiosErrorFromAxiosResp(response: AxiosResponse): Promise<AxiosError> {
-    return enhanceAxiosError(
-        new Error("Request failed with status code " + response.status),
-        response.config,
-        undefined,
-        response.request,
-        response
-    );
-}

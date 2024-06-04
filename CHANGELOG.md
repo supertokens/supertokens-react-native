@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [5.1.0] - 2024-06-04
+
+### Changes
+
+- Fixed the session refresh loop in all the request interceptors that occurred when an API returned a 401 response despite a valid session. Interceptors now attempt to refresh the session a maximum of ten times before throwing an error. The retry limit is configurable via the `maxRetryAttemptsForSessionRefresh` option.
+
 ## [5.0.2] - 2024-05-28
 
 - Adds FDI 2.0 and 3.0 to the list of supported FDI versions
