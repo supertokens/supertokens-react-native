@@ -15,9 +15,9 @@ export declare type InputType = {
     tokenTransferMethod?: "cookie" | "header";
     /**
      * This specifies the maximum number of times the interceptor will attempt to refresh
-     * the session when a 401 Unauthorized response is received. If the number of retries
+     * the session  when a 401 Unauthorized response is received. If the number of retries
      * exceeds this limit, no further attempts will be made to refresh the session, and
-     * the last response will be returned to the caller.
+     * and an error will be thrown.
      */
     maxRetryAttemptsForSessionRefresh?: number;
     sessionTokenBackendDomain?: string;
