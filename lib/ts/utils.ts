@@ -92,6 +92,14 @@ export function validateAndNormaliseInputOrThrowError(options: InputType): Norma
         sessionTokenBackendDomain = normaliseSessionScopeOrThrowError(options.sessionTokenBackendDomain);
     }
 
+    let maxRetryAttemptsForSessionRefresh = 10;
+    if (options.maxRetryAttemptsForSessionRefresh !== undefined) {
+        if (options.maxRetryAttemptsForSessionRefresh < 0) {
+            throw new Error("maxRetryAttemptsForSessionRefresh must be greater than or equal to 0.");
+        }
+        maxRetryAttemptsForSessionRefresh = options.maxRetryAttemptsForSessionRefresh;
+    }
+
     let preAPIHook = async (context: {
         action: "SIGN_OUT" | "REFRESH_SESSION";
         requestInit: RequestInit;
@@ -122,6 +130,7 @@ export function validateAndNormaliseInputOrThrowError(options: InputType): Norma
         apiBasePath,
         sessionExpiredStatusCode,
         autoAddCredentials,
+        maxRetryAttemptsForSessionRefresh,
         sessionTokenBackendDomain,
         tokenTransferMethod,
         preAPIHook,

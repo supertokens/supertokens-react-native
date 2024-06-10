@@ -12,8 +12,8 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-import { AxiosPromise, AxiosRequestConfig, AxiosResponse } from "axios";
-import { createAxiosErrorFromAxiosResp, createAxiosErrorFromFetchResp } from "./axiosError";
+import { AxiosPromise, AxiosRequestConfig as OriginalAxiosRequestConfig, AxiosResponse } from "axios";
+import { createAxiosErrorFromFetchResp } from "./axiosError";
 
 import AuthHttpRequestFetch, { onUnauthorisedResponse } from "./fetch";
 
@@ -22,6 +22,26 @@ import AntiCSRF from "./antiCsrf";
 import { PROCESS_STATE, ProcessState } from "./processState";
 import { fireSessionUpdateEventsIfNecessary, getLocalSessionState, getTokenForHeaderAuth, setToken } from "./utils";
 import { logDebugMessage } from "./logger";
+
+type AxiosRequestConfig = OriginalAxiosRequestConfig & {
+    __supertokensSessionRefreshAttempts?: number;
+    __supertokensAddedAuthHeader?: boolean;
+};
+
+function incrementSessionRefreshAttemptCount(config: AxiosRequestConfig) {
+    if (config.__supertokensSessionRefreshAttempts === undefined) {
+        config.__supertokensSessionRefreshAttempts = 0;
+    }
+    config.__supertokensSessionRefreshAttempts++;
+}
+
+function hasExceededMaxSessionRefreshAttempts(config: AxiosRequestConfig): boolean {
+    if (config.__supertokensSessionRefreshAttempts === undefined) {
+        config.__supertokensSessionRefreshAttempts = 0;
+    }
+
+    return config.__supertokensSessionRefreshAttempts >= AuthHttpRequestFetch.config.maxRetryAttemptsForSessionRefresh;
+}
 
 function getUrlFromConfig(config: AxiosRequestConfig) {
     let url: string = config.url === undefined ? "" : config.url;
@@ -363,6 +383,11 @@ export default class AuthHttpRequest {
                     }
                     let response =
                         localPrevResponse === undefined ? await httpCall(configWithAntiCsrf) : localPrevResponse;
+
+                    // NOTE: No need to check for unauthorized response status here for session refresh,
+                    // as we only reach this point on a successful response. Axios handles error responses
+                    // by throwing an error, which is handled in the catch block.
+
                     logDebugMessage("doRequest: User's http call ended");
 
                     await saveTokensFromHeaders(response);
@@ -373,21 +398,7 @@ export default class AuthHttpRequest {
                         response.headers["front-token"]
                     );
 
-                    if (response.status === AuthHttpRequestFetch.config.sessionExpiredStatusCode) {
-                        logDebugMessage("doRequest: Status code is: " + response.status);
-                        const refreshResult = await onUnauthorisedResponse(preRequestLocalSessionState);
-
-                        if (refreshResult.result !== "RETRY") {
-                            logDebugMessage("doRequest: Not retrying original request");
-                            returnObj = refreshResult.error
-                                ? await createAxiosErrorFromFetchResp(refreshResult.error)
-                                : await createAxiosErrorFromAxiosResp(response);
-                            break;
-                        }
-                        logDebugMessage("doRequest: Retrying original request");
-                    } else {
-                        return response;
-                    }
+                    return response;
                 } catch (err) {
                     const response = (err as any).response;
                     if (response !== undefined) {
@@ -401,7 +412,26 @@ export default class AuthHttpRequest {
 
                         if (err.response.status === AuthHttpRequestFetch.config.sessionExpiredStatusCode) {
                             logDebugMessage("doRequest: Status code is: " + response.status);
+
+                            /**
+                             * An API may return a 401 error response even with a valid session, causing a session refresh loop in the interceptor.
+                             * To prevent this infinite loop, we break out of the loop after retrying the original request a specified number of times.
+                             * The maximum number of retry attempts is defined by maxRetryAttemptsForSessionRefresh config variable.
+                             */
+                            if (hasExceededMaxSessionRefreshAttempts(config)) {
+                                logDebugMessage(
+                                    `doRequest: Maximum session refresh attempts reached. sessionRefreshAttempts: ${config.__supertokensSessionRefreshAttempts}, maxRetryAttemptsForSessionRefresh: ${AuthHttpRequestFetch.config.maxRetryAttemptsForSessionRefresh}`
+                                );
+                                throw new Error(
+                                    `Received a 401 response from ${url}. Attempted to refresh the session and retry the request with the updated session tokens ${AuthHttpRequestFetch.config.maxRetryAttemptsForSessionRefresh} times, but each attempt resulted in a 401 error. The maximum session refresh limit has been reached. Please investigate your API. To increase the session refresh attempts, update maxRetryAttemptsForSessionRefresh in the config.`
+                                );
+                            }
+
                             const refreshResult = await onUnauthorisedResponse(preRequestLocalSessionState);
+                            incrementSessionRefreshAttemptCount(config);
+                            logDebugMessage(
+                                "doRequest: sessionRefreshAttempts: " + config.__supertokensSessionRefreshAttempts
+                            );
                             if (refreshResult.result !== "RETRY") {
                                 logDebugMessage("doRequest: Not retrying original request");
                                 // Returning refreshResult.error as an Axios Error if we attempted a refresh
