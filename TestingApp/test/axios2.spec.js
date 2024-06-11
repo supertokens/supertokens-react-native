@@ -298,6 +298,63 @@ describe("Axios AuthHttpRequest class tests", function() {
         assert(idRefreshInCookies.length === 0);
     });
 
+    it("should throw error if refresh fails with a network error", async function() {
+        await startST();
+        AuthHttpRequest.addAxiosInterceptors(axiosInstance);
+        const origFetch = global.fetch;
+        global.fetch = async (...input) => {
+            try {
+                if (input[0].endsWith("/auth/session/refresh")) {
+                    input[0] = "http://localhost:1234/nope";
+                }
+                return await origFetch(...input);
+            } catch (err) {
+                throw err;
+            }
+        };
+        AuthHttpRequest.init({
+            apiDomain: BASE_URL,
+            tokenTransferMethod: "cookie"
+        });
+
+        let userId = "testing-supertokens-react-native";
+
+        let loginResponse = await axiosInstance.post(`${BASE_URL}/login`, JSON.stringify({ userId }), {
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json"
+            }
+        });
+        let userIdFromResponse = loginResponse.data;
+        assertEqual(userId, userIdFromResponse);
+
+        cookieJar.setCookieSync("sIdRefreshToken=asdf", `${BASE_URL}/`);
+
+        // This is to verify that the cookie is correctly set
+        let currentCookies = cookieJar.getCookiesSync(`${BASE_URL}/`);
+        let idRefreshInCookies = currentCookies.filter(i => i.key === "sIdRefreshToken");
+        let accessTokenInCookies = currentCookies.filter(i => i.key === "sAccessToken");
+
+        assert(idRefreshInCookies.length !== 0);
+        assert(accessTokenInCookies.length !== 0);
+
+        //check that the number of times the refreshAPI was called is 0
+        assert((await getNumberOfTimesRefreshCalled()) === 0);
+
+        try {
+            await axiosInstance("http://localhost:1234/asdf");
+            await axiosInstance({
+                url: `${BASE_URL}/`,
+                method: "GET",
+                headers: { "Cache-Control": "no-cache, private" }
+            });
+        } catch (err) {
+            assert(err.isAxiosError);
+            assert.strictEqual(err.code, "ECONNREFUSED");
+            assert.strictEqual(err.response, undefined);
+        }
+    });
+
     it("test that interception happens based on the return value of shouldDoInterceptionBasedOnUrl override", async function() {
         await startST();
         AuthHttpRequest.addAxiosInterceptors(axiosInstance);
