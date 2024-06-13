@@ -62,41 +62,43 @@ function enhanceAxiosError(
     return error;
 }
 
-export async function createAxiosErrorFromFetchResp(response: Response): Promise<AxiosError> {
+export async function createAxiosErrorFromFetchResp(responseOrError: Response): Promise<AxiosError> {
     const config = {
-        url: response.url,
-        headers: response.headers
+        url: responseOrError.url,
+        headers: responseOrError.headers
     };
-    const isProperResponse = "status" in response;
+    const isResponse = "status" in responseOrError;
     let axiosResponse;
-    if (isProperResponse) {
+    if (isResponse) {
         let data;
-        const contentType = response.headers.get("content-type");
+        const contentType = responseOrError.headers.get("content-type");
         if (!contentType || contentType.includes("application/json")) {
             try {
-                data = await response.json();
+                data = await responseOrError.json();
             } catch {
-                data = await response.text();
+                data = await responseOrError.text();
             }
         } else if (contentType.includes("text/")) {
-            data = await response.text();
+            data = await responseOrError.text();
         } else {
-            data = await response.blob();
+            data = await responseOrError.blob();
         }
 
         axiosResponse = {
             data,
-            status: response.status,
-            statusText: response.statusText,
-            headers: response.headers,
+            status: responseOrError.status,
+            statusText: responseOrError.statusText,
+            headers: responseOrError.headers,
             config: config,
             request: undefined
         };
     }
     return enhanceAxiosError(
-        "status" in response ? new Error("Request failed with status code " + response.status) : response,
+        "status" in responseOrError
+            ? new Error("Request failed with status code " + responseOrError.status)
+            : responseOrError,
         config,
-        (response as any).code,
+        (responseOrError as any).code,
         undefined,
         axiosResponse
     );
