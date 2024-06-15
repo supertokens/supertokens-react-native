@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [5.1.1] - 2024-06-12
+
+### Fixes
+
+- Fixed an issue in the Axios interceptor that caused it to throw when encountering a network error
+
 ## [5.1.0] - 2024-06-04
 
 ### Changes

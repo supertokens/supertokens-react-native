@@ -62,37 +62,43 @@ function enhanceAxiosError(
     return error;
 }
 
-export async function createAxiosErrorFromFetchResp(response: Response): Promise<AxiosError> {
+export async function createAxiosErrorFromFetchResp(responseOrError: Response): Promise<AxiosError> {
     const config = {
-        url: response.url,
-        headers: response.headers
+        url: responseOrError.url,
+        headers: responseOrError.headers
     };
-    const contentType = response.headers.get("content-type");
-    let data;
-    if (!contentType || contentType.includes("application/json")) {
-        try {
-            data = await response.json();
-        } catch {
-            data = await response.text();
+    const isResponse = "status" in responseOrError;
+    let axiosResponse;
+    if (isResponse) {
+        let data;
+        const contentType = responseOrError.headers.get("content-type");
+        if (!contentType || contentType.includes("application/json")) {
+            try {
+                data = await responseOrError.json();
+            } catch {
+                data = await responseOrError.text();
+            }
+        } else if (contentType.includes("text/")) {
+            data = await responseOrError.text();
+        } else {
+            data = await responseOrError.blob();
         }
-    } else if (contentType.includes("text/")) {
-        data = await response.text();
-    } else {
-        data = await response.blob();
-    }
 
-    const axiosResponse = {
-        data,
-        status: response.status,
-        statusText: response.statusText,
-        headers: response.headers,
-        config: config,
-        request: undefined
-    };
+        axiosResponse = {
+            data,
+            status: responseOrError.status,
+            statusText: responseOrError.statusText,
+            headers: responseOrError.headers,
+            config: config,
+            request: undefined
+        };
+    }
     return enhanceAxiosError(
-        new Error("Request failed with status code " + response.status),
+        "status" in responseOrError
+            ? new Error("Request failed with status code " + responseOrError.status)
+            : responseOrError,
         config,
-        undefined,
+        (responseOrError as any).code,
         undefined,
         axiosResponse
     );
