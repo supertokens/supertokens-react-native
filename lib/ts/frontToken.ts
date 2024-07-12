@@ -3,6 +3,7 @@ import AuthHttpRequest from "./fetch";
 import { decode as atob } from "base-64";
 import { getLocalSessionState, saveLastAccessTokenUpdate, setToken } from "./utils";
 import { logDebugMessage } from "./logger";
+import AntiCSRF from "./antiCsrf";
 
 const FRONT_TOKEN_KEY = "supertokens-rn-front-token-key";
 const FRONT_TOKEN_NAME = "sFrontToken";
@@ -113,6 +114,7 @@ export default class FrontToken {
         await this.setFrontToken(undefined);
         await setToken("access", "");
         await setToken("refresh", "");
+        await AntiCSRF.removeToken();
         FrontToken.waiters.forEach(f => f(undefined));
         FrontToken.waiters = [];
     }
