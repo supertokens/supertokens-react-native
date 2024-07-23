@@ -150,75 +150,65 @@ export function responseInterceptor(axiosInstance: any) {
     return async (response: AxiosResponse) => {
         let doNotDoInterception = false;
 
+        if (!AuthHttpRequestFetch.initCalled) {
+            throw new Error("init function not called");
+        }
+        logDebugMessage("responseInterceptor: started");
+        logDebugMessage(
+            "responseInterceptor: already intercepted: " + response.headers["x-supertokens-xhr-intercepted"]
+        );
+        let url = getUrlFromConfig(response.config);
+
         try {
-            if (!AuthHttpRequestFetch.initCalled) {
-                throw new Error("init function not called");
-            }
-            logDebugMessage("responseInterceptor: started");
-            logDebugMessage(
-                "responseInterceptor: already intercepted: " + response.headers["x-supertokens-xhr-intercepted"]
-            );
-            let url = getUrlFromConfig(response.config);
-
-            try {
-                doNotDoInterception =
-                    typeof url === "string" &&
-                    !AuthHttpRequestFetch.recipeImpl.shouldDoInterceptionBasedOnUrl(
-                        url,
-                        AuthHttpRequestFetch.config.apiDomain,
-                        AuthHttpRequestFetch.config.sessionTokenBackendDomain
-                    );
-            } catch (err) {
-                // This is because when this function is called we always have a full URL (refer to getUrlFromConfig),
-                // so we do not need to check for the case where axios is called with just a path (for example axios.post("/login"))
-                throw err;
-            }
-
-            logDebugMessage("responseInterceptor: Value of doNotDoInterception: " + doNotDoInterception);
-            if (doNotDoInterception) {
-                logDebugMessage("responseInterceptor: Returning without interception");
-                // this check means that if you are using axios via inteceptor, then we only do the refresh steps if you are calling your APIs.
-                return response;
-            }
-            logDebugMessage("responseInterceptor: Interception started");
-
-            ProcessState.getInstance().addState(PROCESS_STATE.CALLING_INTERCEPTION_RESPONSE);
-
-            const preRequestLocalSessionState = await getLocalSessionState();
-            await saveTokensFromHeaders(response);
-
-            fireSessionUpdateEventsIfNecessary(
-                preRequestLocalSessionState.status === "EXISTS",
-                response.status,
-                response.headers["front-token"]
-            );
-
-            if (response.status === AuthHttpRequestFetch.config.sessionExpiredStatusCode) {
-                logDebugMessage("responseInterceptor: Status code is: " + response.status);
-                let config = response.config;
-                return AuthHttpRequest.doRequest(
-                    (config: AxiosRequestConfig) => {
-                        // we create an instance since we don't want to intercept this.
-                        // const instance = axios.create();
-                        // return instance(config);
-                        return axiosInstance(config);
-                    },
-                    config,
+            doNotDoInterception =
+                typeof url === "string" &&
+                !AuthHttpRequestFetch.recipeImpl.shouldDoInterceptionBasedOnUrl(
                     url,
-                    response,
-                    true
+                    AuthHttpRequestFetch.config.apiDomain,
+                    AuthHttpRequestFetch.config.sessionTokenBackendDomain
                 );
-            } else {
-                return response;
-            }
-        } finally {
-            if (!doNotDoInterception && (await getLocalSessionState()).status !== "EXISTS") {
-                logDebugMessage(
-                    "responseInterceptor: local session doesn't exist, so removing anti-csrf and sFrontToken"
-                );
-                await AntiCSRF.removeToken();
-                await FrontToken.removeToken();
-            }
+        } catch (err) {
+            // This is because when this function is called we always have a full URL (refer to getUrlFromConfig),
+            // so we do not need to check for the case where axios is called with just a path (for example axios.post("/login"))
+            throw err;
+        }
+
+        logDebugMessage("responseInterceptor: Value of doNotDoInterception: " + doNotDoInterception);
+        if (doNotDoInterception) {
+            logDebugMessage("responseInterceptor: Returning without interception");
+            // this check means that if you are using axios via inteceptor, then we only do the refresh steps if you are calling your APIs.
+            return response;
+        }
+        logDebugMessage("responseInterceptor: Interception started");
+
+        ProcessState.getInstance().addState(PROCESS_STATE.CALLING_INTERCEPTION_RESPONSE);
+
+        const preRequestLocalSessionState = await getLocalSessionState();
+        await saveTokensFromHeaders(response);
+
+        fireSessionUpdateEventsIfNecessary(
+            preRequestLocalSessionState.status === "EXISTS",
+            response.status,
+            response.headers["front-token"]
+        );
+
+        if (response.status === AuthHttpRequestFetch.config.sessionExpiredStatusCode) {
+            logDebugMessage("responseInterceptor: Status code is: " + response.status);
+            let config = response.config;
+            return AuthHttpRequest.doRequest(
+                (config: AxiosRequestConfig) => {
+                    // we create an instance since we don't want to intercept this.
+                    // const instance = axios.create();
+                    // return instance(config);
+                    return axiosInstance(config);
+                },
+                config,
+                url,
+                response,
+                true
+            );
+        } else {
+            return response;
         }
     };
 }
@@ -308,88 +298,95 @@ export default class AuthHttpRequest {
         logDebugMessage("doRequest: Interception started");
 
         config = await removeAuthHeaderIfMatchesLocalToken(config);
-        try {
-            let returnObj = undefined;
-            while (true) {
-                // we read this here so that if there is a session expiry error, then we can compare this value (that caused the error) with the value after the request is sent.
-                // to avoid race conditions
-                const preRequestLocalSessionState = await getLocalSessionState();
-                let configWithAntiCsrf: AxiosRequestConfig = config;
+        let returnObj = undefined;
+        while (true) {
+            // we read this here so that if there is a session expiry error, then we can compare this value (that caused the error) with the value after the request is sent.
+            // to avoid race conditions
+            const preRequestLocalSessionState = await getLocalSessionState();
+            let configWithAntiCsrf: AxiosRequestConfig = config;
 
-                if (preRequestLocalSessionState.status === "EXISTS") {
-                    const antiCsrfToken = await AntiCSRF.getToken(preRequestLocalSessionState.lastAccessTokenUpdate);
-                    if (antiCsrfToken !== undefined) {
-                        logDebugMessage("doRequest: Adding anti-csrf token to request");
-                        configWithAntiCsrf = {
-                            ...configWithAntiCsrf,
-                            headers:
-                                configWithAntiCsrf === undefined
-                                    ? {
-                                          "anti-csrf": antiCsrfToken
-                                      }
-                                    : {
-                                          ...configWithAntiCsrf.headers,
-                                          "anti-csrf": antiCsrfToken
-                                      }
-                        };
-                    }
-                }
-
-                if (
-                    AuthHttpRequestFetch.config.autoAddCredentials &&
-                    configWithAntiCsrf.withCredentials === undefined
-                ) {
-                    logDebugMessage("doRequest: Adding credentials include");
+            if (preRequestLocalSessionState.status === "EXISTS") {
+                const antiCsrfToken = await AntiCSRF.getToken(preRequestLocalSessionState.lastAccessTokenUpdate);
+                if (antiCsrfToken !== undefined) {
+                    logDebugMessage("doRequest: Adding anti-csrf token to request");
                     configWithAntiCsrf = {
                         ...configWithAntiCsrf,
-                        withCredentials: true
+                        headers:
+                            configWithAntiCsrf === undefined
+                                ? {
+                                      "anti-csrf": antiCsrfToken
+                                  }
+                                : {
+                                      ...configWithAntiCsrf.headers,
+                                      "anti-csrf": antiCsrfToken
+                                  }
                     };
                 }
+            }
 
-                // adding rid for anti-csrf protection: Anti-csrf via custom header
-                logDebugMessage("doRequest: Adding rid header: anti-csrf (May get overriden by user's rid)");
+            if (AuthHttpRequestFetch.config.autoAddCredentials && configWithAntiCsrf.withCredentials === undefined) {
+                logDebugMessage("doRequest: Adding credentials include");
                 configWithAntiCsrf = {
                     ...configWithAntiCsrf,
-                    headers:
-                        configWithAntiCsrf === undefined
-                            ? {
-                                  rid: "anti-csrf"
-                              }
-                            : {
-                                  rid: "anti-csrf",
-                                  ...configWithAntiCsrf.headers
-                              }
+                    withCredentials: true
                 };
+            }
 
-                const transferMethod = AuthHttpRequestFetch.config.tokenTransferMethod;
-                logDebugMessage("doRequest: Adding st-auth-mode header: " + transferMethod);
-                configWithAntiCsrf.headers!["st-auth-mode"] = transferMethod;
+            // adding rid for anti-csrf protection: Anti-csrf via custom header
+            logDebugMessage("doRequest: Adding rid header: anti-csrf (May get overriden by user's rid)");
+            configWithAntiCsrf = {
+                ...configWithAntiCsrf,
+                headers:
+                    configWithAntiCsrf === undefined
+                        ? {
+                              rid: "anti-csrf"
+                          }
+                        : {
+                              rid: "anti-csrf",
+                              ...configWithAntiCsrf.headers
+                          }
+            };
 
-                await setAuthorizationHeaderIfRequired(configWithAntiCsrf);
+            const transferMethod = AuthHttpRequestFetch.config.tokenTransferMethod;
+            logDebugMessage("doRequest: Adding st-auth-mode header: " + transferMethod);
+            configWithAntiCsrf.headers!["st-auth-mode"] = transferMethod;
 
-                try {
-                    let localPrevError = prevError;
-                    let localPrevResponse = prevResponse;
-                    prevError = undefined;
-                    prevResponse = undefined;
-                    if (localPrevError !== undefined) {
-                        logDebugMessage("doRequest: Not making call because localPrevError is not undefined");
-                        throw localPrevError;
-                    }
-                    if (localPrevResponse !== undefined) {
-                        logDebugMessage("doRequest: Not making call because localPrevResponse is not undefined");
-                    } else {
-                        logDebugMessage("doRequest: Making user's http call");
-                    }
-                    let response =
-                        localPrevResponse === undefined ? await httpCall(configWithAntiCsrf) : localPrevResponse;
+            await setAuthorizationHeaderIfRequired(configWithAntiCsrf);
 
-                    // NOTE: No need to check for unauthorized response status here for session refresh,
-                    // as we only reach this point on a successful response. Axios handles error responses
-                    // by throwing an error, which is handled in the catch block.
+            try {
+                let localPrevError = prevError;
+                let localPrevResponse = prevResponse;
+                prevError = undefined;
+                prevResponse = undefined;
+                if (localPrevError !== undefined) {
+                    logDebugMessage("doRequest: Not making call because localPrevError is not undefined");
+                    throw localPrevError;
+                }
+                if (localPrevResponse !== undefined) {
+                    logDebugMessage("doRequest: Not making call because localPrevResponse is not undefined");
+                } else {
+                    logDebugMessage("doRequest: Making user's http call");
+                }
+                let response = localPrevResponse === undefined ? await httpCall(configWithAntiCsrf) : localPrevResponse;
 
-                    logDebugMessage("doRequest: User's http call ended");
+                // NOTE: No need to check for unauthorized response status here for session refresh,
+                // as we only reach this point on a successful response. Axios handles error responses
+                // by throwing an error, which is handled in the catch block.
 
+                logDebugMessage("doRequest: User's http call ended");
+
+                await saveTokensFromHeaders(response);
+
+                fireSessionUpdateEventsIfNecessary(
+                    preRequestLocalSessionState.status === "EXISTS",
+                    response.status,
+                    response.headers["front-token"]
+                );
+
+                return response;
+            } catch (err) {
+                const response = (err as any).response;
+                if (response !== undefined) {
                     await saveTokensFromHeaders(response);
 
                     fireSessionUpdateEventsIfNecessary(
@@ -398,73 +395,51 @@ export default class AuthHttpRequest {
                         response.headers["front-token"]
                     );
 
-                    return response;
-                } catch (err) {
-                    const response = (err as any).response;
-                    if (response !== undefined) {
-                        await saveTokensFromHeaders(response);
+                    if (err.response.status === AuthHttpRequestFetch.config.sessionExpiredStatusCode) {
+                        logDebugMessage("doRequest: Status code is: " + response.status);
 
-                        fireSessionUpdateEventsIfNecessary(
-                            preRequestLocalSessionState.status === "EXISTS",
-                            response.status,
-                            response.headers["front-token"]
-                        );
-
-                        if (err.response.status === AuthHttpRequestFetch.config.sessionExpiredStatusCode) {
-                            logDebugMessage("doRequest: Status code is: " + response.status);
-
-                            /**
-                             * An API may return a 401 error response even with a valid session, causing a session refresh loop in the interceptor.
-                             * To prevent this infinite loop, we break out of the loop after retrying the original request a specified number of times.
-                             * The maximum number of retry attempts is defined by maxRetryAttemptsForSessionRefresh config variable.
-                             */
-                            if (hasExceededMaxSessionRefreshAttempts(config)) {
-                                logDebugMessage(
-                                    `doRequest: Maximum session refresh attempts reached. sessionRefreshAttempts: ${config.__supertokensSessionRefreshAttempts}, maxRetryAttemptsForSessionRefresh: ${AuthHttpRequestFetch.config.maxRetryAttemptsForSessionRefresh}`
-                                );
-                                throw new Error(
-                                    `Received a 401 response from ${url}. Attempted to refresh the session and retry the request with the updated session tokens ${AuthHttpRequestFetch.config.maxRetryAttemptsForSessionRefresh} times, but each attempt resulted in a 401 error. The maximum session refresh limit has been reached. Please investigate your API. To increase the session refresh attempts, update maxRetryAttemptsForSessionRefresh in the config.`
-                                );
-                            }
-
-                            const refreshResult = await onUnauthorisedResponse(preRequestLocalSessionState);
-                            incrementSessionRefreshAttemptCount(config);
+                        /**
+                         * An API may return a 401 error response even with a valid session, causing a session refresh loop in the interceptor.
+                         * To prevent this infinite loop, we break out of the loop after retrying the original request a specified number of times.
+                         * The maximum number of retry attempts is defined by maxRetryAttemptsForSessionRefresh config variable.
+                         */
+                        if (hasExceededMaxSessionRefreshAttempts(config)) {
                             logDebugMessage(
-                                "doRequest: sessionRefreshAttempts: " + config.__supertokensSessionRefreshAttempts
+                                `doRequest: Maximum session refresh attempts reached. sessionRefreshAttempts: ${config.__supertokensSessionRefreshAttempts}, maxRetryAttemptsForSessionRefresh: ${AuthHttpRequestFetch.config.maxRetryAttemptsForSessionRefresh}`
                             );
-                            if (refreshResult.result !== "RETRY") {
-                                logDebugMessage("doRequest: Not retrying original request");
-                                // Returning refreshResult.error as an Axios Error if we attempted a refresh
-                                // Returning the original error if we did not attempt refreshing
-                                returnObj =
-                                    refreshResult.error !== undefined
-                                        ? await createAxiosErrorFromFetchResp(refreshResult.error)
-                                        : err;
-                                break;
-                            }
-                            logDebugMessage("doRequest: Retrying original request");
-                        } else {
-                            throw err;
+                            throw new Error(
+                                `Received a 401 response from ${url}. Attempted to refresh the session and retry the request with the updated session tokens ${AuthHttpRequestFetch.config.maxRetryAttemptsForSessionRefresh} times, but each attempt resulted in a 401 error. The maximum session refresh limit has been reached. Please investigate your API. To increase the session refresh attempts, update maxRetryAttemptsForSessionRefresh in the config.`
+                            );
                         }
+
+                        const refreshResult = await onUnauthorisedResponse(preRequestLocalSessionState);
+                        incrementSessionRefreshAttemptCount(config);
+                        logDebugMessage(
+                            "doRequest: sessionRefreshAttempts: " + config.__supertokensSessionRefreshAttempts
+                        );
+                        if (refreshResult.result !== "RETRY") {
+                            logDebugMessage("doRequest: Not retrying original request");
+                            // Returning refreshResult.error as an Axios Error if we attempted a refresh
+                            // Returning the original error if we did not attempt refreshing
+                            returnObj =
+                                refreshResult.error !== undefined
+                                    ? await createAxiosErrorFromFetchResp(refreshResult.error)
+                                    : err;
+                            break;
+                        }
+                        logDebugMessage("doRequest: Retrying original request");
                     } else {
                         throw err;
                     }
+                } else {
+                    throw err;
                 }
             }
-
-            // if it comes here, means we called break. which happens only if we have logged out.
-            // which means it's a 401, so we throw
-            throw returnObj;
-        } finally {
-            // If we get here we already tried refreshing so we should have the already id refresh token either in EXISTS or NOT_EXISTS, so no need to call the backend
-            // The backend should not be down if we get here, but even if it were we shouldn't need to call refresh
-            const postRequestLocalSessionState = await getLocalSessionState();
-            if (postRequestLocalSessionState.status === "NOT_EXISTS") {
-                logDebugMessage("doRequest: local session doesn't exist, so removing anti-csrf and sFrontToken");
-                await AntiCSRF.removeToken();
-                await FrontToken.removeToken();
-            }
         }
+
+        // if it comes here, means we called break. which happens only if we have logged out.
+        // which means it's a 401, so we throw
+        throw returnObj;
     };
 }
 

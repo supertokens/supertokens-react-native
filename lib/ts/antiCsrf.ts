@@ -14,7 +14,6 @@
  */
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import AuthHttpRequest from "./fetch";
 import { getLocalSessionState } from "./utils";
 import { logDebugMessage } from "./logger";
 
