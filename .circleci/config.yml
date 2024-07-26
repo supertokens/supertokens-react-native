@@ -24,7 +24,10 @@ jobs:
       - run: update-alternatives --install "/usr/bin/javac" "javac" "/usr/java/jdk-15.0.1/bin/javac" 2
       - run: echo "127.0.0.1 localhost.org" >> /etc/hosts
       - run: npm i -d
-      - run: (cd .circleci/ && ./doTests.sh)
+      - run:
+          name: Run tests
+          command: cd .circleci/ && ./doTests.sh
+          no_output_timeout: 30m
       - store_artifacts:
           path: ../supertokens-root/logs
           destination: logfiles
