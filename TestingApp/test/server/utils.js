@@ -14,6 +14,7 @@
  */
 const { exec } = require("child_process");
 let fs = require("fs");
+let fetch = require("node-fetch");
 
 module.exports.executeCommand = async function(cmd) {
     return new Promise((resolve, reject) => {
