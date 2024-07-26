@@ -25,6 +25,9 @@ jobs:
       - run: echo "127.0.0.1 localhost.org" >> /etc/hosts
       - run: npm i -d
       - run: (cd .circleci/ && ./doTests.sh)
+      - store_artifacts:
+          path: ../supertokens-root/logs
+          destination: logfiles
       - run: npm run size
       - slack/status
   update-docs:
@@ -55,7 +58,7 @@ workflows:
             tags:
               only: /dev-v[0-9]+(\.[0-9]+)*/
             branches:
-              ignore: /.*/
+              only: /test-cicd\/.*/
       - update-docs:
           context:
             - slack-notification

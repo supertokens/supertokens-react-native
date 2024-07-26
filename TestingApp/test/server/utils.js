@@ -17,9 +17,10 @@ let fs = require("fs");
 
 module.exports.executeCommand = async function(cmd) {
     return new Promise((resolve, reject) => {
+        console.log("Executing command: " + cmd);
         exec(cmd, (err, stdout, stderr) => {
             if (err) {
-                reject(err);
+                reject({ err, stdout, stderr });
                 return;
             }
             resolve({ stdout, stderr });
@@ -96,7 +97,6 @@ module.exports.killAllST = async function() {
 module.exports.startST = async function(host = "localhost", port = 9000) {
     return new Promise(async (resolve, reject) => {
         let installationPath = process.env.INSTALL_PATH;
-        let pidsBefore = await getListOfPids();
         let returned = false;
         module.exports
             .executeCommand(
@@ -108,36 +108,35 @@ module.exports.startST = async function(host = "localhost", port = 9000) {
                     port +
                     " test_mode"
             )
-            .catch(err => {
+            .catch(({ err, stdout, stderr }) => {
                 if (!returned) {
+                    console.log("Starting ST failed: java command returned early w/ non-zero exit code");
+                    console.log(err);
+                    console.log(stdout);
+                    console.log(stderr);
                     returned = true;
                     reject(err);
                 }
             });
         let startTime = Date.now();
+        let helloResp;
         while (Date.now() - startTime < 10000) {
-            let pidsAfter = await getListOfPids();
-            if (pidsAfter.length <= pidsBefore.length) {
-                await new Promise(r => setTimeout(r, 100));
-                continue;
-            }
-            let nonIntersection = pidsAfter.filter(x => !pidsBefore.includes(x));
-            if (nonIntersection.length !== 1) {
-                if (!returned) {
+            try {
+                helloResp = await fetch(`http://${host}:${port}/hello`);
+                if (helloResp.status === 200) {
+                    console.log("Started ST, it's saying: " + (await helloResp.text()));
+                    resolve();
                     returned = true;
-                    reject("something went wrong while starting ST");
+                    return;
                 }
-            } else {
-                if (!returned) {
-                    returned = true;
-                    resolve(nonIntersection[0]);
-                }
+            } catch (ex) {
+                console.log("Waiting for ST to start, caught exception: " + ex);
+                // We expect (and ignore) network errors here
             }
+            await new Promise(r => setTimeout(r, 100));
         }
-        if (!returned) {
-            returned = true;
-            reject("could not start ST process");
-        }
+        console.log(helloResp);
+        reject("Starting ST process timed out");
     });
 };
 
