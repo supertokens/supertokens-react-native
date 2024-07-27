@@ -21,6 +21,7 @@ let cookieParser = require("cookie-parser");
 let bodyParser = require("body-parser");
 let http = require("http");
 let cors = require("cors");
+
 let {
     startST,
     stopST,
@@ -31,19 +32,19 @@ let {
     maxVersion,
     isProtectedPropName
 } = require("./utils");
-// let { package_version } = require("../../../lib/build/version");
 let { middleware, errorHandler } = require("supertokens-node/framework/express");
 let { verifySession } = require("supertokens-node/recipe/session/framework/express");
 let { version: nodeSDKVersion } = require("supertokens-node/lib/build/version");
 let Querier = require("supertokens-node/lib/build/querier").Querier;
 let NormalisedURLPath = require("supertokens-node/lib/build/normalisedURLPath").default;
+const morgan = require("morgan");
 let noOfTimesRefreshCalledDuringTest = 0;
 let noOfTimesGetSessionCalledDuringTest = 0;
 let noOfTimesRefreshAttemptedDuringTest = 0;
 let Multitenancy, MultitenancyRaw, multitenancySupported;
 try {
     MultitenancyRaw = require("supertokens-node/lib/build/recipe/multitenancy/recipe").default;
-    Multitenancy = require("supertokens-node/lib/build/recipe/multitenancy");
+    Multitenancy = require("supertokens-node/lib/build/recipe/multitenancy/index");
     multitenancySupported = true;
 } catch {
     multitenancySupported = false;
@@ -74,6 +75,8 @@ let app = express();
 app.use(urlencodedParser);
 app.use(jsonParser);
 app.use(cookieParser());
+app.use(morgan(`:date[iso] - :method :url`, { immediate: true }));
+app.use(morgan(`:date[iso] - :method :url :status :response-time ms - :res[content-length]`));
 
 function getConfig(enableAntiCsrf, enableJWT) {
     if (maxVersion(nodeSDKVersion, "14.0") === nodeSDKVersion && enableJWT) {
@@ -250,6 +253,7 @@ app.use(
         credentials: true
     })
 );
+app.disable("etag");
 
 app.use(middleware());
 
@@ -295,8 +299,8 @@ app.post("/startST", async (req, res) => {
         }
         SuperTokens.init(getConfig(enableAntiCsrf, enableJWT));
     }
-    let pid = await startST();
-    res.send(pid + "");
+    await startST();
+    res.send("");
 });
 
 app.post("/beforeeach", async (req, res) => {
@@ -549,8 +553,10 @@ app.use("*", async (req, res, next) => {
 app.use(errorHandler());
 
 app.use(async (err, req, res, next) => {
-    res.send(500).send(err);
+    console.log({ err, stack: new Error().stack });
+    res.status(500).send(err);
 });
 
 let server = http.createServer(app);
-server.listen(process.env.NODE_PORT === undefined ? 8080 : process.env.NODE_PORT, "::");
+// server.listen(process.env.NODE_PORT === undefined ? 8080 : process.env.NODE_PORT, "::");
+server.listen(8080, "::");
