@@ -11,10 +11,13 @@ export const performAppleLogin = async (): Promise<boolean> => {
 
     const response = await fetch(API_DOMAIN + "/auth/signinup", {
       method: "POST",
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8'
+      },
       body: JSON.stringify({
         thirdPartyId: "apple",
         redirectURIInfo: {
-          redirectURIOnProviderDashboard: "",
+          redirectURIOnProviderDashboard: "https://example.com", // this value doesn't matter cause it's mobile login, and Google doesn't check it, but our APIs need some value for it.
           redirectURIQueryParams: {
             code: appleAuthRequestResponse.authorizationCode,
           },
