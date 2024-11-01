@@ -6,6 +6,19 @@ if [ -z "$SUPERTOKENS_API_KEY" ]; then
 fi
 frontendDriverVersion=$1
 
+# get sdk version
+version=`cat ../package.json | grep -e '"version":'`
+while IFS='"' read -ra ADDR; do
+    counter=0
+    for i in "${ADDR[@]}"; do
+        if [ $counter == 3 ]
+        then
+            version=$i
+        fi
+        counter=$(($counter+1))
+    done
+done <<< "$version"
+
 driverVersionXY=`curl -s -X GET \
 "https://api.supertokens.io/0/frontend-driver-interface/dependency/driver/latest?password=$SUPERTOKENS_API_KEY&mode=DEV&version=$frontendDriverVersion&driverName=node" \
 -H 'api-version: 0'`
