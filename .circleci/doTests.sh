@@ -68,5 +68,5 @@ then
     exit 1
 fi
 rm -rf ../../supertokens-root
-rm -rf ../test/server/node_modules/supertokens-node
-git checkout HEAD -- ../test/server/package.json
+rm -rf ../TestingApp/test/server/node_modules/supertokens-node
+git checkout HEAD -- ../TestingApp/test/server/package.json
