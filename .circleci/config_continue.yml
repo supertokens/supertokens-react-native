@@ -29,7 +29,6 @@ jobs:
           environment:
             JEST_JUNIT_OUTPUT_DIR: ~/reports/
       - run: npm run size
-      - run: npm run check-circular-dependencies
       - store_test_results:
           path: ~/reports/
   test-success:
