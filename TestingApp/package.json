@@ -7,7 +7,7 @@
     "ios": "react-native run-ios",
     "start": "react-native start",
     "test": "npx jest test/*.spec.js --runInBand --silent=false",
-    "test-ci": "npx jest --listTests test/*.spec.js | circleci tests run --command=\"JEST_JUNIT_ADD_FILE_ATTRIBUTE=true xargs npx jest --runInBand --\" --verbose --split-by=timings",
+    "test-ci": "npx jest --listTests test/*.spec.js | circleci tests run --command=\"JEST_JUNIT_ADD_FILE_ATTRIBUTE=true xargs npx jest --ci --reporters=default --reporters=jest-junit --runInBand --\" --verbose --split-by=timings",
     "lint": "eslint ."
   },
   "dependencies": {
