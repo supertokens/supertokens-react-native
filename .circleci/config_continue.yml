@@ -24,10 +24,10 @@ jobs:
       - checkout
       - run: echo "127.0.0.1 localhost.org" >> /etc/hosts
       - run: npm i -d
-      - run: 
-        command: for i in $(seq 1 5); do (cd .circleci/ && ./doTests.sh  << parameters.fdi-version >>) && s=0 && break || s=$? && sleep 10; done; (exit $s) # https://support.circleci.com/hc/en-us/articles/5728720104347-How-To-Retry-an-Intermittently-Failing-Step
-        environment:
-          JEST_JUNIT_OUTPUT_DIR: ~/reports/
+      - run:
+          command: for i in $(seq 1 5); do (cd .circleci/ && ./doTests.sh  << parameters.fdi-version >>) && s=0 && break || s=$? && sleep 10; done; (exit $s) # https://support.circleci.com/hc/en-us/articles/5728720104347-How-To-Retry-an-Intermittently-Failing-Step
+          environment:
+            JEST_JUNIT_OUTPUT_DIR: ~/reports/
       - run: npm run size
       - run: npm run check-circular-dependencies
       - store_test_results:
