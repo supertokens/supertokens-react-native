@@ -7,6 +7,7 @@
     "ios": "react-native run-ios",
     "start": "react-native start",
     "test": "npx jest test/*.spec.js --runInBand --silent=false",
+    "test-ci": "npx jest --listTests test/*.spec.js | circleci tests run --command=\"JEST_JUNIT_ADD_FILE_ATTRIBUTE=true xargs npx jest --runInBand --\" --verbose --split-by=timings",
     "lint": "eslint ."
   },
   "dependencies": {
@@ -27,10 +28,11 @@
     "fetch-cookie": "0.8.0",
     "isomorphic-fetch": "^3.0.0",
     "jest": "^26.6.3",
+    "jest-junit": "^16.0.0",
     "metro-react-native-babel-preset": "^0.66.2",
     "node-fetch": "2.6.0",
     "react-test-renderer": "17.0.2",
-    "ts-jest": "25.3.0"
+    "ts-jest": "^26.5.6"
   },
   "jest": {
     "preset": "react-native",
