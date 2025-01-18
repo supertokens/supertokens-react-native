@@ -44,12 +44,12 @@
     "axios": "*",
     "prettier": "1.18.2",
     "size-limit": "^6.0.4",
-    "typescript": "3.8.3",
+    "typescript": "4.4.3",
     "typedoc": "^0.22.5"
   },
   "dependencies": {
     "base-64": "^1.0.0",
-    "react-native-url-polyfill": "^1.3.0",
+    "react-native-url-polyfill": "^2.0.0",
     "supertokens-js-override": "^0.0.4"
   },
   "size-limit": [
