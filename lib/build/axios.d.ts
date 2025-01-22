@@ -4,7 +4,7 @@ declare type AxiosRequestConfig = OriginalAxiosRequestConfig & {
     __supertokensAddedAuthHeader?: boolean;
 };
 export declare function interceptorFunctionRequestFulfilled(config: AxiosRequestConfig): Promise<AxiosRequestConfig>;
-export declare function responseInterceptor(axiosInstance: any): (response: AxiosResponse<any>) => Promise<AxiosResponse<any>>;
+export declare function responseInterceptor(axiosInstance: any): (response: AxiosResponse) => Promise<AxiosResponse<any>>;
 export declare function responseErrorInterceptor(axiosInstance: any): (error: any) => Promise<AxiosResponse<any>>;
 /**
  * @class AuthHttpRequest
