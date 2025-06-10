@@ -60,7 +60,9 @@ workflows:
             tags:
               only: /dev-v[0-9]+(\.[0-9]+)*/
             branches:
-              only: /test-cicd\/.*/
+              only:
+                - /test-cicd\/.*/
+                - fix/dependency-mismatch
           matrix:
             parameters:
               fdi-version: placeholder
