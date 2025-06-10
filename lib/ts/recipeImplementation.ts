@@ -1,4 +1,3 @@
-import { URL } from "react-native-url-polyfill";
 import { RecipeInterface, NormalisedInputType } from "./types";
 import AuthHttpRequest, { onUnauthorisedResponse } from "./fetch";
 import FrontToken from "./frontToken";
