@@ -50,7 +50,8 @@ npm i git+https://github.com:supertokens/supertokens-node.git#$2
 cd ../../
 npm i -d
 cp -r ./test/tough-cookie ./node_modules/
-npm i git+https://github.com:supertokens/supertokens-react-native.git#dev-v$3
+# npm i git+https://github.com:supertokens/supertokens-react-native.git#dev-v$3
+npm i git+https://github.com:supertokens/supertokens-react-native.git#fix/dependency-mismatch
 SUPERTOKENS_CORE_TAG=$coreTag INSTALL_PATH=../../supertokens-root npm run test-ci
 if [[ $? -ne 0 ]]
 then
