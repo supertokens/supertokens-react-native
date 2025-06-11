@@ -50,9 +50,7 @@ workflows:
             tags:
               only: /dev-v[0-9]+(\.[0-9]+)*/
             branches:
-              only:
-                - /test-cicd\/.*/
-                - fix/dependency-mismatch
+              only: /test-cicd\/.*/
 
       - test-unit:
           requires:
@@ -63,9 +61,7 @@ workflows:
             tags:
               only: /dev-v[0-9]+(\.[0-9]+)*/
             branches:
-              only:
-                - /test-cicd\/.*/
-                - fix/dependency-mismatch
+              only: /test-cicd\/.*/
           matrix:
             parameters:
               fdi-version: placeholder
