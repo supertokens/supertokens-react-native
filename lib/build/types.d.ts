@@ -1,12 +1,12 @@
 import OverrideableBuilder from "supertokens-js-override";
-export declare type Event = {
+export type Event = {
     action: "SIGN_OUT" | "REFRESH_SESSION" | "SESSION_CREATED";
 } | {
     action: "UNAUTHORISED";
     sessionExpiredOrRevoked: boolean;
 };
-export declare type EventHandler = (event: Event) => void;
-export declare type InputType = {
+export type EventHandler = (event: Event) => void;
+export type InputType = {
     enableDebugLogs?: boolean;
     apiDomain: string;
     apiBasePath?: string;
@@ -34,7 +34,7 @@ export declare type InputType = {
         functions?: (originalImplementation: RecipeInterface, builder?: OverrideableBuilder<RecipeInterface>) => RecipeInterface;
     };
 };
-export declare type NormalisedInputType = {
+export type NormalisedInputType = {
     apiDomain: string;
     apiBasePath: string;
     sessionExpiredStatusCode: number;
@@ -55,14 +55,14 @@ export declare type NormalisedInputType = {
         functions: (originalImplementation: RecipeInterface, builder?: OverrideableBuilder<RecipeInterface>) => RecipeInterface;
     };
 };
-export declare type PreAPIHookFunction = (context: {
+export type PreAPIHookFunction = (context: {
     requestInit: RequestInit;
     url: string;
 }) => Promise<{
     url: string;
     requestInit: RequestInit;
 }>;
-export declare type RecipeInterface = {
+export type RecipeInterface = {
     addFetchInterceptorsAndReturnModifiedFetch: (originalFetch: any, config: NormalisedInputType) => typeof fetch;
     addAxiosInterceptors: (axiosInstance: any, config: NormalisedInputType) => void;
     getUserId: (config: NormalisedInputType) => Promise<string>;
@@ -71,10 +71,10 @@ export declare type RecipeInterface = {
     signOut: (config: NormalisedInputType) => Promise<void>;
     shouldDoInterceptionBasedOnUrl(toCheckUrl: string, apiDomain: string, sessionTokenBackendDomain: string | undefined): boolean;
 };
-export declare type IdRefreshTokenType = {
+export type IdRefreshTokenType = {
     status: "NOT_EXISTS" | "MAY_EXIST";
 } | {
     status: "EXISTS";
     token: string;
 };
-export declare type TokenType = "access" | "refresh";
+export type TokenType = "access" | "refresh";

@@ -1,10 +1,10 @@
 import { AxiosPromise, AxiosRequestConfig as OriginalAxiosRequestConfig, AxiosResponse } from "axios";
-declare type AxiosRequestConfig = OriginalAxiosRequestConfig & {
+type AxiosRequestConfig = OriginalAxiosRequestConfig & {
     __supertokensSessionRefreshAttempts?: number;
     __supertokensAddedAuthHeader?: boolean;
 };
 export declare function interceptorFunctionRequestFulfilled(config: AxiosRequestConfig): Promise<AxiosRequestConfig>;
-export declare function responseInterceptor(axiosInstance: any): (response: AxiosResponse<any>) => Promise<AxiosResponse<any>>;
+export declare function responseInterceptor(axiosInstance: any): (response: AxiosResponse) => Promise<AxiosResponse<any>>;
 export declare function responseErrorInterceptor(axiosInstance: any): (error: any) => Promise<AxiosResponse<any>>;
 /**
  * @class AuthHttpRequest
@@ -17,6 +17,6 @@ export default class AuthHttpRequest {
      * attempts to call the refresh token API and if that is successful, calls this API again.
      * @throws Error
      */
-    static doRequest: (httpCall: (config: AxiosRequestConfig) => AxiosPromise<any>, config: AxiosRequestConfig, url?: string | undefined, prevResponse?: AxiosResponse<any> | undefined, prevError?: any, viaInterceptor?: boolean) => Promise<AxiosResponse<any>>;
+    static doRequest: (httpCall: (config: AxiosRequestConfig) => AxiosPromise<any>, config: AxiosRequestConfig, url?: string, prevResponse?: AxiosResponse, prevError?: any, viaInterceptor?: boolean) => Promise<AxiosResponse<any>>;
 }
 export {};

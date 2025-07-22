@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [5.1.5] - 2025-06-10
+
+### Changes
+
+- Ensures that if domain/path validation fails then the correct error is thrown
+- Moves to using native `URL` library instead of poly-filling with `react-native-url-polyfill` since the functions of URL that are being used are present in the native implementation now.
+- Bumps some versions to ensure that the dependencies can be installed without issues.
+
 ## [5.1.4] - 2025-03-26
 
 ### Changes

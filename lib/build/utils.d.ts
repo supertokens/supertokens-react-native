@@ -14,7 +14,7 @@ export declare function storeInStorage(name: string, value: string, expiry: numb
 export declare function saveLastAccessTokenUpdate(): Promise<void>;
 export declare function getStorageNameForToken(tokenType: TokenType): "st-access-token" | "st-refresh-token";
 export declare function getTokenForHeaderAuth(tokenType: TokenType): Promise<string | undefined>;
-export declare type LocalSessionState = {
+export type LocalSessionState = {
     status: "NOT_EXISTS" | "MAY_EXIST";
 } | {
     status: "EXISTS";

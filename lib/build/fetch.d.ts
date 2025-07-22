@@ -19,7 +19,7 @@ export default class AuthHttpRequest {
      * attempts to call the refresh token API and if that is successful, calls this API again.
      * @throws Error
      */
-    static doRequest: (httpCall: (config?: RequestInit | undefined) => Promise<Response>, config?: RequestInit | undefined, url?: any) => Promise<Response>;
+    static doRequest: (httpCall: (config?: RequestInit) => Promise<Response>, config?: RequestInit, url?: any) => Promise<Response>;
     static attemptRefreshingSession: () => Promise<boolean>;
 }
 export declare function onUnauthorisedResponse(preRequestLocalSessionState: LocalSessionState): Promise<{

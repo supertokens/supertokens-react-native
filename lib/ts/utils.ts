@@ -1,5 +1,4 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { URL } from "react-native-url-polyfill";
 import AuthHttpRequest from "./fetch";
 import FrontToken from "./frontToken";
 import NormalisedURLDomain from "./normalisedURLDomain";
@@ -40,8 +39,7 @@ export function normaliseSessionScopeOrThrowError(cookieDomain: string): string 
         }
 
         try {
-            // @ts-ignore (Typescript complains that URL does not expect a parameter in constructor even though it does for react-native-url-polyfill)
-            let urlObj: any = new URL(cookieDomain);
+            let urlObj = new URL(cookieDomain);
             cookieDomain = urlObj.hostname;
 
             return cookieDomain;
