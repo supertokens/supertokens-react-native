@@ -29,9 +29,10 @@ import {
     getNumberOfTimesGetSessionCalled,
     BASE_URL_FOR_ST,
     BASE_URL as UTILS_BASE_URL,
-    getNumberOfTimesRefreshAttempted
+    getNumberOfTimesRefreshAttempted,
+    startTestBackend,
+    setupFetchWithCookieJar
 } from "./utils";
-import { spawn } from "child_process";
 import { ProcessState, PROCESS_STATE } from "supertokens-react-native/lib/build/processState";
 import { getLocalSessionState } from "supertokens-react-native/lib/build/utils";
 // jest does not call setupFiles properly with the new react-native init, so doing it this way instead
@@ -64,16 +65,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     }
 
     beforeAll(async function() {
-        let child = spawn("./test/startServer", [
-            process.env.INSTALL_PATH,
-            process.env.NODE_PORT === undefined ? 8080 : process.env.NODE_PORT
-        ]);
+        startTestBackend("cookie");
 
-        // Uncomment this to print server logs
-        // child.stdout.setEncoding('utf8');
-        // child.stderr.setEncoding('utf8');
-        // child.stdout.on("data", data => console.log(data))
-        // child.stderr.on("data", data => console.log(data))
         await new Promise(r => setTimeout(r, 1000));
     });
 
@@ -92,23 +85,17 @@ describe("Axios AuthHttpRequest class tests", function() {
         await AntiCsrfToken.removeToken();
         await FrontToken.removeToken();
 
+        const cookieJar = setupFetchWithCookieJar();
+
         let instance = axios.create();
         await instance.post(BASE_URL_FOR_ST + "/beforeeach");
         await instance.post(BASE_URL + "/beforeeach");
 
-        let cookieJar = new tough.CookieJar();
         axiosInstance = axios.create({
             withCredentials: true
         });
         axiosCookieJarSupport(axiosInstance);
         axiosInstance.defaults.jar = cookieJar;
-
-        let nodeFetch = require("node-fetch").default;
-        const fetch = require("fetch-cookie")(nodeFetch, cookieJar);
-        global.fetch = fetch;
-        global.Headers = nodeFetch.Headers;
-        global.__supertokensOriginalFetch = undefined;
-        global.__supertokensSessionRecipe = undefined;
     });
 
     afterEach(async function() {

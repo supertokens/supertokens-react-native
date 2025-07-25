@@ -12,7 +12,11 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+import { Headers } from "headers-polyfill";
+let { default: makeFetchCookie } = require("fetch-cookie");
+let { fork } = require("child_process");
 let axios = require("axios");
+let path = require("path");
 
 export const BASE_URL = "http://localhost.org:8080";
 export const BASE_URL_FOR_ST =
@@ -126,4 +130,28 @@ export async function checkIfV3AccessTokenIsSupported() {
     }
 
     return true;
+}
+
+export function startTestBackend(transferMethod) {
+    fork("./index.js", {
+        env: {
+            TEST_MODE: "testing",
+            INSTALL_PATH: process.env.INSTALL_PATH,
+            NODE_PORT: process.env.NODE_PORT === undefined ? 8080 : process.env.NODE_PORT,
+            TRANSFER_METHOD: transferMethod
+        },
+        cwd: path.join(__dirname, "./server"),
+        stdio: "ignore"
+    });
+}
+
+const originalFetch = global.fetch ?? require("node-fetch");
+
+export function setupFetchWithCookieJar() {
+    const fetchCookie = makeFetchCookie(originalFetch);
+    global.fetch = fetchCookie;
+    global.__supertokensOriginalFetch = undefined;
+    global.__supertokensSessionRecipe = undefined;
+    global.Headers = Headers;
+    return fetchCookie.cookieJar;
 }

@@ -18,8 +18,10 @@ let fetch = require("node-fetch");
 
 module.exports.executeCommand = async function(cmd) {
     return new Promise((resolve, reject) => {
-        console.log("Executing command: " + cmd);
+        // console.log("Executing command: " + cmd);
         exec(cmd, (err, stdout, stderr) => {
+            // console.log("Command output: " + stdout);
+            // console.log("Command error: " + stderr);
             if (err) {
                 reject({ err, stdout, stderr });
                 return;
@@ -125,18 +127,18 @@ module.exports.startST = async function(host = "localhost", port = 9000) {
             try {
                 helloResp = await fetch(`http://${host}:${port}/hello`);
                 if (helloResp.status === 200) {
-                    console.log("Started ST, it's saying: " + (await helloResp.text()));
+                    // console.log("Started ST, it's saying: " + (await helloResp.text()));
                     resolve();
                     returned = true;
                     return;
                 }
             } catch (ex) {
-                console.log("Waiting for ST to start, caught exception: " + ex);
+                // console.log("Waiting for ST to start, caught exception: " + ex);
                 // We expect (and ignore) network errors here
             }
             await new Promise(r => setTimeout(r, 100));
         }
-        console.log(helloResp);
+        // console.log(helloResp);
         reject("Starting ST process timed out");
     });
 };

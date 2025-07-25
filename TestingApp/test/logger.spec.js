@@ -12,9 +12,9 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-const tough = require("tough-cookie");
 import SuperTokens from "supertokens-react-native";
 import { disableLogging } from "supertokens-react-native/lib/build/logger";
+import { setupFetchWithCookieJar } from "./utils";
 // jest does not call setupFiles properly with the new react-native init, so doing it this way instead
 import "./setup";
 
@@ -25,9 +25,7 @@ describe("Logger test", () => {
 
     beforeEach(() => {
         disableLogging();
-        let nodeFetch = require("node-fetch").default;
-        const fetch = require("fetch-cookie")(nodeFetch, new tough.CookieJar());
-        global.fetch = fetch;
+        setupFetchWithCookieJar();
     });
 
     afterEach(() => {

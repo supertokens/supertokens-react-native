@@ -13,7 +13,6 @@
  * under the License.
  */
 import axios from "axios";
-const tough = require("tough-cookie");
 import AntiCsrfToken from "supertokens-react-native/lib/build/antiCsrf";
 import FrontToken from "supertokens-react-native/lib/build/frontToken";
 import AuthHttpRequestFetch from "supertokens-react-native/lib/build/fetch";
@@ -25,9 +24,11 @@ import {
     getNumberOfTimesGetSessionCalled,
     BASE_URL_FOR_ST,
     coreTagEqualToOrAfter,
-    getNumberOfTimesRefreshAttempted
+    getNumberOfTimesRefreshAttempted,
+    startTestBackend,
+    setupFetchWithCookieJar
 } from "./utils";
-import { spawn } from "child_process";
+
 import { ProcessState, PROCESS_STATE } from "supertokens-react-native/lib/build/processState";
 import "isomorphic-fetch";
 // jest does not call setupFiles properly with the new react-native init, so doing it this way instead
@@ -35,7 +36,6 @@ import "./setup";
 import { getLocalSessionState } from "supertokens-react-native/lib/build/utils";
 
 const BASE_URL = "http://localhost:8080";
-let cookieJar = new tough.CookieJar();
 
 /* TODO: 
     - User passed config should be sent as well
@@ -53,6 +53,7 @@ let cookieJar = new tough.CookieJar();
     - User passed config should be sent as well
 */
 
+let cookieJar;
 process.env.TEST_MODE = "testing";
 
 describe("Fetch AuthHttpRequest class tests", function() {
@@ -71,16 +72,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
     }
 
     beforeAll(async function() {
-        let child = spawn("./test/startServer", [
-            process.env.INSTALL_PATH,
-            process.env.NODE_PORT === undefined ? 8080 : process.env.NODE_PORT
-        ]);
+        startTestBackend("any");
 
-        // Uncomment this to print server logs
-        // child.stdout.setEncoding('utf8');
-        // child.stderr.setEncoding('utf8');
-        // child.stdout.on("data", data => console.log(data))
-        // child.stderr.on("data", data => console.log(data))
         await new Promise(r => setTimeout(r, 1000));
     });
 
@@ -103,12 +96,7 @@ describe("Fetch AuthHttpRequest class tests", function() {
         await instance.post(BASE_URL_FOR_ST + "/beforeeach");
         await instance.post(BASE_URL + "/beforeeach");
 
-        let nodeFetch = require("node-fetch").default;
-        cookieJar = new tough.CookieJar();
-        const fetch = require("fetch-cookie")(nodeFetch, cookieJar);
-        global.fetch = fetch;
-        global.__supertokensOriginalFetch = undefined;
-        global.__supertokensSessionRecipe = undefined;
+        cookieJar = setupFetchWithCookieJar();
     });
 
     it("checking in fetch that methods exists", function() {
@@ -1544,8 +1532,11 @@ describe("Fetch AuthHttpRequest class tests", function() {
 
             assertEqual(await loginResponse.text(), userId);
 
+            await delay(1);
+
             // Make sure now access token is present because it should use header based auth
             accessToken = await AuthHttpRequest.getAccessToken();
+            console.log("accessToken", accessToken);
             assertNotEqual(accessToken, undefined);
 
             done();

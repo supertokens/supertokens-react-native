@@ -12,7 +12,6 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-const tough = require("tough-cookie");
 import AuthHttpRequestFetch from "supertokens-react-native/lib/build/fetch";
 import AuthHttpRequest from "supertokens-react-native";
 import assert from "assert";
@@ -22,6 +21,7 @@ import {
     normaliseURLPathOrThrowError,
     normaliseURLDomainOrThrowError
 } from "supertokens-react-native/lib/build/utils";
+import { setupFetchWithCookieJar } from "./utils";
 // jest does not call setupFiles properly with the new react-native init, so doing it this way instead
 import "./setup";
 
@@ -32,12 +32,7 @@ describe("Config tests", function() {
         AuthHttpRequestFetch.initCalled = false;
         ProcessState.getInstance().reset();
 
-        let nodeFetch = require("node-fetch").default;
-        const fetch = require("fetch-cookie")(nodeFetch, new tough.CookieJar());
-        global.fetch = fetch;
-
-        global.__supertokensOriginalFetch = undefined;
-        global.__supertokensSessionRecipe = undefined;
+        setupFetchWithCookieJar();
     });
 
     it("testing shouldDoInterceptionBasedOnUrl", async function() {

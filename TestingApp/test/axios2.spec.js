@@ -30,19 +30,20 @@ import {
     BASE_URL_FOR_ST,
     BASE_URL as UTILS_BASE_URL,
     getNumberOfTimesRefreshAttempted,
-    coreTagEqualToOrAfter
+    coreTagEqualToOrAfter,
+    startTestBackend,
+    setupFetchWithCookieJar
 } from "./utils";
 
-import { spawn } from "child_process";
 // jest does not call setupFiles properly with the new react-native init, so doing it this way instead
 import "./setup";
 
 process.env.TEST_MODE = "testing";
 
 const BASE_URL = "http://localhost:8080";
-let cookieJar = new tough.CookieJar();
 
 let axiosInstance;
+let cookieJar;
 
 describe("Axios AuthHttpRequest class tests", function() {
     async function delay(time) {
@@ -60,10 +61,7 @@ describe("Axios AuthHttpRequest class tests", function() {
     }
 
     beforeAll(async function() {
-        spawn("./test/startServer", [
-            process.env.INSTALL_PATH,
-            process.env.NODE_PORT === undefined ? 8080 : process.env.NODE_PORT
-        ]);
+        startTestBackend("cookie");
         await new Promise(r => setTimeout(r, 1000));
     });
 
@@ -82,23 +80,16 @@ describe("Axios AuthHttpRequest class tests", function() {
         await AntiCsrfToken.removeToken();
         await FrontToken.removeToken();
 
+        cookieJar = setupFetchWithCookieJar();
         let instance = axios.create();
         await instance.post(BASE_URL_FOR_ST + "/beforeeach");
         await instance.post(BASE_URL + "/beforeeach");
 
-        cookieJar = new tough.CookieJar();
         axiosInstance = axios.create({
             withCredentials: true
         });
         axiosCookieJarSupport(axiosInstance);
         axiosInstance.defaults.jar = cookieJar;
-
-        let nodeFetch = require("node-fetch").default;
-        const fetch = require("fetch-cookie")(nodeFetch, cookieJar);
-        global.fetch = fetch;
-        global.Headers = nodeFetch.Headers;
-        global.__supertokensOriginalFetch = undefined;
-        global.__supertokensSessionRecipe = undefined;
     });
 
     it("refresh session, signing key interval change", async function(done) {

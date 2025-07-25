@@ -14,6 +14,6 @@
     "express": "4.17.1",
     "morgan": "^1.10.0",
     "node-fetch": "^2.7.0",
-    "supertokens-node": "github:supertokens/supertokens-node#16.0"
+    "supertokens-node": "^22.1.1"
   }
 }

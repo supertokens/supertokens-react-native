@@ -12,7 +12,6 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-import { spawn } from "child_process";
 import { ProcessState } from "supertokens-react-native/lib/build/processState";
 const axiosCookieJarSupport = require("axios-cookiejar-support").default;
 import "isomorphic-fetch";
@@ -24,8 +23,7 @@ import AuthHttpRequestFetch from "supertokens-react-native/lib/build/fetch";
 import AuthHttpRequest from "supertokens-react-native";
 import assert from "assert";
 import axios from "axios";
-const tough = require("tough-cookie");
-import { startST, BASE_URL_FOR_ST, isGeneralErrorSupported } from "./utils";
+import { startST, BASE_URL_FOR_ST, isGeneralErrorSupported, startTestBackend, setupFetchWithCookieJar } from "./utils";
 
 const BASE_URL = "http://localhost:8080";
 
@@ -44,10 +42,7 @@ describe("Test general errors when calling sign out", function() {
 
     describe("Fetch tests", function() {
         beforeAll(async function() {
-            spawn("./test/startServer", [
-                process.env.INSTALL_PATH,
-                process.env.NODE_PORT === undefined ? 8080 : process.env.NODE_PORT
-            ]);
+            startTestBackend("cookie");
             await new Promise(r => setTimeout(r, 1000));
         });
 
@@ -70,11 +65,7 @@ describe("Test general errors when calling sign out", function() {
             await instance.post(BASE_URL_FOR_ST + "/beforeeach");
             await instance.post(BASE_URL + "/beforeeach");
 
-            let nodeFetch = require("node-fetch").default;
-            const fetch = require("fetch-cookie")(nodeFetch, new tough.CookieJar());
-            global.fetch = fetch;
-            global.__supertokensOriginalFetch = undefined;
-            global.__supertokensSessionRecipe = undefined;
+            setupFetchWithCookieJar();
         });
 
         it("Test that getting GENERAL_ERROR from signout throws an error", async function(done) {
@@ -139,10 +130,7 @@ describe("Test general errors when calling sign out", function() {
         let axiosInstance;
 
         beforeAll(async function() {
-            spawn("./test/startServer", [
-                process.env.INSTALL_PATH,
-                process.env.NODE_PORT === undefined ? 8080 : process.env.NODE_PORT
-            ]);
+            startTestBackend("cookie");
             await new Promise(r => setTimeout(r, 1000));
         });
 
@@ -165,18 +153,13 @@ describe("Test general errors when calling sign out", function() {
             await instance.post(BASE_URL_FOR_ST + "/beforeeach");
             await instance.post(BASE_URL + "/beforeeach");
 
-            let cookieJar = new tough.CookieJar();
+            const cookieJar = setupFetchWithCookieJar();
+
             axiosInstance = axios.create({
                 withCredentials: true
             });
             axiosCookieJarSupport(axiosInstance);
             axiosInstance.defaults.jar = cookieJar;
-
-            let nodeFetch = require("node-fetch").default;
-            const fetch = require("fetch-cookie")(nodeFetch, cookieJar);
-            global.fetch = fetch;
-            global.__supertokensOriginalFetch = undefined;
-            global.__supertokensSessionRecipe = undefined;
         });
 
         it("Test that getting GENERAL_ERROR from signout throws an error", async function() {
