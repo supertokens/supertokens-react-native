@@ -57,3 +57,5 @@ buck-out/
 *.keystore
 
 !lib/build/
+
+.expo
