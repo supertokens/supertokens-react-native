@@ -109,7 +109,9 @@ jobs:
             - name: Install SDK dependencies
               working-directory: supertokens-react-native/TestingApp
               run: |
+                cd ../
                 . ./hooks/populate-hook-constants.sh
+                cd TestingApp
 
                 npm i -d
                 cp -r ./test/tough-cookie ./node_modules/
