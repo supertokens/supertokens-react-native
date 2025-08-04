@@ -1,0 +1,121 @@
+name: "App Tests"
+
+on:
+    pull_request:
+        types:
+            - opened
+            - reopened
+            - synchronize
+    push:
+        tags:
+            - dev-v[0-9]+.[0-9]+.[0-9]+
+
+# Only one instance of this workflow will run on the same ref (PR/Branch/Tag)
+# Previous runs will be cancelled.
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    define-versions:
+        runs-on: ubuntu-latest
+        outputs:
+            fdiVersions: ${{ steps.versions.outputs.fdiVersions }}
+            nodeVersions: '["20"]'
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: supertokens/get-supported-versions-action@main
+              id: versions
+              with:
+                  has-fdi: true
+                  has-cdi: false
+
+    define-versions-node:
+        runs-on: ubuntu-latest
+        outputs:
+            coreVersionXy: ${{ steps.core-version.outputs.coreVersionXy }}
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  repository: supertokens/supertokens-node
+
+            - uses: supertokens/get-supported-versions-action@main
+              id: versions
+              with:
+                  has-fdi: true
+                  has-cdi: true
+
+            - name: Get core version
+              id: core-version
+              run: |
+                coreVersionXy=$(echo "${{ fromJson(steps.versions.outputs.cdiVersions) }}" | jq '. | last')
+
+                echo "coreVersionXy=${coreVersionXy}" >> $GITHUB_OUTPUT
+
+    test:
+        runs-on: ubuntu-latest
+        needs:
+          - define-versions
+          - define-versions-node
+        strategy:
+            fail-fast: false
+            matrix:
+                node-version: ${{ fromJSON(needs.define-versions.outputs.nodeVersions) }}
+                fdi-version: ${{ fromJSON(needs.define-versions.outputs.fdiVersions) }}
+
+        steps:
+            - name: Setup ENVs
+              id: envs
+              run: |
+                  APP_SERVER_LOG_DIR=${{ github.workspace }}/logs
+                  echo "APP_SERVER_LOG_DIR=$APP_SERVER_LOG_DIR" | tee -a "$GITHUB_OUTPUT" "$GITHUB_ENV"
+
+                  mkdir -p $APP_SERVER_LOG_DIR
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ matrix.node-version }}
+
+            - uses: actions/checkout@v4
+              with:
+                  path: supertokens-react-native
+
+            - uses: supertokens/get-versions-action@main
+              id: versions
+              with:
+                  driver-name: node
+                  fdi-version: ${{ matrix.fdi-version }}
+              env:
+                  SUPERTOKENS_API_KEY: ${{ secrets.SUPERTOKENS_API_KEY }}
+
+            - name: Start core
+              working-directory: supertokens-react-native
+              run: docker compose up --wait
+              env:
+                  SUPERTOKENS_CORE_VERSION: ${{ needs.define-versions-node.outputs.coreVersionXy }}
+
+            - name: Install SDK dependencies
+              working-directory: supertokens-react-native/TestingApp
+              run: |
+                cp -r ./test/tough-cookie ./node_modules/
+                npm i -d
+
+            - name: Start test server
+              working-directory: supertokens-react-native/TestingApp/test/server
+              env:
+                  TEST_MODE: testing
+                  NODE_PORT: 8080
+              run: |
+                  npm i -d
+                  npm i git+https://github.com:supertokens/supertokens-node.git#${{ steps.versions.outputs.nodeTag }}
+
+                  node . &> ${{ steps.envs.outputs.APP_SERVER_LOG_DIR }}/app-server.log &
+
+            - name: Run tests
+              working-directory: supertokens-react-native/TestingApp
+              env:
+                  TEST_MODE: testing
+                  NODE_PORT: 8080
+              run: |
+                  npm run test-ci
