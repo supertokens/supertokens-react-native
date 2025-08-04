@@ -49,7 +49,7 @@ jobs:
             - name: Get core version
               id: core-version
               run: |
-                coreVersionXy=$(echo "${{ fromJson(steps.versions.outputs.cdiVersions) }}" | jq '. | last')
+                coreVersionXy=$(echo "${{ steps.versions.outputs.cdiVersions }}" | jq '. | last')
 
                 echo "coreVersionXy=${coreVersionXy}" >> $GITHUB_OUTPUT
 
