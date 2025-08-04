@@ -137,4 +137,4 @@ jobs:
                   JEST_JUNIT_OUTPUT_DIR: ${{ steps.envs.outputs.DATA_DIR }}
                   JEST_JUNIT_ADD_FILE_ATTRIBUTE: true
               run: |
-                  npx jest test/*.spec.js --ci --reporters=default --reporters=jest-junit --runInBand --\" --verbose --split-by=timings"
+                  npx jest test/*.spec.js --ci --reporters=default --reporters=jest-junit --runInBand
