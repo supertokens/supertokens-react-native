@@ -20,13 +20,12 @@ import AuthHttpRequest from "supertokens-react-native";
 import assert from "assert";
 import {
     getNumberOfTimesRefreshCalled,
-    startST,
     getNumberOfTimesGetSessionCalled,
     BASE_URL_FOR_ST,
     coreTagEqualToOrAfter,
-    getNumberOfTimesRefreshAttempted,
-    startTestBackend,
-    setupFetchWithCookieJar
+    setupFetchWithCookieJar,
+    setupCoreApp,
+    setupST,
 } from "./utils";
 
 import { ProcessState, PROCESS_STATE } from "supertokens-react-native/lib/build/processState";
@@ -72,18 +71,9 @@ describe("Fetch AuthHttpRequest class tests", function() {
         }
     }
 
-    beforeAll(async function() {
-        startTestBackend("header");
-
-        await new Promise(r => setTimeout(r, 1000));
-    });
-
     afterAll(async function() {
         let instance = axios.create();
         await instance.post(BASE_URL_FOR_ST + "/after");
-        try {
-            await instance.get(BASE_URL_FOR_ST + "/stop");
-        } catch (err) {}
     });
 
     beforeEach(async function() {
@@ -98,6 +88,9 @@ describe("Fetch AuthHttpRequest class tests", function() {
         await instance.post(BASE_URL + "/beforeeach");
 
         setupFetchWithCookieJar();
+
+        const coreUrl = await setupCoreApp();
+        await setupST({ coreUrl, tokenTransferMethod: "header" });
     });
 
     it("checking in fetch that methods exists", function() {
@@ -245,7 +238,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
     it("test refresh session with fetch", async function(done) {
         try {
             jest.setTimeout(10000);
-            await startST(3);
+            const coreUrl = await setupCoreApp({accessTokenValidity: 3});
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
 
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
@@ -287,7 +281,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
         try {
             jest.setTimeout(20000);
             // We can have access tokens valid for longer than the signing key update interval
-            await startST(100, true, "0.002");
+            const coreUrl = await setupCoreApp({accessTokenValidity: 100, accessTokenSigningKeyUpdateInterval: "0.002"});
+            await setupST({ coreUrl, tokenTransferMethod: "header", enableAntiCsrf: true });
 
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
@@ -331,7 +326,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
     it("test rid is there", async function(done) {
         try {
             jest.setTimeout(10000);
-            await startST(3);
+            const coreUrl = await setupCoreApp({accessTokenValidity: 3});
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
 
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
@@ -362,7 +358,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
     it("signout with expired access token", async function(done) {
         try {
             jest.setTimeout(10000);
-            await startST();
+            const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
 
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
@@ -396,7 +393,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
     // test custom headers are being sent when logged in and when not*****
     it("test with fetch that custom headers are being sent", async function(done) {
         try {
-            await startST();
+            const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
 
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
@@ -463,7 +461,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
     it("test with fetch that doesSessionExist works fine when the user is logged in", async function(done) {
         try {
             jest.setTimeout(15000);
-            await startST(5);
+            const coreUrl = await setupCoreApp({accessTokenValidity: 5});
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
 
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
@@ -492,7 +491,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
     it("test with fetch session should not exist when user calls log out", async function(done) {
         try {
             jest.setTimeout(15000);
-            await startST(5);
+            const coreUrl = await setupCoreApp({accessTokenValidity: 5});
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
 
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
@@ -534,7 +534,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
     it("test with fetch that attemptRefreshingSession is working correctly", async function(done) {
         try {
             jest.setTimeout(15000);
-            await startST(5);
+            const coreUrl = await setupCoreApp({accessTokenValidity: 5});
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
 
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
@@ -576,7 +577,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
     it("test with fetch that multiple API calls in parallel when access token is expired, only 1 refresh should be called", async function(done) {
         try {
             jest.setTimeout(15000);
-            await startST(5);
+            const coreUrl = await setupCoreApp({accessTokenValidity: 5});
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
 
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
@@ -632,7 +634,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
     it("test with fetch that things should work correctly if anti-csrf is disabled", async function(done) {
         try {
             jest.setTimeout(15000);
-            await startST(3, false);
+            const coreUrl = await setupCoreApp({accessTokenValidity: 3});
+            await setupST({ coreUrl, tokenTransferMethod: "header", enableAntiCsrf: false });
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
@@ -679,7 +682,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
     it("test with fetch that if an api throws an error it gets propagated to the user with interception", async done => {
         try {
             jest.setTimeout(15000);
-            await startST();
+            const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
@@ -698,7 +702,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
     it("test with fetch that if an api throws an error it gets propagated to the user without interception", async done => {
         try {
             jest.setTimeout(15000);
-            await startST();
+            const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
@@ -717,7 +722,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
     it("test with fetch that calling SuperTokens.init more than once works", async done => {
         try {
             jest.setTimeout(15000);
-            await startST();
+            const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
@@ -775,7 +781,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
     it("test with fetch that if via interception, initially an endpoint is hit just once in case of access token expiry", async done => {
         try {
             jest.setTimeout(15000);
-            await startST(3);
+            const coreUrl = await setupCoreApp({accessTokenValidity: 3});
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
@@ -814,7 +821,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
     it("test with fetch that an api call without cookies throws session expire, refresh api is not called and 401 is the output", async function(done) {
         try {
             jest.setTimeout(15000);
-            await startST(5);
+            const coreUrl = await setupCoreApp({accessTokenValidity: 5});
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
@@ -858,7 +866,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
     it("test that via interception initially an endpoint is just hit once in case of valid access token", async function(done) {
         try {
             jest.setTimeout(15000);
-            await startST(5);
+            const coreUrl = await setupCoreApp({accessTokenValidity: 5});
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
@@ -895,7 +904,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
     it("test with fetch interception should not happen when domain is not the one that they gave", async function(done) {
         try {
             jest.setTimeout(15000);
-            await startST(5);
+            const coreUrl = await setupCoreApp({accessTokenValidity: 5});
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
@@ -936,7 +946,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
     it("test with fetch that if multiple interceptors are there, they should all work", async function(done) {
         try {
             jest.setTimeout(15000);
-            await startST(5);
+            const coreUrl = await setupCoreApp({accessTokenValidity: 5});
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
@@ -989,7 +1000,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
     it("fetch check sessionDoes exist calls refresh API just once", async function(done) {
         try {
             jest.setTimeout(10000);
-            await startST(3);
+            const coreUrl = await setupCoreApp({accessTokenValidity: 3});
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
@@ -1032,7 +1044,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
     });
 
     it("test that unauthorised event is not fired on app launch", async function() {
-        await startST();
+        const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
 
         let events = [];
 
@@ -1061,7 +1074,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
     });
 
     it("test that unauthorised event is fired when calling protected route without a session", async function() {
-        await startST();
+        const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
 
         let events = [];
 
@@ -1141,7 +1155,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
                 return originalFetch(url, config);
             });
 
-            await startST();
+            const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
@@ -1217,7 +1232,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
                 return originalFetch(url, config);
             });
 
-            await startST(100, true, "0.002");
+            const coreUrl = await setupCoreApp({accessTokenValidity: 100, accessTokenSigningKeyUpdateInterval: "0.002"});
+            await setupST({ coreUrl, tokenTransferMethod: "header", enableAntiCsrf: true });
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
@@ -1293,7 +1309,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
                 return originalFetch(url, config);
             });
 
-            await startST(100, true, "0.002");
+            const coreUrl = await setupCoreApp({accessTokenValidity: 100, accessTokenSigningKeyUpdateInterval: "0.002"});
+            await setupST({ coreUrl, tokenTransferMethod: "header", enableAntiCsrf: true });
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
@@ -1320,7 +1337,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
     it("getAccessToken should behave as expected", async function(done) {
         try {
             jest.setTimeout(10000);
-            await startST();
+            const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
@@ -1361,7 +1379,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
     it("Different casing for custom authorization header should work fine", async function(done) {
         try {
             jest.setTimeout(10000);
-            await startST();
+            const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
@@ -1410,7 +1429,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
     it("Custom authorization header is sent to API if it does not match current access token", async function(done) {
         try {
             jest.setTimeout(10000);
-            await startST();
+            const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
@@ -1482,7 +1502,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
     it("Custom authorization header is sent if API does not require interception", async function(done) {
         try {
             jest.setTimeout(10000);
-            await startST();
+            const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
@@ -1553,7 +1574,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
     it("Manually adding an expired access token should refresh and work normally", async function(done) {
         try {
             jest.setTimeout(15000);
-            await startST(3);
+            const coreUrl = await setupCoreApp({accessTokenValidity: 3});
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
@@ -1601,7 +1623,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
     it("getAccessToken calls refresh if session has expired", async function(done) {
         try {
             jest.setTimeout(15000);
-            await startST(3);
+            const coreUrl = await setupCoreApp({accessTokenValidity: 3});
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
@@ -1643,7 +1666,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
     it("Test that using old access token after signOut works fine", async function(done) {
         try {
             jest.setTimeout(15000);
-            await startST();
+            const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
@@ -1685,7 +1709,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
     it("Test that access token and refresh token are cleared when front token is cleared", async function(done) {
         try {
             jest.setTimeout(15000);
-            await startST();
+            const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
@@ -1775,7 +1800,8 @@ describe("Fetch AuthHttpRequest class tests", function() {
                 return originalFetch(url, config);
             });
 
-            await startST();
+            const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });

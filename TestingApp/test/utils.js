@@ -18,9 +18,9 @@ let { fork } = require("child_process");
 let axios = require("axios");
 let path = require("path");
 
-export const BASE_URL = "http://localhost.org:8080";
+export const BASE_URL = "http://localhost:8080";
 export const BASE_URL_FOR_ST =
-    process.env.NODE_PORT === undefined ? "http://localhost.org:8080" : "http://localhost.org:" + process.env.NODE_PORT;
+    process.env.NODE_PORT === undefined ? "http://localhost:8080" : "http://localhost:" + process.env.NODE_PORT;
 
 export function checkIfIdRefreshIsCleared() {
     const ID_COOKIE_NAME = "sIdRefreshToken";
@@ -55,28 +55,32 @@ export async function getNumberOfTimesRefreshAttempted(BASE = BASE_URL) {
     return response.data;
 }
 
-export async function startST(
-    accessTokenValidity = 3,
-    enableAntiCsrf = true,
-    accessTokenSigningKeyUpdateInterval = undefined
-) {
-    {
-        if (BASE_URL !== BASE_URL_FOR_ST) {
-            let instance = axios.create();
-            await instance.post(BASE_URL + "/setAntiCsrf", {
-                enableAntiCsrf
-            });
-        }
-    }
-    {
-        let instance = axios.create();
-        let response = await instance.post(BASE_URL_FOR_ST + "/startST", {
-            accessTokenValidity,
-            enableAntiCsrf,
-            accessTokenSigningKeyUpdateInterval
-        });
-        return response.data;
-    }
+export async function setupCoreApp({ appId, accessTokenValidity = 3, accessTokenSigningKeyUpdateInterval = undefined } = {}) {
+    const response = await fetch(`${BASE_URL}/test/setup/app`, {
+        method: "POST",
+        headers: new Headers([["content-type", "application/json"]]),
+        body: JSON.stringify({
+            appId,
+            coreConfig: {
+                access_token_validity: accessTokenValidity,
+                access_token_signing_key_update_interval: accessTokenSigningKeyUpdateInterval
+            },
+        }),
+    });
+
+    return await response.text();
+}
+
+export async function setupST({
+    coreUrl, enableAntiCsrf, enableJWT, tokenTransferMethod,
+} = {}) {
+    await fetch(`${BASE_URL_FOR_ST}/test/setup/st`, {
+        method: "POST",
+        headers: new Headers([["content-type", "application/json"]]),
+        body: JSON.stringify({
+            coreUrl, enableAntiCsrf, enableJWT, tokenTransferMethod
+        }),
+    });
 }
 
 export async function getNumberOfTimesGetSessionCalled() {
