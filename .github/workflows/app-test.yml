@@ -59,6 +59,8 @@ jobs:
               with:
                 driver-name: node
                 cdi-version: ${{ steps.cdi-version.outputs.cdiVersion }}
+              env:
+                  SUPERTOKENS_API_KEY: ${{ secrets.SUPERTOKENS_API_KEY }}
     test:
         runs-on: ubuntu-latest
         needs:
