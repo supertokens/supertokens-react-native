@@ -76,9 +76,12 @@ jobs:
             - name: Setup ENVs
               id: envs
               run: |
-                  APP_SERVER_LOG_DIR=${{ github.workspace }}/logs
+                  DATA_DIR=${{ github.workspace }}/data
+                  APP_SERVER_LOG_DIR=${{ github.workspace }}/data/logs
+                  echo "DATA_DIR=$DATA_DIR" | tee -a "$GITHUB_OUTPUT" "$GITHUB_ENV"
                   echo "APP_SERVER_LOG_DIR=$APP_SERVER_LOG_DIR" | tee -a "$GITHUB_OUTPUT" "$GITHUB_ENV"
 
+                  mkdir -p $DATA_DIR
                   mkdir -p $APP_SERVER_LOG_DIR
 
             - uses: actions/setup-node@v4
@@ -106,8 +109,12 @@ jobs:
             - name: Install SDK dependencies
               working-directory: supertokens-react-native/TestingApp
               run: |
-                cp -r ./test/tough-cookie ./node_modules/
+                . ./hooks/populate-hook-constants.sh
+
                 npm i -d
+                cp -r ./test/tough-cookie ./node_modules/
+                # TODO: Should this use the current branch/ref instead of the dev tag?
+                npm i git+https://github.com:supertokens/supertokens-react-native.git#dev-v$packageVersion
 
             - name: Start test server
               working-directory: supertokens-react-native/TestingApp/test/server
@@ -125,5 +132,7 @@ jobs:
               env:
                   TEST_MODE: testing
                   NODE_PORT: 8080
+                  JEST_JUNIT_OUTPUT_DIR: ${{ steps.envs.outputs.DATA_DIR }}
+                  JEST_JUNIT_ADD_FILE_ATTRIBUTE: true
               run: |
-                  npm run test-ci
+                  npx jest test/*.spec.js --ci --reporters=default --reporters=jest-junit --runInBand --\" --verbose --split-by=timings"
