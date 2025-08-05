@@ -116,7 +116,7 @@ jobs:
                 npm i -d
                 cp -r ./test/tough-cookie ./node_modules/
                 # npm link ../
-                npm i git+https://github.com:supertokens/supertokens-react-native.git#${{ github.ref_name }}
+                npm i git+https://github.com:supertokens/supertokens-react-native.git#${{ github.sha }}
 
             - name: Start test server
               working-directory: supertokens-react-native/TestingApp/test/server
