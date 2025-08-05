@@ -142,11 +142,14 @@ jobs:
                     tries=$((tries + 1))
                     echo "Running tests [Try $tries/$max_tries]"
 
+                    cd test/server
                     $server_command
                     server_pid=$!
-                    $test_command
+                    cd ../../
 
+                    $test_command
                     exit_code=$?
+
                     if [[ $exit_code -ne 0 && $tries -lt $max_tries ]]; then
                       echo -e "\n\n\n"
                       pkill -9 $server_pid
