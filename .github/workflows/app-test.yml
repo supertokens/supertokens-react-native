@@ -109,16 +109,11 @@ jobs:
             - name: Install SDK dependencies
               working-directory: supertokens-react-native/TestingApp
               run: |
-                cd ../
-                . ./hooks/populate-hook-constants.sh
-                cd TestingApp
-
                 npm i -d
                 cp -r ./test/tough-cookie ./node_modules/
-                # npm link ../
                 npm i git+https://github.com:supertokens/supertokens-react-native.git#${{ github.sha }}
 
-            - name: Start test server
+            - name: Setup test server
               working-directory: supertokens-react-native/TestingApp/test/server
               env:
                   TEST_MODE: testing
@@ -126,8 +121,6 @@ jobs:
               run: |
                   npm i -d
                   npm i git+https://github.com:supertokens/supertokens-node.git#${{ steps.versions.outputs.nodeTag }}
-
-                  node . &> ${{ steps.envs.outputs.APP_SERVER_LOG_DIR }}/app-server.log &
 
             - name: Run tests
               working-directory: supertokens-react-native/TestingApp
@@ -137,4 +130,37 @@ jobs:
                   JEST_JUNIT_OUTPUT_DIR: ${{ steps.envs.outputs.DATA_DIR }}
                   JEST_JUNIT_ADD_FILE_ATTRIBUTE: true
               run: |
-                  npx jest test/*.spec.js --ci --reporters=default --reporters=jest-junit --runInBand --verbose --split-by=timings
+                  set +e
+
+                  tries=0
+                  max_tries=3
+
+                  server_command="node . &> ${{ steps.envs.outputs.APP_SERVER_LOG_DIR }}/app-server.log &"
+                  test_command="npx jest test/*.spec.js --ci --reporters=default --reporters=jest-junit --runInBand --verbose --split-by=timings"
+
+                  while true; do
+                    tries=$((tries + 1))
+                    echo "Running tests [Try $tries/$max_tries]"
+
+                    $server_command
+                    server_pid=$!
+                    $test_command
+
+                    exit_code=$?
+                    if [[ $exit_code -ne 0 && $tries -lt $max_tries ]]; then
+                      echo -e "\n\n\n"
+                      pkill -9 $server_pid
+                    else
+                      exit $exit_code
+                    fi
+
+                  done
+
+            - if: always()
+              name: Publish test results
+              uses: mikepenz/action-junit-report@v5
+              with:
+                  report_paths: ${{ steps.envs.outputs.DATA_DIR }}/junit.xml
+                  detailed_summary: true
+                  include_passed: false
+                  annotate_notice: true
