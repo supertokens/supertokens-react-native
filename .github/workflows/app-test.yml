@@ -161,6 +161,23 @@ jobs:
               uses: mikepenz/action-junit-report@v5
               with:
                   report_paths: ${{ steps.envs.outputs.DATA_DIR }}/junit.xml
+                  check_name: React Native Tests [FDI=${{ matrix.fdi-version }}][Node=${{ matrix.node-version }}]
+                  # Include table with all test results in the summary
                   detailed_summary: true
-                  include_passed: false
-                  annotate_notice: true
+                  # Skips the summary table if only successful tests were detected.
+                  skip_success_summary: true
+                  # Group the testcases by test suite in the detailed_summary
+                  group_suite: true
+                  # Don't fail if no test are found.
+                  require_tests: false
+                  # Fail the build in case of a test failure.
+                  fail_on_failure: true
+                  # No annotations will be added to the run
+                  skip_annotations: true
+
+            - if: failure()
+              name: Upload artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                name: React Native Tests [FDI=${{ matrix.fdi-version }}][Node=${{ matrix.node-version }}]
+                path: ${{ steps.envs.outputs.DATA_DIR }}
