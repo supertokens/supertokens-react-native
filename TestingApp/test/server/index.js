@@ -512,8 +512,19 @@ app.post("/login-2.18", async (req, res) => {
     Querier.apiVersion = "2.18";
     const payload = req.body.payload || {};
     const userId = req.body.userId;
+
+    let path = undefined;
+    if (maxVersion(nodeSDKVersion, "23.0.0") === nodeSDKVersion) {
+        path = {
+            path: "/recipe/session",
+            params: {},
+        };
+    } else {
+        path = new NormalisedURLPath("/recipe/session");
+    }
+
     const legacySessionResp = await Querier.getNewInstanceOrThrowError().sendPostRequest(
-        new NormalisedURLPath("/recipe/session"),
+        path,
         {
             userId,
             enableAntiCsrf: false,

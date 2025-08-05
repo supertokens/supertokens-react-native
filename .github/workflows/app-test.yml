@@ -140,7 +140,7 @@ jobs:
                     echo "Running tests [Try $tries/$max_tries]"
 
                     echo "Starting server"
-                    node test/server/index.js &> ${{ steps.envs.outputs.APP_SERVER_LOG_DIR }}/app-server.log &
+                    node test/server/index.js &> ${{ steps.envs.outputs.APP_SERVER_LOG_DIR }}/app-server-$tries.log &
                     server_pid=$!
 
                     echo "Running tests"
@@ -161,7 +161,7 @@ jobs:
               uses: mikepenz/action-junit-report@v5
               with:
                   report_paths: ${{ steps.envs.outputs.DATA_DIR }}/junit.xml
-                  check_name: React Native Tests [FDI=${{ matrix.fdi-version }}][Node=${{ matrix.node-version }}]
+                  check_name: React Native Tests [FDI=${{ matrix.fdi-version }}][Node=${{ matrix.node-version }}][NodeSDK=${{ steps.versions.outputs.nodeTag }}]
                   # Include table with all test results in the summary
                   detailed_summary: true
                   # Skips the summary table if only successful tests were detected.
@@ -179,5 +179,5 @@ jobs:
               name: Upload artifacts
               uses: actions/upload-artifact@v4
               with:
-                name: React Native Tests [FDI=${{ matrix.fdi-version }}][Node=${{ matrix.node-version }}]
+                name: React Native Tests [FDI=${{ matrix.fdi-version }}][Node=${{ matrix.node-version }}][NodeSDK=${{ steps.versions.outputs.nodeTag }}]
                 path: ${{ steps.envs.outputs.DATA_DIR }}
