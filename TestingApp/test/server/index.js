@@ -77,6 +77,11 @@ function reset() {
     if (UserMetaDataRecipeRaw !== undefined) {
         UserMetaDataRecipeRaw.reset();
     }
+
+    if (accountLinkingSupported) {
+        const AccountLinkingRaw = require("supertokens-node/lib/build/recipe/accountlinking/recipe").default;
+        AccountLinkingRaw.reset();
+    }
 }
 
 function getConfig({coreUrl = getCoreUrl(), enableAntiCsrf, enableJWT, tokenTransferMethod}) {
