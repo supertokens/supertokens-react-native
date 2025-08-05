@@ -135,18 +135,18 @@ jobs:
                   tries=0
                   max_tries=3
 
-                  server_command="node . &> ${{ steps.envs.outputs.APP_SERVER_LOG_DIR }}/app-server.log &"
+                  server_command="node test/server/index.js &> ${{ steps.envs.outputs.APP_SERVER_LOG_DIR }}/app-server.log &"
                   test_command="npx jest test/*.spec.js --ci --reporters=default --reporters=jest-junit --runInBand --verbose --split-by=timings"
 
                   while true; do
                     tries=$((tries + 1))
                     echo "Running tests [Try $tries/$max_tries]"
 
-                    cd test/server
+                    echo "Starting server"
                     $server_command
                     server_pid=$!
-                    cd ../../
 
+                    echo "Running tests"
                     $test_command
                     exit_code=$?
 
