@@ -26,13 +26,13 @@ import assert from "assert";
 
 import {
     getNumberOfTimesRefreshCalled,
-    startST,
     BASE_URL_FOR_ST,
     BASE_URL as UTILS_BASE_URL,
     getNumberOfTimesRefreshAttempted,
     coreTagEqualToOrAfter,
-    startTestBackend,
-    setupFetchWithCookieJar
+    setupFetchWithCookieJar,
+    setupCoreApp,
+    setupST,
 } from "./utils";
 
 // jest does not call setupFiles properly with the new react-native init, so doing it this way instead
@@ -60,17 +60,9 @@ describe("Axios AuthHttpRequest class tests", function() {
         }
     }
 
-    beforeAll(async function() {
-        startTestBackend("cookie");
-        await new Promise(r => setTimeout(r, 1000));
-    });
-
     afterAll(async function() {
         let instance = axios.create();
         await instance.post(BASE_URL_FOR_ST + "/after");
-        try {
-            await instance.get(BASE_URL_FOR_ST + "/stop");
-        } catch (err) {}
     });
 
     beforeEach(async function() {
@@ -95,7 +87,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     it("refresh session, signing key interval change", async function(done) {
         try {
             jest.setTimeout(20000);
-            await startST(100, true, "0.002");
+            const coreUrl = await setupCoreApp({accessTokenValidity: 100, accessTokenSigningKeyUpdateInterval: "0.002"});
+            await setupST({ coreUrl, tokenTransferMethod: "cookie", enableAntiCsrf: true });
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
                 apiDomain: BASE_URL,
@@ -146,7 +139,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     });
 
     it("API returning 401 will not call refresh after logout", async function() {
-        await startST(100, true, "0.002");
+        const coreUrl = await setupCoreApp({accessTokenValidity: 100, accessTokenSigningKeyUpdateInterval: "0.002"});
+            await setupST({ coreUrl, tokenTransferMethod: "cookie", enableAntiCsrf: true });
         AuthHttpRequest.addAxiosInterceptors(axiosInstance);
         AuthHttpRequest.init({
             apiDomain: BASE_URL,
@@ -194,7 +188,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     });
 
     it("should work after refresh migrating old cookie based sessions", async function() {
-        await startST();
+        const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "cookie" });
         AuthHttpRequest.addAxiosInterceptors(axiosInstance);
         AuthHttpRequest.init({
             apiDomain: BASE_URL,
@@ -241,7 +236,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     });
 
     it("should work after refresh migrating old cookie based sessions with expired access tokens", async function() {
-        await startST();
+        const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "cookie" });
         AuthHttpRequest.addAxiosInterceptors(axiosInstance);
         AuthHttpRequest.init({
             apiDomain: BASE_URL,
@@ -290,7 +286,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     });
 
     it("should throw error if refresh fails with a network error", async function() {
-        await startST();
+        const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "cookie" });
         AuthHttpRequest.addAxiosInterceptors(axiosInstance);
         const origFetch = global.fetch;
         global.fetch = async (...input) => {
@@ -347,7 +344,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     });
 
     it("test that interception happens based on the return value of shouldDoInterceptionBasedOnUrl override", async function() {
-        await startST();
+        const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "cookie" });
         AuthHttpRequest.addAxiosInterceptors(axiosInstance);
         AuthHttpRequest.init({
             apiDomain: BASE_URL,

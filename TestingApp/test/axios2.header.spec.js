@@ -26,13 +26,13 @@ import { getTokenForHeaderAuth, setToken } from "supertokens-react-native/lib/bu
 
 import {
     getNumberOfTimesRefreshCalled,
-    startST,
     BASE_URL_FOR_ST,
     BASE_URL as UTILS_BASE_URL,
     getNumberOfTimesRefreshAttempted,
     coreTagEqualToOrAfter,
-    startTestBackend,
-    setupFetchWithCookieJar
+    setupFetchWithCookieJar,
+    setupCoreApp,
+    setupST,
 } from "./utils";
 
 // jest does not call setupFiles properly with the new react-native init, so doing it this way instead
@@ -59,18 +59,9 @@ describe("Axios AuthHttpRequest class tests", function() {
         }
     }
 
-    beforeAll(async function() {
-        startTestBackend("header");
-
-        await new Promise(r => setTimeout(r, 1000));
-    });
-
     afterAll(async function() {
         let instance = axios.create();
         await instance.post(BASE_URL_FOR_ST + "/after");
-        try {
-            await instance.get(BASE_URL_FOR_ST + "/stop");
-        } catch (err) {}
     });
 
     beforeEach(async function() {
@@ -96,7 +87,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     it("refresh session, signing key interval change", async function(done) {
         try {
             jest.setTimeout(20000);
-            await startST(100, true, "0.002");
+            const coreUrl = await setupCoreApp({accessTokenValidity: 100, accessTokenSigningKeyUpdateInterval: "0.002"});
+            await setupST({ coreUrl, tokenTransferMethod: "header", enableAntiCsrf: true });
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
@@ -146,7 +138,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     });
 
     it("API returning 401 will not call refresh after logout", async function() {
-        await startST(100, true, "0.002");
+        const coreUrl = await setupCoreApp({accessTokenValidity: 100, accessTokenSigningKeyUpdateInterval: "0.002"});
+            await setupST({ coreUrl, tokenTransferMethod: "header", enableAntiCsrf: true });
         AuthHttpRequest.addAxiosInterceptors(axiosInstance);
         AuthHttpRequest.init({
             apiDomain: BASE_URL
@@ -199,7 +192,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     it("getAccessToken should behave as expected", async function(done) {
         try {
             jest.setTimeout(10000);
-            await startST();
+            const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
@@ -238,7 +232,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     it("Different casing for custom authorization header should work fine", async function(done) {
         try {
             jest.setTimeout(10000);
-            await startST();
+            const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
@@ -285,7 +280,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     it("Custom authorization header is sent to API if it does not match current access token", async function(done) {
         try {
             jest.setTimeout(10000);
-            await startST();
+            const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
@@ -355,7 +351,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     it("Custom authorization header is sent if API does not require interception", async function(done) {
         try {
             jest.setTimeout(10000);
-            await startST();
+            const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
@@ -424,7 +421,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     it("Manually adding an expired access token should refresh and work normally", async function(done) {
         try {
             jest.setTimeout(15000);
-            await startST(3);
+            const coreUrl = await setupCoreApp({accessTokenValidity: 3});
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
@@ -470,7 +468,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     it("getAccessToken calls refresh if session has expired", async function(done) {
         try {
             jest.setTimeout(15000);
-            await startST(3);
+            const coreUrl = await setupCoreApp({accessTokenValidity: 3});
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
@@ -510,7 +509,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     it("Test that using old access token after signOut works fine", async function(done) {
         try {
             jest.setTimeout(15000);
-            await startST();
+            const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
@@ -550,7 +550,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     it("Test that access token and refresh token are cleared when front token is cleared", async function(done) {
         try {
             jest.setTimeout(15000);
-            await startST();
+            const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
@@ -593,7 +594,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     it("should not ignore the auth header even if it matches the stored access token", async function(done) {
         try {
             jest.setTimeout(15000);
-            await startST();
+            const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
                 apiDomain: BASE_URL,
@@ -605,7 +607,6 @@ describe("Axios AuthHttpRequest class tests", function() {
 
             // We mock specific URLs here, for other URLs we make an actual network call
             axiosInstance.get = jest.fn((url, config) => {
-                console.log(url);
                 if (url === BASE_URL + "/") {
                     let headers = new Headers(config.headers);
                     if (headers.get("authorization") === "Bearer myOwnHeHe") {

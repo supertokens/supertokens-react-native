@@ -13,30 +13,22 @@
  * under the License.
  */
 import axios from "axios";
-const tough = require("tough-cookie");
 import AntiCsrfToken from "supertokens-react-native/lib/build/antiCsrf";
 import FrontToken from "supertokens-react-native/lib/build/frontToken";
 import AuthHttpRequestFetch from "supertokens-react-native/lib/build/fetch";
 import AuthHttpRequest from "supertokens-react-native";
 import assert from "assert";
 import {
-    getNumberOfTimesRefreshCalled,
-    startST,
-    getNumberOfTimesGetSessionCalled,
+    setupCoreApp,
+    setupST,
     BASE_URL_FOR_ST,
-    coreTagEqualToOrAfter,
-    getNumberOfTimesRefreshAttempted,
     checkIfV3AccessTokenIsSupported,
-    startTestBackend,
     setupFetchWithCookieJar
 } from "./utils";
-import { fork } from "child_process";
-import { ProcessState, PROCESS_STATE } from "supertokens-react-native/lib/build/processState";
+import { ProcessState } from "supertokens-react-native/lib/build/processState";
 import "isomorphic-fetch";
 // jest does not call setupFiles properly with the new react-native init, so doing it this way instead
 import "./setup";
-import { getLocalSessionState } from "supertokens-react-native/lib/build/utils";
-import path from "path";
 
 const BASE_URL = "http://localhost:8080";
 
@@ -73,19 +65,9 @@ describe("Fetch AuthHttpRequest class tests", function() {
         }
     }
 
-    beforeAll(async function() {
-        startTestBackend("header");
-
-        // Uncomment this to print server logs
-        await new Promise(r => setTimeout(r, 1000));
-    });
-
     afterAll(async function() {
         let instance = axios.create();
         await instance.post(BASE_URL_FOR_ST + "/after");
-        try {
-            await instance.get(BASE_URL_FOR_ST + "/stop");
-        } catch (err) {}
     });
 
     beforeEach(async function() {
@@ -105,7 +87,10 @@ describe("Fetch AuthHttpRequest class tests", function() {
     it("should return the appropriate access token payload", async function(done) {
         try {
             jest.setTimeout(10000);
-            await startST();
+
+            const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
+
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
@@ -162,7 +147,10 @@ describe("Fetch AuthHttpRequest class tests", function() {
     it("should be able to refresh a session started w/ CDI 2.18", async function(done) {
         try {
             jest.setTimeout(10000);
-            await startST();
+
+            const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "header" });
+
             AuthHttpRequest.init({
                 apiDomain: BASE_URL
             });
