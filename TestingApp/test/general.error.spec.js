@@ -23,7 +23,7 @@ import AuthHttpRequestFetch from "supertokens-react-native/lib/build/fetch";
 import AuthHttpRequest from "supertokens-react-native";
 import assert from "assert";
 import axios from "axios";
-import { startST, BASE_URL_FOR_ST, isGeneralErrorSupported, startTestBackend, setupFetchWithCookieJar } from "./utils";
+import { BASE_URL_FOR_ST, isGeneralErrorSupported, setupFetchWithCookieJar, setupCoreApp, setupST } from "./utils";
 
 const BASE_URL = "http://localhost:8080";
 
@@ -41,17 +41,9 @@ describe("Test general errors when calling sign out", function() {
     }
 
     describe("Fetch tests", function() {
-        beforeAll(async function() {
-            startTestBackend("cookie");
-            await new Promise(r => setTimeout(r, 1000));
-        });
-
         afterAll(async function() {
             let instance = axios.create();
             await instance.post(BASE_URL_FOR_ST + "/after");
-            try {
-                await instance.get(BASE_URL_FOR_ST + "/stop");
-            } catch (err) {}
         });
 
         beforeEach(async function() {
@@ -76,7 +68,8 @@ describe("Test general errors when calling sign out", function() {
 
             try {
                 jest.setTimeout(10000);
-                await startST();
+                const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "cookie" });
 
                 AuthHttpRequest.init({
                     apiDomain: BASE_URL,
@@ -129,11 +122,6 @@ describe("Test general errors when calling sign out", function() {
     describe("axios tests", function() {
         let axiosInstance;
 
-        beforeAll(async function() {
-            startTestBackend("cookie");
-            await new Promise(r => setTimeout(r, 1000));
-        });
-
         afterAll(async function() {
             let instance = axios.create();
             await instance.post(BASE_URL_FOR_ST + "/after");
@@ -168,7 +156,8 @@ describe("Test general errors when calling sign out", function() {
             }
 
             let testPassed = false;
-            await startST();
+            const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "cookie" });
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
 
             AuthHttpRequest.init({
