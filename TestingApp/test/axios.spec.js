@@ -25,13 +25,12 @@ import { interceptorFunctionRequestFulfilled, responseInterceptor } from "supert
 import assert from "assert";
 import {
     getNumberOfTimesRefreshCalled,
-    startST,
     getNumberOfTimesGetSessionCalled,
     BASE_URL_FOR_ST,
     BASE_URL as UTILS_BASE_URL,
-    getNumberOfTimesRefreshAttempted,
-    startTestBackend,
-    setupFetchWithCookieJar
+    setupFetchWithCookieJar,
+    setupCoreApp,
+    setupST,
 } from "./utils";
 import { ProcessState, PROCESS_STATE } from "supertokens-react-native/lib/build/processState";
 import { getLocalSessionState } from "supertokens-react-native/lib/build/utils";
@@ -64,18 +63,9 @@ describe("Axios AuthHttpRequest class tests", function() {
         assert(a === b);
     }
 
-    beforeAll(async function() {
-        startTestBackend("cookie");
-
-        await new Promise(r => setTimeout(r, 1000));
-    });
-
     afterAll(async function() {
         let instance = axios.create();
         await instance.post(BASE_URL_FOR_ST + "/after");
-        try {
-            await instance.get(BASE_URL_FOR_ST + "/stop");
-        } catch (err) {}
     });
 
     beforeEach(async function() {
@@ -305,7 +295,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     it("refresh session", async function(done) {
         try {
             jest.setTimeout(10000);
-            await startST();
+            const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "cookie" });
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
                 apiDomain: UTILS_BASE_URL,
@@ -335,7 +326,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     });
 
     it("test that unauthorised event is not fired on app launch", async function() {
-        await startST();
+        const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "cookie" });
 
         AuthHttpRequest.addAxiosInterceptors(axiosInstance);
         let events = [];
@@ -363,7 +355,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     });
 
     it("test that unauthorised event is fired when calling protected route without a session", async function() {
-        await startST();
+        const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "cookie" });
 
         AuthHttpRequest.addAxiosInterceptors(axiosInstance);
         let events = [];
@@ -392,7 +385,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     });
 
     it("test rid is there", async function() {
-        await startST(3);
+        const coreUrl = await setupCoreApp({accessTokenValidity: 3});
+            await setupST({ coreUrl, tokenTransferMethod: "cookie" });
         AuthHttpRequest.addAxiosInterceptors(axiosInstance);
 
         AuthHttpRequest.init({
@@ -419,7 +413,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     it("signout with expired access token", async function(done) {
         try {
             jest.setTimeout(10000);
-            await startST();
+            const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "cookie" });
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
 
             AuthHttpRequest.init({
@@ -450,7 +445,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     });
 
     it("signout with not expired access token", async function() {
-        await startST(3);
+        const coreUrl = await setupCoreApp({accessTokenValidity: 3});
+            await setupST({ coreUrl, tokenTransferMethod: "cookie" });
         AuthHttpRequest.addAxiosInterceptors(axiosInstance);
 
         AuthHttpRequest.init({
@@ -479,7 +475,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     it("test that custom headers are being sent when logged in", async function(done) {
         try {
             jest.setTimeout(15000);
-            await startST();
+            const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "cookie" });
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
                 apiDomain: BASE_URL,
@@ -538,7 +535,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     it("test doesSessionExist works fine when user is logged in", async function(done) {
         try {
             jest.setTimeout(15000);
-            await startST(5);
+            const coreUrl = await setupCoreApp({accessTokenValidity: 5});
+            await setupST({ coreUrl, tokenTransferMethod: "cookie" });
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
                 apiDomain: BASE_URL,
@@ -564,7 +562,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     //session should not exist when user calls log out - use doesSessionExist & check localstorage is empty
     it("test session should not exist when user calls log out", async function(done) {
         try {
-            await startST();
+            const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "cookie" });
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
                 apiDomain: BASE_URL,
@@ -602,7 +601,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     it("test that attemptRefreshingSession is working correctly", async function(done) {
         try {
             jest.setTimeout(15000);
-            await startST(5);
+            const coreUrl = await setupCoreApp({accessTokenValidity: 5});
+            await setupST({ coreUrl, tokenTransferMethod: "cookie" });
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
                 apiDomain: BASE_URL,
@@ -642,7 +642,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     it("test that multiple API calls in parallel when access token is expired, only 1 refresh should be called", async function(done) {
         try {
             jest.setTimeout(15000);
-            await startST(5, true);
+            const coreUrl = await setupCoreApp({accessTokenValidity: 5});
+            await setupST({ coreUrl, tokenTransferMethod: "cookie", enableAntiCsrf: true });
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
                 apiDomain: BASE_URL,
@@ -694,7 +695,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     it("test that things should work correctly if anti-csrf is disabled", async function(done) {
         try {
             jest.setTimeout(15000);
-            await startST(3, false);
+            const coreUrl = await setupCoreApp({accessTokenValidity: 3});
+            await setupST({ coreUrl, tokenTransferMethod: "cookie", enableAntiCsrf: false });
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
                 apiDomain: BASE_URL,
@@ -740,7 +742,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     it("test that calling addAxiosInterceptors multiple times is not a problem", async done => {
         try {
             jest.setTimeout(15000);
-            await startST(3);
+            const coreUrl = await setupCoreApp({accessTokenValidity: 3});
+            await setupST({ coreUrl, tokenTransferMethod: "cookie" });
 
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
@@ -802,7 +805,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     it("test that user passed config should be sent", async done => {
         try {
             jest.setTimeout(15000);
-            await startST();
+            const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "cookie" });
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
                 apiDomain: BASE_URL,
@@ -833,7 +837,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     it("test that if an api throws an error it gets propagated to the user with interception", async done => {
         try {
             jest.setTimeout(15000);
-            await startST();
+            const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "cookie" });
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
                 apiDomain: BASE_URL,
@@ -856,7 +861,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     it("test that if an api throws an error, it gets propergated to the user without interception", async done => {
         try {
             jest.setTimeout(15000);
-            await startST();
+            const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "cookie" });
             AuthHttpRequest.init({
                 apiDomain: BASE_URL,
                 tokenTransferMethod: "cookie"
@@ -879,7 +885,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     it("test that calling SuperTokens.init more than once works", async done => {
         try {
             jest.setTimeout(15000);
-            await startST();
+            const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "cookie" });
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
                 apiDomain: BASE_URL,
@@ -935,7 +942,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     it("test interception should not happen when domain is not the one that they gave", async function(done) {
         try {
             jest.setTimeout(15000);
-            await startST(5);
+            const coreUrl = await setupCoreApp({accessTokenValidity: 5});
+            await setupST({ coreUrl, tokenTransferMethod: "cookie" });
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
                 apiDomain: BASE_URL,
@@ -986,7 +994,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     it("test that an api call without cookies throws session expire, refresh api is not called and 401 is the output", async function(done) {
         try {
             jest.setTimeout(15000);
-            await startST(5);
+            const coreUrl = await setupCoreApp({accessTokenValidity: 5});
+            await setupST({ coreUrl, tokenTransferMethod: "cookie" });
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
                 apiDomain: BASE_URL,
@@ -1030,7 +1039,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     it("test that via interception initially an endpoint is just hit once in case of valid access token", async function(done) {
         try {
             jest.setTimeout(15000);
-            await startST(5);
+            const coreUrl = await setupCoreApp({accessTokenValidity: 5});
+            await setupST({ coreUrl, tokenTransferMethod: "cookie" });
             AuthHttpRequest.addAxiosInterceptors(axiosInstance);
             AuthHttpRequest.init({
                 apiDomain: BASE_URL,
@@ -1066,7 +1076,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     it("test that if multiple interceptors are there, they should all work", async function(done) {
         try {
             jest.setTimeout(15000);
-            await startST();
+            const coreUrl = await setupCoreApp();
+            await setupST({ coreUrl, tokenTransferMethod: "cookie" });
             addAxiosInterceptorsTest(axiosInstance);
             AuthHttpRequest.init({
                 apiDomain: UTILS_BASE_URL,
@@ -1093,7 +1104,8 @@ describe("Axios AuthHttpRequest class tests", function() {
     });
 
     it("check sessionDoes exist calls refresh API just once", async function() {
-        await startST(3);
+        const coreUrl = await setupCoreApp({accessTokenValidity: 3});
+            await setupST({ coreUrl, tokenTransferMethod: "cookie" });
         AuthHttpRequest.addAxiosInterceptors(axiosInstance);
         AuthHttpRequest.init({
             apiDomain: BASE_URL,

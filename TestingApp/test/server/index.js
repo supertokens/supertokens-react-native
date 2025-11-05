@@ -23,14 +23,12 @@ let http = require("http");
 let cors = require("cors");
 
 let {
-    startST,
-    stopST,
-    killAllST,
-    setupST,
-    cleanST,
-    setKeyValueInConfig,
     maxVersion,
-    isProtectedPropName
+    isProtectedPropName,
+    getCoreUrl,
+    createCoreApplication,
+    addLicense
+
 } = require("./utils");
 let { middleware, errorHandler } = require("supertokens-node/framework/express");
 let { verifySession } = require("supertokens-node/recipe/session/framework/express");
@@ -68,31 +66,39 @@ if (maxVersion(nodeSDKVersion, "10.0.0") === nodeSDKVersion) {
 
 let accountLinkingSupported = maxVersion(nodeSDKVersion, "16.0") === nodeSDKVersion;
 
-let urlencodedParser = bodyParser.urlencoded({ limit: "20mb", extended: true, parameterLimit: 20000 });
-let jsonParser = bodyParser.json({ limit: "20mb" });
+function reset() {
+    SuperTokensRaw.reset();
+    SessionRecipeRaw.reset();
 
-let app = express();
-app.use(urlencodedParser);
-app.use(jsonParser);
-app.use(cookieParser());
-app.use(morgan(`:date[iso] - :method :url`, { immediate: true }));
-app.use(morgan(`:date[iso] - :method :url :status :response-time ms - :res[content-length]`));
+    if (multitenancySupported) {
+        MultitenancyRaw.reset();
+    }
 
-function getConfig(enableAntiCsrf, enableJWT) {
+    if (UserMetaDataRecipeRaw !== undefined) {
+        UserMetaDataRecipeRaw.reset();
+    }
+
+    if (accountLinkingSupported) {
+        const AccountLinkingRaw = require("supertokens-node/lib/build/recipe/accountlinking/recipe").default;
+        AccountLinkingRaw.reset();
+    }
+}
+
+function getConfig({coreUrl = getCoreUrl(), enableAntiCsrf, enableJWT, tokenTransferMethod}) {
     if (maxVersion(nodeSDKVersion, "14.0") === nodeSDKVersion && enableJWT) {
         return {
             appInfo: {
                 appName: "SuperTokens",
                 apiDomain: "0.0.0.0:" + (process.env.NODE_PORT === undefined ? 8080 : process.env.NODE_PORT),
-                websiteDomain: "http://localhost.org:8080"
+                websiteDomain: "http://localhost:8080"
             },
             supertokens: {
-                connectionURI: "http://localhost:9000"
+                connectionURI: coreUrl
             },
             recipeList: [
                 Session.init({
                     exposeAccessTokenToFrontendInCookieBasedAuth: true,
-                    getTokenTransferMethod: process.env.TRANSFER_METHOD ? () => process.env.TRANSFER_METHOD : undefined,
+                    getTokenTransferMethod: () => tokenTransferMethod,
                     errorHandlers: {
                         onUnauthorised: (err, req, res) => {
                             res.setStatusCode(401);
@@ -144,17 +150,17 @@ function getConfig(enableAntiCsrf, enableJWT) {
             appInfo: {
                 appName: "SuperTokens",
                 apiDomain: "0.0.0.0:" + (process.env.NODE_PORT === undefined ? 8080 : process.env.NODE_PORT),
-                websiteDomain: "http://localhost.org:8080"
+                websiteDomain: "http://localhost:8080"
             },
             supertokens: {
-                connectionURI: "http://localhost:9000"
+                connectionURI: coreUrl
             },
             recipeList: [
                 Session.init({
                     jwt: {
                         enable: true
                     },
-                    getTokenTransferMethod: process.env.TRANSFER_METHOD ? () => process.env.TRANSFER_METHOD : undefined,
+                    getTokenTransferMethod: () => tokenTransferMethod,
                     errorHandlers: {
                         onUnauthorised: (err, req, res) => {
                             res.setStatusCode(401);
@@ -205,14 +211,14 @@ function getConfig(enableAntiCsrf, enableJWT) {
         appInfo: {
             appName: "SuperTokens",
             apiDomain: "0.0.0.0:" + (process.env.NODE_PORT === undefined ? 8080 : process.env.NODE_PORT),
-            websiteDomain: "http://localhost.org:8080"
+            websiteDomain: "http://localhost:8080"
         },
         supertokens: {
-            connectionURI: "http://localhost:9000"
+            connectionURI: coreUrl
         },
         recipeList: [
             Session.init({
-                getTokenTransferMethod: process.env.TRANSFER_METHOD ? () => process.env.TRANSFER_METHOD : undefined,
+                getTokenTransferMethod: () => tokenTransferMethod,
                 errorHandlers: {
                     onUnauthorised: (err, req, res) => {
                         res.setStatusCode(401);
@@ -243,11 +249,31 @@ function getConfig(enableAntiCsrf, enableJWT) {
     };
 }
 
-SuperTokens.init(getConfig(true, false));
+function initST({coreUrl = getCoreUrl(), enableAntiCsrf = true, enableJWT = false, tokenTransferMethod} = {}) {
+    reset();
+    SuperTokens.init(getConfig({coreUrl, enableAntiCsrf, enableJWT, tokenTransferMethod}));
+}
+
+// Initialize ST once to ensure all endpoints work
+initST();
+// Add license before the server starts
+(async function () {
+    await addLicense();
+})();
+
+let urlencodedParser = bodyParser.urlencoded({ limit: "20mb", extended: true, parameterLimit: 20000 });
+let jsonParser = bodyParser.json({ limit: "20mb" });
+
+let app = express();
+app.use(urlencodedParser);
+app.use(jsonParser);
+app.use(cookieParser());
+app.use(morgan(`:date[iso] - :method :url`, { immediate: true }));
+app.use(morgan(`:date[iso] - :method :url :status :response-time ms - :res[content-length]`));
 
 app.use(
     cors({
-        origin: "http://localhost.org:8080",
+        origin: "http://localhost:8080",
         allowedHeaders: ["content-type", ...SuperTokens.getAllCORSHeaders()],
         methods: ["GET", "PUT", "POST", "DELETE"],
         credentials: true
@@ -275,31 +301,15 @@ app.post("/login", async (req, res) => {
     res.send(session.userId);
 });
 
-app.post("/startST", async (req, res) => {
-    let accessTokenValidity = req.body.accessTokenValidity === undefined ? 1 : req.body.accessTokenValidity;
-    let enableAntiCsrf = req.body.enableAntiCsrf === undefined ? true : req.body.enableAntiCsrf;
-    let enableJWT = req.body.enableJWT === undefined ? false : req.body.enableJWT;
-    await setKeyValueInConfig("access_token_validity", accessTokenValidity);
-    if (req.body.accessTokenSigningKeyUpdateInterval !== undefined) {
-        await setKeyValueInConfig(
-            "access_token_signing_key_update_interval",
-            req.body.accessTokenSigningKeyUpdateInterval
-        );
-    }
-    if (enableAntiCsrf !== undefined) {
-        SuperTokensRaw.reset();
-        SessionRecipeRaw.reset();
+app.post("/test/setup/app", async (req, res) => {
+    const { appId, coreConfig } = req.body;
+    const coreAppUrl = await createCoreApplication({ appId, coreConfig });
+    res.status(200).send(coreAppUrl);
+});
 
-        if (multitenancySupported) {
-            MultitenancyRaw.reset();
-        }
-
-        if (UserMetaDataRecipeRaw !== undefined) {
-            UserMetaDataRecipeRaw.reset();
-        }
-        SuperTokens.init(getConfig(enableAntiCsrf, enableJWT));
-    }
-    await startST();
+app.post("/test/setup/st", async (req, res) => {
+    const {coreUrl, enableAntiCsrf, enableJWT, tokenTransferMethod} = req.body;
+    await initST({coreUrl, enableAntiCsrf, enableJWT, tokenTransferMethod});
     res.send("");
 });
 
@@ -307,21 +317,17 @@ app.post("/beforeeach", async (req, res) => {
     noOfTimesRefreshCalledDuringTest = 0;
     noOfTimesGetSessionCalledDuringTest = 0;
     noOfTimesRefreshAttemptedDuringTest = 0;
-    await killAllST();
-    await setupST();
+    reset();
+    initST();
     res.send();
 });
 
 app.post("/after", async (req, res) => {
-    await killAllST();
-    await cleanST();
+    reset();
+    initST();
     res.send();
 });
 
-app.post("/stopst", async (req, res) => {
-    await stopST(req.body.pid);
-    res.send("");
-});
 
 app.post("/testUserConfig", async (req, res) => {
     res.status(200).send();
@@ -480,10 +486,6 @@ app.get("/testError", (req, res) => {
     res.status(500).send("test error message");
 });
 
-app.get("/stop", async (req, res) => {
-    process.exit();
-});
-
 app.get("/test/featureFlags", (req, res) => {
     const available = [];
 
@@ -510,8 +512,19 @@ app.post("/login-2.18", async (req, res) => {
     Querier.apiVersion = "2.18";
     const payload = req.body.payload || {};
     const userId = req.body.userId;
+
+    let path = undefined;
+    if (maxVersion(nodeSDKVersion, "23.0.0") === nodeSDKVersion) {
+        path = {
+            path: "/recipe/session",
+            params: {},
+        };
+    } else {
+        path = new NormalisedURLPath("/recipe/session");
+    }
+
     const legacySessionResp = await Querier.getNewInstanceOrThrowError().sendPostRequest(
-        new NormalisedURLPath("/recipe/session"),
+        path,
         {
             userId,
             enableAntiCsrf: false,
