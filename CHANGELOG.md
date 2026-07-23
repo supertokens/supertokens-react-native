@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+### Fixes
+
+- Fixed the fetch and axios interceptors throwing (e.g. `Please provide a valid domain name`) for URLs that cannot be reduced to a domain — relative paths, and `blob:` / `data:` / `file:` URIs. Such URLs can never match `apiDomain`, so `shouldDoInterceptionBasedOnUrl` now returns `false` (skips interception) instead of throwing, which previously broke unrelated app requests once `SuperTokens.init()` was called (e.g. relative fetches on react-native-web / Expo web, and native `file://` / `blob:` reads).
+
 ## [5.1.5] - 2025-07-25
 
 ### Changes

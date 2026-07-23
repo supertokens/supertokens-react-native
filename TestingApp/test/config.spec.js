@@ -145,23 +145,15 @@ describe("Config tests", function() {
         assert(!shouldDoInterceptionBasedOnUrl("http://localhost.org", "", ".localhost"));
         assert(!shouldDoInterceptionBasedOnUrl("http://localhost.org", "", "localhost:2000"));
 
-        // errors in input
-        try {
-            assert(shouldDoInterceptionBasedOnUrl("/some/path", "", "api.example.co.uk"));
-            assert(false);
-        } catch (err) {
-            if (err.message !== "Please provide a valid domain name") {
-                throw err;
-            }
-        }
-        try {
-            assert(shouldDoInterceptionBasedOnUrl("/some/path", "api.example.co.uk", undefined));
-            assert(false);
-        } catch (err) {
-            if (err.message !== "Please provide a valid domain name") {
-                throw err;
-            }
-        }
+        // URLs that cannot be reduced to a domain (relative path, or blob:/data:/file: URI) can
+        // never equal apiDomain, so they are not intercepted and must not throw.
+        assert(!shouldDoInterceptionBasedOnUrl("/some/path", "", "api.example.co.uk"));
+        assert(!shouldDoInterceptionBasedOnUrl("/some/path", "api.example.co.uk", undefined));
+        assert(
+            !shouldDoInterceptionBasedOnUrl("blob:https://api.example.com/abcd", "https://api.example.com", undefined)
+        );
+        assert(!shouldDoInterceptionBasedOnUrl("data:text/plain,hello", "https://api.example.com", undefined));
+        assert(!shouldDoInterceptionBasedOnUrl("file:///tmp/photo.jpg", "https://api.example.com", undefined));
     });
 
     it("testing cookieDomain normalisation", async function() {
