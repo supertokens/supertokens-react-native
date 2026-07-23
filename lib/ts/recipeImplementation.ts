@@ -171,7 +171,6 @@ export default function RecipeImplementation(): RecipeInterface {
             try {
                 toCheckUrl = normaliseURLDomainOrThrowError(toCheckUrl);
             } catch (err) {
-                logDebugMessage(err);
                 return false;
             }
             let urlObj = new URL(toCheckUrl);
